@@ -30,10 +30,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework, Version=2.6.2.12296, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\referenceddlls\nunit.framework.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -44,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NoticeBoardTest.cs" />
     <Compile Include="ExampleTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerCommunicationTest.cs" />
@@ -77,6 +76,12 @@
       <Project>{039ee1f6-4fd5-4dc7-97ed-4d3e5e8b9c20}</Project>
       <Name>NabfAgentLogic</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NabfProject\NabfProject.csproj">
+      <Project>{926590fe-c08e-4f55-8646-cece975b6d74}</Project>
+      <Name>NabfProject</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\NabfProject\NabfProject.csproj">
       <Project>{926590fe-c08e-4f55-8646-cece975b6d74}</Project>
       <Name>NabfProject</Name>

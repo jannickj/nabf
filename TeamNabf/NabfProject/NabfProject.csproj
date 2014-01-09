@@ -39,10 +39,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AI\AgentConnection.cs" />
+    <Compile Include="AI\Agent.cs" />
     <Compile Include="AI\AgentMaster.cs" />
-    <Compile Include="AI\ServerApplication.cs" />
     <Compile Include="AI\ServerCommunication.cs" />
+    <Compile Include="NoticeBoardModel\Notice.cs" />
+    <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerMessages\ActionMessage.cs" />
     <Compile Include="ServerMessages\AuthenticationMessage.cs" />
