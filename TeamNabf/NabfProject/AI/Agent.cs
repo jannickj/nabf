@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NabfProject.AI
 {
-    class Agent : XmasEngineModel.EntityLib.Agent
+    public class Agent : XmasEngineModel.EntityLib.Agent
     {
         public Agent(string s)
             : base(s)

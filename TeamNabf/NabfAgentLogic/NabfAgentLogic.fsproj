@@ -42,6 +42,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Agent.fs" />
+    <Compile Include="AgentInterfaces.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
+      <Name>JSLibrary</Name>
+      <Project>{02121c4a-b1fb-46b8-bde8-c5c6ca28c036}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

@@ -10,6 +10,12 @@ namespace NabfProject.AI
 	public class AgentConnection : AgentController
 	{
 
+		public AgentConnection(Agent agent)
+			: base(agent)
+		{
+
+		}
+
 		public override void Start()
 		{
 			throw new NotImplementedException();

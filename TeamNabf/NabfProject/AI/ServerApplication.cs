@@ -9,8 +9,12 @@ namespace NabfProject.AI
 {
 	public class ServerApplication : XmasController
 	{
+		private ServerCommunication communication;
 
-		public ServerApplication
+		public ServerApplication(ServerCommunication communication)
+		{
+			this.communication = communication;
+		}
 
 		public override void Initialize()
 		{
