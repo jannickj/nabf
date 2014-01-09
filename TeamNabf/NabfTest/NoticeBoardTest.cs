@@ -132,10 +132,10 @@ namespace NabfTest
         {
         }
 
-        [Test]
-        public void GetNoticeOfType_NoTypes_Failure()
-        {
-        }
+        //[Test]
+        //public void GetNoticeOfType_NoTypes_Failure()
+        //{
+        //}
         //[Test]
         //public void RemoveNotice_NoSuchNotice_Failure()
         //{

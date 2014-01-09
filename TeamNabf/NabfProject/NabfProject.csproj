@@ -41,9 +41,13 @@
   <ItemGroup>
     <Compile Include="AI\Agent.cs" />
     <Compile Include="AI\AgentMaster.cs" />
+    <Compile Include="AI\ServerCommunication.cs" />
     <Compile Include="NoticeBoardModel\Notice.cs" />
     <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerMessages\ActionMessage.cs" />
+    <Compile Include="ServerMessages\AuthenticationMessage.cs" />
+    <Compile Include="ServerMessages\ServerMessage.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
@@ -67,7 +71,6 @@
       <Name>XmasEngineView</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
