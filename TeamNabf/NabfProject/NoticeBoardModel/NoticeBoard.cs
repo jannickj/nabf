@@ -5,19 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 using JSLibrary.Data;
 using System.Linq;
+using NabfProject.AI;
 
 namespace NabfProject.NoticeBoardModel
 {
     public class NoticeBoard
     {
-        private SortedList<int, Notice> Jobs { get; set; }
         private DictionaryList<JobType, Notice> AvailableJobs = new DictionaryList<JobType, Notice>();
 
         public enum JobType { Disrupt, Occupy, Attack, Repair }
 
+        public event EventHandler<NoticeIsReadyToBeExecutedEventArgs> NoticeIsReadyToBeExecutedEvent;
+
         public NoticeBoard()
-        {
-            Jobs = new SortedList<int, Notice>();            
+        {        
         }
 
         public bool AddNotice(Notice no)
@@ -92,7 +93,7 @@ namespace NabfProject.NoticeBoardModel
             return result;
         }
 
-        public void ApplyToNotice(Notice notice, int desirability, AI.NabfAgent a)
+        public void ApplyToNotice(Notice notice, int desirability, NabfAgent a)
         {
             foreach (Notice n in AvailableJobs.Get(NoticeToJobType(notice)))
             {
@@ -103,7 +104,7 @@ namespace NabfProject.NoticeBoardModel
                 }
             }
         }
-        public void UnApplyToNotice(Notice notice, AI.NabfAgent a)
+        public void UnApplyToNotice(Notice notice, NabfAgent a)
         {
             foreach (Notice n in AvailableJobs.Get(NoticeToJobType(notice)))
             {
@@ -115,21 +116,80 @@ namespace NabfProject.NoticeBoardModel
             }
         }
 
-        public Notice PopFromJobsList()
+        //public Notice PopFromJobsList(SortedList<int, Notice> jobs)
+        //{
+        //    Notice n = jobs.First<KeyValuePair<int, Notice>>().Value;
+        //    jobs.RemoveAt(0);
+        //    return n;
+        //}
+
+        public SortedList<int, Notice[]> PrepareSortedQueue()
         {
-            Notice n = Jobs.First<KeyValuePair<int, Notice>>().Value;
-            Jobs.RemoveAt(0);
-            return n;
+            //calculate highest desirability based on the average desirability of the top X agents, where X is AgentsNeeded
+            DictionaryList<int, Notice> dl = new DictionaryList<int, Notice>();
+            foreach (Notice no in AvailableJobs.SelectMany(kvp => kvp.Value))
+                dl.Add(no.HighestDesirabilityForNotice, no);
+
+            SortedList<int, Notice[]> jobs = new SortedList<int, Notice[]>();
+
+            foreach (KeyValuePair<int, Notice[]> kvp in dl)
+                jobs.Add(kvp.Key, kvp.Value);
+
+            return jobs;
         }
 
-        //public bool PrepareSortedQueue() 
-        //{
-        //    foreach(KeyValuePair<JobType, Notice[]> kvp in AvailableJobs)
-        //    {
-        //        Jobs.Add();                
-        //    }
+        private bool RaiseEventForNotice(Notice n) 
+        {
+            //handle if not enough have applied (or have been removed first)
+            List<NabfAgent> agents = new List<NabfAgent>();
+            NoticeIsReadyToBeExecutedEventArgs args = new NoticeIsReadyToBeExecutedEventArgs();
+            SortedList<int, NabfAgent> topDesires = new SortedList<int, NabfAgent>(new InvertedComparer<int>());
+            //topDesires.OrderByDescending((kvp) => { return kvp.Key; });
+            for(int i = 0; i < n.AgentsNeeded; i++)
+            {
+                topDesires.Add(-1, null);
+            }
+            int desire = 0, lowestDesire = -1;
+            bool b;
             
-        //    return true; 
-        //}
+            foreach(NabfAgent a in n.AgentsApplied)
+            {
+                b = n.AgentsToDesirability.TryGetValue(a, out desire);
+                if (desire > lowestDesire)
+                {
+                    topDesires.Add(desire, a);
+                    agents.Add(a);
+                    agents.Remove(topDesires.Last().Value);
+                    topDesires.RemoveAt(n.AgentsNeeded);
+                    lowestDesire = topDesires.Keys[n.AgentsNeeded - 1];
+                }
+            }
+            if (lowestDesire == -1)
+                return false;
+            args.Agents = agents;
+            args.Notice = n;
+            
+            if(NoticeIsReadyToBeExecutedEvent != null)
+                NoticeIsReadyToBeExecutedEvent(this, args);
+
+            return true;
+        }
+
+        public void FindJobsForAgents()
+        {
+            SortedList<int, Notice[]> jobs = PrepareSortedQueue();
+
+            foreach (KeyValuePair<int, Notice[]> kvp in jobs)
+            {                
+                foreach(Notice n in kvp.Value)
+                    RaiseEventForNotice(n);
+            }
+        }
+    }
+
+    public class NoticeIsReadyToBeExecutedEventArgs : EventArgs
+    {
+        public Notice Notice { get; set; }
+        public List<NabfAgent> Agents = new List<NabfAgent>();
     }
 }

@@ -7,6 +7,7 @@ using NUnit.Framework;
 using NabfProject.NoticeBoardModel;
 using NabfProject.AI;
 using System.Reflection;
+using JSLibrary.Data;
 
 namespace NabfTest
 {
@@ -184,24 +185,89 @@ namespace NabfTest
 
 
             nb.ApplyToNotice(possibleJobs[0], desirability, a1);
-            int highest = (int)getField(n, true, "_highestDesirabilityForNotice");
-            Assert.AreEqual(desirability, highest);
+            //int highest = (int)getField(n, true, "_highestDesirabilityForNotice");
+            Assert.AreEqual(desirability, n.HighestDesirabilityForNotice);
             Assert.AreEqual(1, n.AgentsApplied.Count);
 
             nb.ApplyToNotice(possibleJobs[0], desirability2, a2);
-            highest = (int)getField(n, true, "_highestDesirabilityForNotice");
-            Assert.AreEqual(desirability2, highest);
+            Assert.AreEqual(desirability2, n.HighestDesirabilityForNotice);
             Assert.AreEqual(2, n.AgentsApplied.Count);
 
 
             nb.UnApplyToNotice(possibleJobs[0], a2);
-            highest = (int)getField(n, true, "_highestDesirabilityForNotice");
-            Assert.AreEqual(desirability, highest);
+            Assert.AreEqual(desirability, n.HighestDesirabilityForNotice);
             Assert.AreEqual(1, n.AgentsApplied.Count);
         }
 
 
 
+        [Test]
+        public void FindJobsForAgents_AllJobsFilledAllTheTime_Success()
+        {
+            int evtTriggered = 0;
+
+            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+
+            Notice no = new DisruptJob(1, testNodes), no2 = new AttackJob(1, testNodes);
+            nb.AddNotice(no);
+            nb.AddNotice(no2);
+            List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt, NoticeBoard.JobType.Attack };
+            
+            int desirability = 1, desirability2 = 99;
+            NabfAgent a1 = new NabfAgent("agent1"), a2 = new NabfAgent("agent2");
+
+
+            nb.ApplyToNotice(no, desirability, a1);
+            nb.ApplyToNotice(no2, desirability2, a1);
+            nb.ApplyToNotice(no, desirability2, a2);
+            nb.ApplyToNotice(no2, desirability, a2);
+
+            int maxDesirabilityForFirstNotice = -1, maxDesirabilityForSecondNotice = -1;
+            int agentsOnFirstNotice = -1, agentsOnSecondNotice = -1;
+            NabfAgent agentOnFirstNotice = null, agentOnSecondNotice = null;
+            nb.NoticeIsReadyToBeExecutedEvent += (sender, evt) =>
+            {
+                evtTriggered++;
+                if (evt.Notice.ChildTypeIsEqualTo(no))
+                {
+                    agentsOnFirstNotice = evt.Notice.AgentsApplied.Count;
+                    maxDesirabilityForFirstNotice = evt.Notice.HighestDesirabilityForNotice;
+                    agentOnFirstNotice = evt.Agents[0];
+                }
+                if (evt.Notice.ChildTypeIsEqualTo(no2))
+                {
+                    agentsOnSecondNotice = evt.Notice.AgentsApplied.Count;
+                    maxDesirabilityForSecondNotice = evt.Notice.HighestDesirabilityForNotice;
+                    agentOnSecondNotice = evt.Agents[0];
+                }
+            };
+            nb.FindJobsForAgents();
+
+            Assert.AreEqual(2, evtTriggered);
+            Assert.AreEqual(99, maxDesirabilityForFirstNotice);
+            Assert.AreEqual(99, maxDesirabilityForSecondNotice);
+            Assert.AreEqual(2, agentsOnFirstNotice);
+            Assert.AreEqual(2, agentsOnSecondNotice);
+            Assert.AreEqual(a1.Name, agentOnSecondNotice.Name);
+            Assert.AreEqual(a2.Name, agentOnFirstNotice.Name);     
+        }
+
+        [Test]
+        public void FindJobsForAgentsSomeAgentsIsPreferedForMultipleMultiJobs_AllJobsFilledAtStart_Success()
+        {
+            Assert.IsTrue(true);
+            return;
+            bool evtTriggered = false;
+            nb.NoticeIsReadyToBeExecutedEvent += (sender, evt) =>
+            {
+                evtTriggered = true;
+
+            };
+            nb.FindJobsForAgents();
+
+            Assert.IsTrue(evtTriggered);
+
+        }
 
 
 
