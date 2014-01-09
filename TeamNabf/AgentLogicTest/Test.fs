@@ -26,17 +26,14 @@ type GraphTest() =
                                ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] })
                                ] |> Map.ofList
 
-            let expectedGraph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b"); (None, "c")] }) 
-                                ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a"); (None, "c")] })
+            let expectedGraph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "c"); (None, "b")] }) 
+                                ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a")] })
                                 ; ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] }) 
                                 ] |> Map.ofList
 
             let actualGraph = addVertex initialGraph testVertex
             let list1 = Map.toList expectedGraph
             let list2 = Map.toList actualGraph
-
-            printfn "%i" 3
-            System.Console.WriteLine (3)
 
             Assert.AreEqual (Map.toList expectedGraph, Map.toList actualGraph)
          

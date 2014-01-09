@@ -15,8 +15,6 @@
     let isVertexAdjacentTo identifier vertex = 
         List.exists (fun (_, toVertex) -> toVertex = identifier) vertex.Edges 
 
-        (* Graph -> Edge list -> Graph*)
-
     let rec updateGraph (vertex : Vertex) (graph : Graph) = 
         match vertex.Edges with
         | (weight, otherVertexId) :: rest -> 
