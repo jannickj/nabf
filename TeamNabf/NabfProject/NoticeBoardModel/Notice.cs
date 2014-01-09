@@ -11,13 +11,15 @@ namespace NabfProject.NoticeBoardModel
     {
         public List<Node> WhichNodes { get; set; }
         public int AgentsNeeded { get; set; }
+        public int Id { get; set; }
 
         public int HighestDesirabilityForNotice = -1;
         public List<NabfAgent> AgentsApplied = new List<NabfAgent>();
         public Dictionary<NabfAgent, int> AgentsToDesirability = new Dictionary<NabfAgent, int>(); 
 
-        public Notice()
+        public Notice(int id)
         {
+            Id = id;
         }
 
         public int CompareTo(object obj)
@@ -79,8 +81,8 @@ namespace NabfProject.NoticeBoardModel
     public class DisruptJob : Notice
     {
 
-        public DisruptJob(int agentsNeeded, List<Node> whichNodes)
-            : base()
+        public DisruptJob(int agentsNeeded, List<Node> whichNodes, int id)
+            : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
@@ -90,8 +92,8 @@ namespace NabfProject.NoticeBoardModel
     public class AttackJob : Notice
     {
 
-        public AttackJob(int agentsNeeded, List<Node> whichNodes)
-            : base()
+        public AttackJob(int agentsNeeded, List<Node> whichNodes, int id)
+            : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
@@ -101,8 +103,8 @@ namespace NabfProject.NoticeBoardModel
     public class OccupyJob : Notice
     {
 
-        public OccupyJob(int agentsNeeded, List<Node> whichNodes)
-            : base()
+        public OccupyJob(int agentsNeeded, List<Node> whichNodes, int id)
+            : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
@@ -112,8 +114,8 @@ namespace NabfProject.NoticeBoardModel
     public class RepairJob : Notice
     {
 
-        public RepairJob(List<Node> whichNodes)
-            : base()
+        public RepairJob(List<Node> whichNodes, int id)
+            : base(id)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = 1;

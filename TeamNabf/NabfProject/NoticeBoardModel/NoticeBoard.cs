@@ -12,6 +12,7 @@ namespace NabfProject.NoticeBoardModel
     public class NoticeBoard
     {
         private DictionaryList<JobType, Notice> AvailableJobs = new DictionaryList<JobType, Notice>();
+        private Dictionary<int, Notice> IdToNotice = new Dictionary<int, Notice>();
 
         public enum JobType { Disrupt, Occupy, Attack, Repair }
 
@@ -25,6 +26,7 @@ namespace NabfProject.NoticeBoardModel
         {
             if (AvailableJobsContainsChildType(no))
                 return false;
+            IdToNotice.Add(no.Id, no);
             AvailableJobs.Add(NoticeToJobType(no), no);
             return true;
         }
@@ -61,6 +63,7 @@ namespace NabfProject.NoticeBoardModel
 
             foreach (NabfProject.AI.NabfAgent a in no.AgentsApplied)
                 UnApplyToNotice(no, a);
+            IdToNotice.Remove(no.Id);
             AvailableJobs.Remove(NoticeToJobType(no), no);
             return true;
         }
@@ -184,6 +187,20 @@ namespace NabfProject.NoticeBoardModel
                 foreach(Notice n in kvp.Value)
                     RaiseEventForNotice(n);
             }
+        }
+
+        public bool UpdateNotice(int id, List<Node> whichNodes, int agentsNeeded)
+        {
+            Notice no;
+            bool b = IdToNotice.TryGetValue(id, out no);
+
+            if (b == false)
+                return false;
+
+            no.WhichNodes = whichNodes;
+            no.AgentsNeeded = agentsNeeded;
+
+            return true;
         }
     }
 
