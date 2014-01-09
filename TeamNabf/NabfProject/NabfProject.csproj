@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NabfProject</RootNamespace>
     <AssemblyName>NabfProject</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <ProductVersion>12.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -51,23 +52,23 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
-      <Project>{02121c4a-b1fb-46b8-bde8-c5c6ca28c036}</Project>
+      <Project>{02121C4A-B1FB-46B8-BDE8-C5C6CA28C036}</Project>
       <Name>JSLibrary</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineController\XmasEngineController.csproj">
-      <Project>{0fae1368-42fc-48f7-a82b-58cf276188c1}</Project>
+      <Project>{0FAE1368-42FC-48F7-A82B-58CF276188C1}</Project>
       <Name>XmasEngineController</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineExtensions\XmasEngineExtensions.csproj">
-      <Project>{f0965ebc-feaf-4445-a43b-998d0a8d249d}</Project>
+      <Project>{F0965EBC-FEAF-4445-A43B-998D0A8D249D}</Project>
       <Name>XmasEngineExtensions</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineModel\XmasEngineModel.csproj">
-      <Project>{70abbb17-6a3c-429c-b27e-0f56aacb9f69}</Project>
+      <Project>{70ABBB17-6A3C-429C-B27E-0F56AACB9F69}</Project>
       <Name>XmasEngineModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineView\XmasEngineView.csproj">
-      <Project>{99f1f1f4-2df4-4c9e-8a33-5cd538d2c002}</Project>
+      <Project>{99F1F1F4-2DF4-4C9E-8A33-5CD538D2C002}</Project>
       <Name>XmasEngineView</Name>
     </ProjectReference>
   </ItemGroup>

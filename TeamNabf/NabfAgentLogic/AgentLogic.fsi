@@ -32,3 +32,5 @@ module AgentLogic
             Self : Agent;
             Enemies : Agent list;
         }
+
+    val multify : int -> int -> int

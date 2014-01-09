@@ -44,6 +44,8 @@ let handlePercept state percept =
 let updateState : State -> Percept list -> State = 
     List.fold handlePercept
 
+let multify a b = a * b
+
 (* chooseAction : State -> Percept list -> Action *)
 let chooseAction currentState percepts =
     let newState = updateState currentState percepts
