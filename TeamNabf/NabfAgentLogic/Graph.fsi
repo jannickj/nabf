@@ -5,6 +5,7 @@
 
     type Vertex = 
         {
+            Identifier : string;
             Value : Option<int>;
             Edges : DirectedEdge list;
         }

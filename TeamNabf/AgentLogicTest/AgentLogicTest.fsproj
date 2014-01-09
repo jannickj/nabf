@@ -5,12 +5,12 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>3cac5b0f-6b66-4b12-b58e-bb326c989b84</ProjectGuid>
+    <ProjectGuid>3CAC5B0F-6B66-4B12-B58E-BB326C989B84</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>AgentLogicTest</RootNamespace>
     <AssemblyName>AgentLogicTest</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>AgentLogicTest</Name>
+    <ProductVersion>12.0.0</ProductVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,6 +23,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Debug\AgentLogicTest.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
+    <Externalconsole>true</Externalconsole>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -37,9 +38,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
+    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="nunit.framework">
       <HintPath>..\referenceddlls\nunit.framework.dll</HintPath>
     </Reference>
@@ -53,8 +52,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NabfAgentLogic\NabfAgentLogic.fsproj">
       <Name>NabfAgentLogic</Name>
-      <Project>{039ee1f6-4fd5-4dc7-97ed-4d3e5e8b9c20}</Project>
-      <Private>True</Private>
+      <Project>039EE1F6-4FD5-4DC7-97ED-4D3E5E8B9C20</Project>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
