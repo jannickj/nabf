@@ -20,6 +20,13 @@ type GraphTest() =
 
         [<Test>]
         member this.AddVertexWithEdgesToOtherVerticesInGraph_PopulatedGraph_EvenMoreSo () =
+            (*
+             *  A       A - C       A - C
+             *  |          /        |  /
+             *  |   +     /     =   | /
+             *  |        /          |/ 
+             *  B       B           B
+             *)
             let testVertex = { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] }
 
             let initialGraph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] }) 
@@ -36,5 +43,23 @@ type GraphTest() =
             let list2 = Map.toList actualGraph
 
             Assert.AreEqual (Map.toList expectedGraph, Map.toList actualGraph)
-         
         
+        [<Test>]
+        member this.AddEdge_Graph2Vertices0Edges_Graph2Vertices1Edge () =
+            (*
+             * A               A
+             *     +   |   =   |
+             * B               B
+             *)
+
+            let testEdge = (None, "a", "b")
+            let initialGraph = [ ("a", {Identifier = "a"; Value = None; Edges = [] })
+                                ; ("b", {Identifier = "b"; Value = None; Edges = [] })
+                                ] |> Map.ofList
+
+            let expected = [ ("a", {Identifier = "a"; Value = None; Edges = [(None, "b")] })
+                                 ; ("b", {Identifier = "b"; Value = None; Edges = [(None, "a")] })
+                                 ] |> Map.ofList
+             
+            let actual = addEdge initialGraph testEdge
+            Assert.AreEqual (expected, actual)
