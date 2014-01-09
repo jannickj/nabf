@@ -10,7 +10,7 @@ namespace NabfProject.AI
 	public class ServerApplication : XmasController
 	{
 
-
+		public ServerApplication
 
 		public override void Initialize()
 		{
