@@ -1,8 +1,8 @@
-﻿module Agent
+﻿module AgentLogic
 
 open System
+open Graph
 
-type Percept = int
 type Action = int
 
 type AgentType =
@@ -15,23 +15,30 @@ type AgentType =
 type Agent =
     {
         Id          : string;
-        EnemyType   : AgentType;
+        Type        : AgentType;
         Energy      : int;
         Health      : int;
         Strength    : int;
         VisionRange : int;
     }
 
+type Percept =
+    | EnemySeen of Agent
+    | NodeSeen of Graph.Vertex
+
 type State =
     {
-        World : int;
+        World : Graph;
         Self : Agent;
         Enemies : Agent list;
     }
 
 (* handlePercept State -> Percept -> State *)
 let handlePercept state percept =
-    {World = 1;Self = {Id="";EnemyType=Saboteur;Energy=1;Health=1;Strength=1;VisionRange=1};Enemies = []} : State
+    match percept with
+        | EnemySeen enemy -> { state with Enemies = enemy :: state.Enemies }
+//        | NodeSeen node -> { state with World = 
+        | _ -> state
 
 (* let updateState : State -> Percept list -> State *)
 let updateState : State -> Percept list -> State = 
