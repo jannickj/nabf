@@ -39,9 +39,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actions\AddStandbyAgentAction.cs" />
+    <Compile Include="AgentStandbyManager.cs" />
+    <Compile Include="AI\AgentConnection.cs" />
+    <Compile Include="AI\Client\ClientApplication.cs" />
+    <Compile Include="AI\IilPacketTransmitter.cs" />
     <Compile Include="AI\NabfAgent.cs" />
     <Compile Include="AI\AgentMaster.cs" />
+    <Compile Include="AI\ServerApplication.cs" />
     <Compile Include="AI\ServerCommunication.cs" />
+    <Compile Include="NabfModel.cs" />
     <Compile Include="NoticeBoardModel\Notice.cs" />
     <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -69,6 +76,10 @@
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineView\XmasEngineView.csproj">
       <Project>{99f1f1f4-2df4-4c9e-8a33-5cd538d2c002}</Project>
       <Name>XmasEngineView</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NabfAgentLogic\NabfAgentLogic.fsproj">
+      <Project>{039ee1f6-4fd5-4dc7-97ed-4d3e5e8b9c20}</Project>
+      <Name>NabfAgentLogic</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

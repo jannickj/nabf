@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NabfProject.Actions;
 using XmasEngineController.AI;
 using XmasEngineModel;
+using XmasEngineModel.EntityLib;
 
 namespace NabfProject.AI
 {

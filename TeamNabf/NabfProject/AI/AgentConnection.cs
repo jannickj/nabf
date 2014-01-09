@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using XmasEngineController.AI;
+using XmasEngineModel.EntityLib;
 
 namespace NabfProject.AI
 {
