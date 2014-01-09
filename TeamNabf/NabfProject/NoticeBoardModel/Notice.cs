@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NabfProject.AI;
 
 namespace NabfProject.NoticeBoardModel
 {
@@ -10,19 +11,23 @@ namespace NabfProject.NoticeBoardModel
     {
         public List<Node> WhichNodes { get; set; }
         public int AgentsNeeded { get; set; }
+        public int Id { get; set; }
 
-        public int Desirability { get; set; }
+        public int HighestDesirabilityForNotice = -1;
+        public List<NabfAgent> AgentsApplied = new List<NabfAgent>();
+        public Dictionary<NabfAgent, int> AgentsToDesirability = new Dictionary<NabfAgent, int>(); 
 
-        public Notice()
+        public Notice(int id)
         {
+            Id = id;
         }
 
         public int CompareTo(object obj)
         {
             if (obj is Notice)
-                if (((Notice)obj).Desirability < Desirability)
+                if (((Notice)obj).HighestDesirabilityForNotice < HighestDesirabilityForNotice)
                     return -1;
-                else if (((Notice)obj).Desirability > Desirability)
+                else if (((Notice)obj).HighestDesirabilityForNotice > HighestDesirabilityForNotice)
                     return 1;
                 else
                     return 0;
@@ -48,13 +53,36 @@ namespace NabfProject.NoticeBoardModel
             return no.AgentsNeeded == this.AgentsNeeded;
         }
 
+        public void Apply(int desirability, NabfAgent a)
+        {
+            if (HighestDesirabilityForNotice < desirability)
+                HighestDesirabilityForNotice = desirability;
+            AgentsToDesirability.Add(a, desirability);
+            AgentsApplied.Add(a);
+        }
+        public void UnApply(NabfAgent a)
+        {
+            int des = -2, newMaxDes = -1;
+            AgentsToDesirability.TryGetValue(a, out des);
+            AgentsToDesirability.Remove(a);
+            AgentsApplied.Remove(a);
+            if (HighestDesirabilityForNotice == des)
+            {
+                foreach (int i in AgentsToDesirability.Values)
+                {
+                    if (i > newMaxDes)
+                        HighestDesirabilityForNotice = i;
+                }
+            }
+        }
+
     }
     
     public class DisruptJob : Notice
     {
 
-        public DisruptJob(int agentsNeeded, List<Node> whichNodes)
-            : base()
+        public DisruptJob(int agentsNeeded, List<Node> whichNodes, int id)
+            : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
@@ -64,8 +92,8 @@ namespace NabfProject.NoticeBoardModel
     public class AttackJob : Notice
     {
 
-        public AttackJob(int agentsNeeded, List<Node> whichNodes)
-            : base()
+        public AttackJob(int agentsNeeded, List<Node> whichNodes, int id)
+            : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
@@ -75,8 +103,8 @@ namespace NabfProject.NoticeBoardModel
     public class OccupyJob : Notice
     {
 
-        public OccupyJob(int agentsNeeded, List<Node> whichNodes)
-            : base()
+        public OccupyJob(int agentsNeeded, List<Node> whichNodes, int id)
+            : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
@@ -86,8 +114,8 @@ namespace NabfProject.NoticeBoardModel
     public class RepairJob : Notice
     {
 
-        public RepairJob(List<Node> whichNodes)
-            : base()
+        public RepairJob(List<Node> whichNodes, int id)
+            : base(id)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = 1;
