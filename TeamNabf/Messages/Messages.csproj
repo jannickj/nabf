@@ -4,12 +4,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{926590FE-C08E-4F55-8646-CECE975B6D74}</ProjectGuid>
+    <ProjectGuid>{CB3999A2-8953-4232-A51E-07B30EA158A1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NabfProject</RootNamespace>
-    <AssemblyName>NabfProject</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <RootNamespace>Messages</RootNamespace>
+    <AssemblyName>Messages</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -39,37 +39,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AI\Agent.cs" />
-    <Compile Include="AI\AgentMaster.cs" />
-    <Compile Include="AI\ServerCommunication.cs" />
-    <Compile Include="NoticeBoardModel\Notice.cs" />
-    <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
+    <Compile Include="AuthenticationMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServerMessages\ActionMessage.cs" />
-    <Compile Include="ServerMessages\AuthenticationMessage.cs" />
-    <Compile Include="ServerMessages\ServerMessage.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
-      <Project>{02121c4a-b1fb-46b8-bde8-c5c6ca28c036}</Project>
-      <Name>JSLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineController\XmasEngineController.csproj">
-      <Project>{0fae1368-42fc-48f7-a82b-58cf276188c1}</Project>
-      <Name>XmasEngineController</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineExtensions\XmasEngineExtensions.csproj">
-      <Project>{f0965ebc-feaf-4445-a43b-998d0a8d249d}</Project>
-      <Name>XmasEngineExtensions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineModel\XmasEngineModel.csproj">
-      <Project>{70abbb17-6a3c-429c-b27e-0f56aacb9f69}</Project>
-      <Name>XmasEngineModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineView\XmasEngineView.csproj">
-      <Project>{99f1f1f4-2df4-4c9e-8a33-5cd538d2c002}</Project>
-      <Name>XmasEngineView</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
