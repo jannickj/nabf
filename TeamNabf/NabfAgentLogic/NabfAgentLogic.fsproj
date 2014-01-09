@@ -41,7 +41,10 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Agent.fs" />
+    <Compile Include="Graph.fsi" />
+    <Compile Include="Graph.fs" />
+    <Compile Include="AgentLogic.fsi" />
+    <Compile Include="AgentLogic.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
