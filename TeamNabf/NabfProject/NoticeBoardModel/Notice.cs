@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NabfProject.AI;
 
 namespace NabfProject.NoticeBoardModel
 {
@@ -11,7 +12,9 @@ namespace NabfProject.NoticeBoardModel
         public List<Node> WhichNodes { get; set; }
         public int AgentsNeeded { get; set; }
 
-        public int Desirability { get; set; }
+        private int _highestDesirabilityForNotice = -1;
+        public List<NabfAgent> AgentsApplied = new List<NabfAgent>();
+        private Dictionary<NabfAgent, int> AgentsToDesirability = new Dictionary<NabfAgent, int>(); 
 
         public Notice()
         {
@@ -20,9 +23,9 @@ namespace NabfProject.NoticeBoardModel
         public int CompareTo(object obj)
         {
             if (obj is Notice)
-                if (((Notice)obj).Desirability < Desirability)
+                if (((Notice)obj)._highestDesirabilityForNotice < _highestDesirabilityForNotice)
                     return -1;
-                else if (((Notice)obj).Desirability > Desirability)
+                else if (((Notice)obj)._highestDesirabilityForNotice > _highestDesirabilityForNotice)
                     return 1;
                 else
                     return 0;
@@ -46,6 +49,29 @@ namespace NabfProject.NoticeBoardModel
                     return false;
 
             return no.AgentsNeeded == this.AgentsNeeded;
+        }
+
+        public void Apply(int desirability, NabfAgent a)
+        {
+            if (_highestDesirabilityForNotice < desirability)
+                _highestDesirabilityForNotice = desirability;
+            AgentsToDesirability.Add(a, desirability);
+            AgentsApplied.Add(a);
+        }
+        public void UnApply(NabfAgent a)
+        {
+            int des = -2, newMaxDes = -1;
+            AgentsToDesirability.TryGetValue(a, out des);
+            AgentsToDesirability.Remove(a);
+            AgentsApplied.Remove(a);
+            if (_highestDesirabilityForNotice == des)
+            {
+                foreach (int i in AgentsToDesirability.Values)
+                {
+                    if (i > newMaxDes)
+                        _highestDesirabilityForNotice = i;
+                }
+            }
         }
 
     }

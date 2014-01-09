@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using NabfProject.NoticeBoardModel;
+using NabfProject.AI;
+using System.Reflection;
 
 namespace NabfTest
 {
@@ -128,19 +130,99 @@ namespace NabfTest
         }
 
         [Test]
-        public void GetNoticeOfType_NoTypes_Failure()
+        public void GetNoticeOfType_NoJobsOfSuchType_Failure()
         {
+            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+
+            Notice no = new DisruptJob(1, testNodes);
+            Notice no2 = new AttackJob(1, testNodes);
+            Notice no3 = new OccupyJob(1, testNodes);
+            nb.AddNotice(no);
+            nb.AddNotice(no2);
+            nb.AddNotice(no3);
+            List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Repair };
+            List<Notice> possibleJobs = new List<Notice>();
+            possibleJobs.AddRange(nb.GetNotices(jobs));
+
+            Assert.AreEqual(0, possibleJobs.Count);
         }
 
-        //[Test]
-        //public void GetNoticeOfType_NoTypes_Failure()
-        //{
-        //}
-        //[Test]
-        //public void RemoveNotice_NoSuchNotice_Failure()
-        //{
-        //}
+        [Test]
+        public void GetNoticeOfType_MultipleJobsOfTypeAndOtherType_Success()
+        {
+            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+
+            Notice no = new DisruptJob(1, testNodes);
+            Notice no2 = new AttackJob(1, testNodes);
+            Notice no3 = new OccupyJob(1, testNodes);
+            nb.AddNotice(no);
+            nb.AddNotice(no2);
+            nb.AddNotice(no3);
+            List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>(){ NoticeBoard.JobType.Attack, NoticeBoard.JobType.Occupy };
+            List<Notice> possibleJobs = new List<Notice>();
+            possibleJobs.AddRange(nb.GetNotices(jobs));
+
+            Assert.AreEqual(2, possibleJobs.Count);
+        }
+
+        [Test]
+        public void TwoAgentsApplyToSameNoticeThenUnApply_NoticeExists_Success()
+        {
+            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+
+            Notice no = new DisruptJob(1, testNodes);
+            nb.AddNotice(no);
+            List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt };
+            List<Notice> possibleJobs = new List<Notice>();
+            possibleJobs.AddRange(nb.GetNotices(jobs));
+
+            Assert.AreEqual(1, possibleJobs.Count);
+
+            int desirability = 1, desirability2 = 99;
+            NabfAgent a1 = new NabfAgent("agent1"), a2 = new NabfAgent("agent2");
+            Notice n = nb.GetNotices(jobs).First<Notice>();
+
+
+            nb.ApplyToNotice(possibleJobs[0], desirability, a1);
+            int highest = (int)getField(n, true, "_highestDesirabilityForNotice");
+            Assert.AreEqual(desirability, highest);
+            Assert.AreEqual(1, n.AgentsApplied.Count);
+
+            nb.ApplyToNotice(possibleJobs[0], desirability2, a2);
+            highest = (int)getField(n, true, "_highestDesirabilityForNotice");
+            Assert.AreEqual(desirability2, highest);
+            Assert.AreEqual(2, n.AgentsApplied.Count);
+
+
+            nb.UnApplyToNotice(possibleJobs[0], a2);
+            highest = (int)getField(n, true, "_highestDesirabilityForNotice");
+            Assert.AreEqual(desirability, highest);
+            Assert.AreEqual(1, n.AgentsApplied.Count);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+        private object getField(object instance, bool useBase, String name)
+        {
+            Type t;
+            if (useBase)
+                t = instance.GetType().BaseType;
+            else
+                t = instance.GetType();
+
+            FieldInfo f = t.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.IgnoreCase);
+            
+            return f.GetValue(instance);
+        }
         
-        //remove og add af occupy jobs skal have testing for delte områder (se .txt fil)  
 	}
 }
