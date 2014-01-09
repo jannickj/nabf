@@ -4,15 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using XmasEngineController.AI;
-using XmasEngineModel;
 
 namespace NabfProject.AI
 {
-	public class AgentMaster : AgentManager
+	public class AgentConnection : AgentController
 	{
-		p
 
-		protected override Func<KeyValuePair<string, AgentController>> AquireAgentControllerContructor()
+		public override void Start()
 		{
 			throw new NotImplementedException();
 		}
