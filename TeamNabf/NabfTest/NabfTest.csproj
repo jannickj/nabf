@@ -45,6 +45,41 @@
   <ItemGroup>
     <Compile Include="ExampleTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerCommunicationTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
+      <Project>{02121c4a-b1fb-46b8-bde8-c5c6ca28c036}</Project>
+      <Name>JSLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineController\XmasEngineController.csproj">
+      <Project>{0fae1368-42fc-48f7-a82b-58cf276188c1}</Project>
+      <Name>XmasEngineController</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineExtensions\XmasEngineExtensions.csproj">
+      <Project>{f0965ebc-feaf-4445-a43b-998d0a8d249d}</Project>
+      <Name>XmasEngineExtensions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineModel\XmasEngineModel.csproj">
+      <Project>{70abbb17-6a3c-429c-b27e-0f56aacb9f69}</Project>
+      <Name>XmasEngineModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineView\XmasEngineView.csproj">
+      <Project>{99f1f1f4-2df4-4c9e-8a33-5cd538d2c002}</Project>
+      <Name>XmasEngineView</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngine\XmasEngine.csproj">
+      <Project>{935b3fa0-d1de-4395-a69c-8f64159791f9}</Project>
+      <Name>XmasEngine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NabfAgentLogic\NabfAgentLogic.fsproj">
+      <Project>{039ee1f6-4fd5-4dc7-97ed-4d3e5e8b9c20}</Project>
+      <Name>NabfAgentLogic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NabfProject\NabfProject.csproj">
+      <Project>{926590fe-c08e-4f55-8646-cece975b6d74}</Project>
+      <Name>NabfProject</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
