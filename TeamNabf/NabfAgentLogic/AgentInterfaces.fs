@@ -5,21 +5,21 @@ namespace NabfAgentLogic.AgentInterfaces
     open JSLibrary.Data.GenericEvents;
     open System;
 
-    type IJob = 
-        abstract member JobType : string 
-        abstract member ID : int
-        abstract member Value : int
+    type JobID = int
+    type Desirability = int
 
     type IAgentLogic = 
-        abstract member EvaluateJob : IJob -> int * bool
-        abstract member LoadPercepts : IilPerceptCollection -> unit
-        abstract member GetJobs : List<IJob>
-        abstract member LoadJob : IJob
-        abstract member GivenJob : IJob -> unit
+        abstract member EvaluateJob : JobID -> IilAction*bool
+        abstract member HandlePercepts : IilPerceptCollection -> unit
+        abstract member GetJobs : List<JobID*Desirability>
         abstract member Start : unit
-        abstract member GetDecision : IilAction
+        abstract member CurrentDecision : IilAction
         [<CLIEvent>]
-        abstract member JobCreated : IEvent<UnaryValueHandler<IJob>, UnaryValueEvent<IJob>>
+        abstract member JobCreated : IEvent<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>
+        [<CLIEvent>]
+        abstract member JobLoaded : IEvent<UnaryValueHandler<JobID>, UnaryValueEvent<JobID>>
+        [<CLIEvent>]
+        abstract member PerceptsLoaded : IEvent<EventHandler, EventArgs>
         [<CLIEvent>]
         abstract member EvaluationCompleted : IEvent<EventHandler, EventArgs>
         

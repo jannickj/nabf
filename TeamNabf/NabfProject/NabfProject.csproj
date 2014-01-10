@@ -30,6 +30,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,7 +44,7 @@
     <Compile Include="AgentStandbyManager.cs" />
     <Compile Include="AI\AgentConnection.cs" />
     <Compile Include="AI\Client\ClientApplication.cs" />
-    <Compile Include="AI\IilPacketTransmitter.cs" />
+    <Compile Include="AI\XmlPacketTransmitter.cs" />
     <Compile Include="AI\NabfAgent.cs" />
     <Compile Include="AI\AgentMaster.cs" />
     <Compile Include="AI\ServerApplication.cs" />
@@ -82,6 +83,7 @@
       <Name>NabfAgentLogic</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

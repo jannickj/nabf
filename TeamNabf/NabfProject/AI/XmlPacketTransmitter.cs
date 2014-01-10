@@ -10,32 +10,34 @@ using JSLibrary.IiLang.DataContainers;
 
 namespace NabfProject.AI
 {
-	public class IilPacketTransmitter
+	public class XmlPacketTransmitter<TRecieve,TSend> 
+		where TRecieve : IXmlSerializable
+		where TSend : IXmlSerializable
 	{
 		private XmlReader reader;
 		private XmlWriter writer;
 		private XmlSerializer serializerReciever;
 		private XmlSerializer serializerSender;
 
-		public IilPacketTransmitter(XmlReader reader, XmlWriter writer)
+		public XmlPacketTransmitter(XmlReader reader, XmlWriter writer)
 		{
 			
 			this.reader = reader;
 			this.writer = writer;
-			serializerReciever = new XmlSerializer(typeof(IilPerceptCollection));
-			serializerSender = new XmlSerializer(typeof(IilAction));
+			serializerReciever = new XmlSerializer(typeof(TRecieve));
+			serializerSender = new XmlSerializer(typeof(TSend));
 		}
 
-		public IilPerceptCollection DeserializePacket()
+		public TRecieve DeserializePacket()
 		{
 			reader.ReadStartElement("packet");
-			var percepts = (IilPerceptCollection)serializerReciever.Deserialize(reader);
+			var percepts = (TRecieve)serializerReciever.Deserialize(reader);
 			reader.ReadEndElement();
 			return percepts;
 
 		}
 
-		public void SeralizePacket(IilAction action)
+		public void SeralizePacket(TSend action)
 		{
 			writer.WriteStartElement("packet");
 			serializerSender.Serialize(writer, action);

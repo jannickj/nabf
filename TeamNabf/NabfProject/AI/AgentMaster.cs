@@ -4,6 +4,9 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using JSLibrary.IiLang;
+using JSLibrary.IiLang.DataContainers;
 using NabfProject.Actions;
 using XmasEngineController.AI;
 using XmasEngineModel;
@@ -30,8 +33,10 @@ namespace NabfProject.AI
 			{ 
 			
 				Agent agent = new Agent(agentName);
-			
-				AgentConnection connection = new AgentConnection(agent);
+				XmlReader reader = XmlReader.Create(client.GetStream(),new XmlReaderSettings(){ConformanceLevel=ConformanceLevel.Fragment});
+				XmlWriter writer = XmlWriter.Create(client.GetStream(),new XmlWriterSettings(){ConformanceLevel = System.Xml.ConformanceLevel.Fragment});
+				XmlPacketTransmitter<IilAction, IilPerceptCollection> transmitter = new XmlPacketTransmitter<IilAction, IilPerceptCollection>(reader, writer);
+				AgentConnection connection = new AgentConnection(agent,transmitter);
 				this.ActionManager.Queue(new AddStandbyAgentAction(agent));
 				return new KeyValuePair<string,AgentController>(agentName, connection);
 			};
