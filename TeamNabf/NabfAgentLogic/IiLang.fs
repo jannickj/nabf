@@ -1,5 +1,5 @@
 namespace IiLang
-    module IiLang =
+    module IiLangHandler =
         open JSLibrary.IiLang
         open System.Xml.Serialization
 

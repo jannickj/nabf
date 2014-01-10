@@ -44,7 +44,7 @@
     <Compile Include="Graph.fs" />
     <Compile Include="AgentLogic.fsi" />
     <Compile Include="AgentLogic.fs" />
-    <Compile Include="ClassConversionTest.fs" />
+    <Compile Include="IiLang.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
