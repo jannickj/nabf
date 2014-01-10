@@ -5,7 +5,7 @@
 
         type Action = int
 
-        type AgentType =
+        type AgentRole =
             | Saboteur
             | Explorer
             | Repairer
@@ -13,22 +13,30 @@
             | Sentinel
 
         type Agent =
-            {
-                Id          : string;
-                Type        : AgentType;
-                Energy      : int;
-                Health      : int;
-                Strength    : int;
-                VisionRange : int;
+            { Energy      : int
+            ; Health      : int
+            ; MaxEnergy   : int
+            ; MaxHealth   : int
+            ; Name        : string
+            ; Node        : string
+            ; Role        : AgentRole
+            ; Strength    : int
+            ; Team        : string
+            ; VisionRange : int
+            ; Position    : string
             }
 
         type Percept =
-            | EnemySeen of Agent
-            | NodeSeen of Graph.Vertex
+            | EnemySeen      of Agent
+            | VertexSeen     of Graph.Vertex
+            | EdgeSeen       of Graph.Edge
+            | Achievement    of string
+            | SimulationStep of int
 
         type State =
-            {
-                World : Graph;
-                Self : Agent;
-                Enemies : Agent list;
+            { World          : Graph
+            ; Self           : Agent
+            ; Enemies        : Agent list
+            ; Achievements   : Set<string>
+            ; SimulationStep : int
             }

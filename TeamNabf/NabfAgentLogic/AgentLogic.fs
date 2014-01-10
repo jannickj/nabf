@@ -5,7 +5,7 @@
 
         type Action = int
 
-        type AgentType =
+        type AgentRole =
             | Saboteur
             | Explorer
             | Repairer
@@ -13,36 +13,51 @@
             | Sentinel
 
         type Agent =
-            {
-                Id          : string;
-                Type        : AgentType;
-                Energy      : int;
-                Health      : int;
-                Strength    : int;
-                VisionRange : int;
+            { Energy      : int
+            ; Health      : int
+            ; MaxEnergy   : int
+            ; MaxHealth   : int
+            ; Name        : string
+            ; Node        : string
+            ; Role        : AgentRole
+            ; Strength    : int
+            ; Team        : string
+            ; VisionRange : int
+            ; Position    : string
             }
 
         type Percept =
-            | EnemySeen of Agent
-            | NodeSeen of Graph.Vertex
+            | EnemySeen      of Agent
+            | VertexSeen     of Graph.Vertex
+            | EdgeSeen       of Graph.Edge
+            | Achievement    of string
+            | SimulationStep of int
 
         type State =
-            {
-                World : Graph;
-                Self : Agent;
-                Enemies : Agent list;
+            { World          : Graph
+            ; Self           : Agent
+            ; Enemies        : Agent list
+            ; Achievements   : Set<string>
+            ; SimulationStep : int
             }
 
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
             match percept with
-                | EnemySeen enemy -> { state with Enemies = enemy :: state.Enemies }
-        //        | NodeSeen node -> { state with World = 
-                | _ -> state
+                | EnemySeen enemy   
+                    -> { state with Enemies = enemy :: state.Enemies }
+                | VertexSeen vertex 
+                    -> { state with World = addVertex state.World vertex }
+                | EdgeSeen edge          
+                    -> { state with World = addEdge state.World edge }
+                | Achievement achievement 
+                    -> { state with Achievements = state.Achievements.Add achievement }
+                | SimulationStep step
+                    -> { state with SimulationStep = step }
 
         (* let updateState : State -> Percept list -> State *)
-        let updateState : State -> Percept list -> State = 
-            List.fold handlePercept
+        let updateState state = 
+            List.fold handlePercept state
 
         (* chooseAction : State -> Percept list -> Action *)
         let chooseAction currentState percepts =
