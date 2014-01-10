@@ -10,7 +10,7 @@ type GraphTest() =
 
         [<Test>]
         member this.AddVertex_EmptyGraph_GraphWithOneVertex () =
-            let testVertex = { Identifier = "a"; Value = Some 1; Edges = [] }
+            let testVertex = { Identifier = "a"; Value = Some 1; Edges = Set.empty }
             let emptyGraph = Map.empty<string, Vertex>
 
             let expectedGraph = Map.add "a" testVertex Map.empty<string, Vertex> 
@@ -27,15 +27,27 @@ type GraphTest() =
              *  |        /          |/ 
              *  B       B           B
              *)
-            let testVertex = { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] }
+            let testVertex = { Identifier = "c"
+                             ; Value = None
+                             ; Edges = [(None, "a"); (None, "b")] |> Set.ofList 
+                             }
 
-            let initialGraph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] }) 
-                               ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] })
+            let initialGraph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList }) 
+                               ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
                                ] |> Map.ofList
 
-            let expectedGraph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "c"); (None, "b")] }) 
-                                ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a")] })
-                                ; ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] }) 
+            let expectedGraph = [ ("a", { Identifier = "a"
+                                        ; Value = None
+                                        ; Edges = [(None, "c"); (None, "b")] |> Set.ofList 
+                                        }) 
+                                ; ("b", { Identifier = "b"
+                                        ; Value = None
+                                        ; Edges = [(None, "c"); (None, "a")] |> Set.ofList 
+                                        })
+                                ; ("c", { Identifier = "c"
+                                        ; Value = None
+                                        ; Edges = [(None, "a"); (None, "b")] |> Set.ofList 
+                                        }) 
                                 ] |> Map.ofList
 
             let actualGraph = addVertex initialGraph testVertex
@@ -53,13 +65,13 @@ type GraphTest() =
              *)
 
             let testEdge = (None, "a", "b")
-            let initialGraph = [ ("a", {Identifier = "a"; Value = None; Edges = [] })
-                                ; ("b", {Identifier = "b"; Value = None; Edges = [] })
+            let initialGraph = [ ("a", {Identifier = "a"; Value = None; Edges = Set.empty })
+                                ; ("b", {Identifier = "b"; Value = None; Edges = Set.empty })
                                 ] |> Map.ofList
 
-            let expected = [ ("a", {Identifier = "a"; Value = None; Edges = [(None, "b")] })
-                                 ; ("b", {Identifier = "b"; Value = None; Edges = [(None, "a")] })
-                                 ] |> Map.ofList
+            let expected = [ ("a", {Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList })
+                           ; ("b", {Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                           ] |> Map.ofList
              
             let actual = addEdge initialGraph testEdge
             Assert.AreEqual (expected, actual)

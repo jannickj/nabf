@@ -7,25 +7,25 @@
         {
             Identifier : string;
             Value : Option<int>;
-            Edges : DirectedEdge list;
+            Edges : Set<DirectedEdge>;
         }
 
     type Graph = Map<string, Vertex>
 
     let isVertexAdjacentTo identifier vertex = 
-        List.exists (fun (_, toVertex) -> toVertex = identifier) vertex.Edges 
+        Set.exists (fun (_, toVertex) -> toVertex = identifier) vertex.Edges 
 
     let addEdgeToVertex vertexId (edge : DirectedEdge) (graph : Graph) =
         let vertex = graph.[vertexId]
-        let updatedVertex = { vertex with Edges = edge :: vertex.Edges }
+        let updatedVertex = { vertex with Edges = vertex.Edges.Add edge }
         Map.remove vertex.Identifier graph
         |> Map.add vertex.Identifier updatedVertex
 
     let rec updateGraph (vertex : Vertex) (graph : Graph) = 
-        match vertex.Edges with
+        match Set.toList vertex.Edges with
         | (weight, otherVertexId) :: rest -> 
             addEdgeToVertex otherVertexId (weight, vertex.Identifier) graph
-            |> updateGraph { vertex with Edges = rest }
+            |> updateGraph { vertex with Edges = vertex.Edges.Remove (weight, otherVertexId) }
         | [] -> graph
 
     let addVertex graph vertex = 

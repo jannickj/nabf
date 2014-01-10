@@ -7,7 +7,7 @@
         {
             Identifier : string;
             Value : Option<int>;
-            Edges : DirectedEdge list;
+            Edges : Set<DirectedEdge>;
         }
 
     type Graph = Map<string, Vertex>
