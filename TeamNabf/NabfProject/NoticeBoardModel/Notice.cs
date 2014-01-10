@@ -14,12 +14,29 @@ namespace NabfProject.NoticeBoardModel
         public int Id { get; set; }
 
         public int HighestDesirabilityForNotice = -1;
+        public int HighestAverageDesirabilityForNotice = -1;
         public List<NabfAgent> AgentsApplied = new List<NabfAgent>();
+        private List<NabfAgent> _topDesireAgents = new List<NabfAgent>();
         public Dictionary<NabfAgent, int> AgentsToDesirability = new Dictionary<NabfAgent, int>(); 
 
         public Notice(int id)
         {
             Id = id;
+        }
+
+        public List<NabfAgent> GetTopDesireAgents()
+        {
+            return this._topDesireAgents.ToList();
+        }
+
+        public void AddToTopDesireAgents(NabfAgent toAdd)
+        {
+            _topDesireAgents.Add(toAdd);
+        }
+
+        public void AddRangeToTopDesireAgents(ICollection<NabfAgent> toAdd)
+        {
+            _topDesireAgents.AddRange(toAdd);
         }
 
         public int CompareTo(object obj)
@@ -60,12 +77,33 @@ namespace NabfProject.NoticeBoardModel
             AgentsToDesirability.Add(a, desirability);
             AgentsApplied.Add(a);
         }
-        public void UnApply(NabfAgent a)
+        public void UnApply(NabfAgent a, NoticeBoard nb)
         {
             int des = -2, newMaxDes = -1;
             AgentsToDesirability.TryGetValue(a, out des);
             AgentsToDesirability.Remove(a);
             AgentsApplied.Remove(a);
+            bool b = _topDesireAgents.Remove(a);
+            int lowestDesire;
+            SortedList<int, NabfAgent> topDesires;
+            List<NabfAgent> agentsToAdd;
+            if (b)
+            {
+                lowestDesire = nb.FindTopDesiresForNotice(this, out topDesires, out agentsToAdd);
+                if (lowestDesire != -1)
+                {
+                    b = nb.RemoveJob(this);
+                    if (b)
+                    {
+                        _topDesireAgents.Clear();
+                        _topDesireAgents.AddRange(agentsToAdd);
+                        HighestAverageDesirabilityForNotice = topDesires.Keys.Sum() / topDesires.Keys.Count;
+                        nb.AddJob(this);//duplicate / false jobs are added here
+                    }
+                }
+                else
+                    nb.RemoveJob(this);
+            }
             if (HighestDesirabilityForNotice == des)
             {
                 foreach (int i in AgentsToDesirability.Values)

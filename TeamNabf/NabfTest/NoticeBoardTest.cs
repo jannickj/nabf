@@ -228,64 +228,150 @@ namespace NabfTest
 
             List<Node> testNodes = new List<Node>() { new Node(), new Node() };
 
-            Notice no = new DisruptJob(1, testNodes, ID++), no2 = new AttackJob(1, testNodes, ID++);
+            Notice no = new DisruptJob(1, testNodes, ID++), no2 = new AttackJob(1, testNodes, ID++), no3 = new OccupyJob(2, testNodes, ID++);
             nb.AddNotice(no);
             nb.AddNotice(no2);
-            List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt, NoticeBoard.JobType.Attack };
+            nb.AddNotice(no3);
+            //List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt, NoticeBoard.JobType.Attack };
+            //List<NoticeBoard.JobType> jobs2 = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt, NoticeBoard.JobType.Attack, NoticeBoard.JobType.Occupy };
             
-            int desirability = 1, desirability2 = 99;
-            NabfAgent a1 = new NabfAgent("agent1"), a2 = new NabfAgent("agent2");
+            //int desirability = 1, desirability2 = 100, desirability3 = 50;
+            NabfAgent a1 = new NabfAgent("agent1"), a2 = new NabfAgent("agent2"), a3 = new NabfAgent("agent3"), a4 = new NabfAgent("agent4");
 
 
-            nb.ApplyToNotice(no, desirability, a1);
-            nb.ApplyToNotice(no2, desirability2, a1);
-            nb.ApplyToNotice(no, desirability2, a2);
-            nb.ApplyToNotice(no2, desirability, a2);
+            nb.ApplyToNotice(no, 1, a1);
+            nb.ApplyToNotice(no2, 50, a1);
+            nb.ApplyToNotice(no, 50, a2);
+            nb.ApplyToNotice(no2, 1, a2);
 
-            int maxDesirabilityForFirstNotice = -1, maxDesirabilityForSecondNotice = -1;
-            int agentsOnFirstNotice = -1, agentsOnSecondNotice = -1;
-            NabfAgent agentOnFirstNotice = null, agentOnSecondNotice = null;
+            nb.ApplyToNotice(no, 1, a3);
+
+            nb.ApplyToNotice(no3, 50, a3);
+            nb.ApplyToNotice(no3, 100, a4);
+
+            int maxDesirabilityForFirstNotice = -1, maxDesirabilityForSecondNotice = -1, maxDesirabilityForThirdNotice = -1;
+            int agentsAppliedToFirstNotice = -1, agentsAppliedToSecondNotice = -1, agentsAppliedToThirdNotice = -1;
+            NabfAgent agentOnFirstNotice1 = null, agentOnFirstNotice2 = null, agentOnSecondNotice = null, agentOnThirdNotice = null;
+            int i = 0;
+            Notice firstNotice = null, secondNotice = null, thirdNotice = null;
             nb.NoticeIsReadyToBeExecutedEvent += (sender, evt) =>
             {
                 evtTriggered++;
-                if (evt.Notice.ChildTypeIsEqualTo(no))
+                i++;
+                if (i == 1)
                 {
-                    agentsOnFirstNotice = evt.Notice.AgentsApplied.Count;
-                    maxDesirabilityForFirstNotice = evt.Notice.HighestDesirabilityForNotice;
-                    agentOnFirstNotice = evt.Agents[0];
+                    firstNotice = evt.Notice;
+                    agentsAppliedToFirstNotice = evt.Notice.AgentsApplied.Count;
+                    maxDesirabilityForFirstNotice = evt.Notice.HighestAverageDesirabilityForNotice;
+                    agentOnFirstNotice1 = evt.Agents[0];
+                    agentOnFirstNotice2 = evt.Agents[1];
                 }
-                if (evt.Notice.ChildTypeIsEqualTo(no2))
+                if (i == 2)
                 {
-                    agentsOnSecondNotice = evt.Notice.AgentsApplied.Count;
-                    maxDesirabilityForSecondNotice = evt.Notice.HighestDesirabilityForNotice;
+                    secondNotice = evt.Notice;
+                    agentsAppliedToSecondNotice = evt.Notice.AgentsApplied.Count;
+                    maxDesirabilityForSecondNotice = evt.Notice.HighestAverageDesirabilityForNotice;
                     agentOnSecondNotice = evt.Agents[0];
+                }
+                if (i == 3)
+                {
+                    thirdNotice = evt.Notice;
+                    agentsAppliedToThirdNotice = evt.Notice.AgentsApplied.Count;
+                    maxDesirabilityForThirdNotice = evt.Notice.HighestAverageDesirabilityForNotice;
+                    agentOnThirdNotice = evt.Agents[0];
                 }
             };
             nb.FindJobsForAgents();
 
-            Assert.AreEqual(2, evtTriggered);
-            Assert.AreEqual(99, maxDesirabilityForFirstNotice);
-            Assert.AreEqual(99, maxDesirabilityForSecondNotice);
-            Assert.AreEqual(2, agentsOnFirstNotice);
-            Assert.AreEqual(2, agentsOnSecondNotice);
-            Assert.AreEqual(a1.Name, agentOnSecondNotice.Name);
-            Assert.AreEqual(a2.Name, agentOnFirstNotice.Name);     
+            Assert.AreEqual(3, evtTriggered);
+            Assert.IsTrue(firstNotice.ChildTypeIsEqualTo(no3));
+            Assert.IsTrue(secondNotice.ChildTypeIsEqualTo(no2) || secondNotice.ChildTypeIsEqualTo(no));
+            Assert.IsTrue(thirdNotice.ChildTypeIsEqualTo(no2) || thirdNotice.ChildTypeIsEqualTo(no));
+            Assert.AreEqual(75, maxDesirabilityForFirstNotice);
+            Assert.AreEqual(50, maxDesirabilityForSecondNotice);
+            Assert.AreEqual(50, maxDesirabilityForThirdNotice);
+            //Assert.AreEqual(2, agentsAppliedToFirstNotice);
+            //Assert.AreEqual(3, agentsAppliedToSecondNotice);
+            //Assert.AreEqual(2, agentsAppliedToThirdNotice);
+            Assert.AreEqual(a3.Name, agentOnFirstNotice1.Name);
+            Assert.AreEqual(a4.Name, agentOnFirstNotice2.Name);
+            Assert.AreEqual(a2.Name, agentOnSecondNotice.Name);
+            Assert.AreEqual(a1.Name, agentOnThirdNotice.Name);    
         }
 
         [Test]
         public void FindJobsForAgentsSomeAgentsIsPreferedForMultipleMultiJobs_AllJobsFilledAtStart_Success()
         {
-            Assert.IsTrue(true);
-            return;
-            bool evtTriggered = false;
+            #region setup
+            List<Node> nodes = new List<Node>() { new Node(), new Node(), new Node() };
+
+            NabfAgent agent1 = new NabfAgent("a1"), agent2 = new NabfAgent("a2"), agent3 = new NabfAgent("a3"), 
+                agent4 = new NabfAgent("a4"), agent5 = new NabfAgent("a5"), agent6 = new NabfAgent("a6");
+
+            Notice notice1 = new OccupyJob(2, nodes, ID++), notice2 = new DisruptJob(2, nodes, ID++), notice3 = new AttackJob(2, nodes, ID++), 
+                notice4 = new RepairJob(nodes, ID++);
+
+            nb.AddNotice(notice1); nb.AddNotice(notice2); nb.AddNotice(notice3); nb.AddNotice(notice4);
+            #endregion
+
+            #region agent desirability
+            nb.ApplyToNotice(notice1, 110, agent1);
+            nb.ApplyToNotice(notice2, 10, agent1);
+            nb.ApplyToNotice(notice3, 11, agent1);
+            nb.ApplyToNotice(notice4, 1111, agent1);
+
+            nb.ApplyToNotice(notice1, 120, agent2);
+            nb.ApplyToNotice(notice2, 20, agent2);
+            nb.ApplyToNotice(notice3, 22, agent2);
+            nb.ApplyToNotice(notice4, 2222, agent2);
+
+            nb.ApplyToNotice(notice1, 130, agent3);
+            nb.ApplyToNotice(notice2, 30, agent3);
+            nb.ApplyToNotice(notice3, 33, agent3);
+
+            nb.ApplyToNotice(notice1, 140, agent4);
+            nb.ApplyToNotice(notice2, 40, agent4);
+            nb.ApplyToNotice(notice3, 44, agent4);
+
+            nb.ApplyToNotice(notice1, 150, agent5);
+            nb.ApplyToNotice(notice2, 50, agent5);
+            nb.ApplyToNotice(notice3, 55, agent5);
+
+            nb.ApplyToNotice(notice1, 99999999, agent6);
+            nb.ApplyToNotice(notice2, 99999999, agent6);
+            nb.ApplyToNotice(notice3, 99999999, agent6);
+            #endregion
+
+            int evtTriggered = 0;
+            List<Notice> notices = new List<Notice>();
+            List<List<NabfAgent>> listOfListOfAgents = new List<List<NabfAgent>>();
+            List<int> averageDesires = new List<int>();
             nb.NoticeIsReadyToBeExecutedEvent += (sender, evt) =>
             {
-                evtTriggered = true;
+                notices.Add(evt.Notice);
+                listOfListOfAgents.Add(evt.Agents);
+                averageDesires.Add(evt.Notice.HighestAverageDesirabilityForNotice);
 
+                evtTriggered++;
             };
             nb.FindJobsForAgents();
 
-            Assert.IsTrue(evtTriggered);
+            Assert.AreEqual(3, evtTriggered);
+
+            Assert.AreEqual(notice1, notices[0]);
+            //Assert.AreEqual(0, notices);
+            Assert.AreEqual(notice4, notices[1]);
+            Assert.AreEqual(notice3, notices[2]);
+
+            Assert.IsTrue(listOfListOfAgents[0][0].Name == agent6.Name || listOfListOfAgents[0][0].Name == agent5.Name);
+            Assert.IsTrue(listOfListOfAgents[0][1].Name == agent6.Name || listOfListOfAgents[0][1].Name == agent5.Name);
+            Assert.AreEqual(listOfListOfAgents[1][0].Name, agent2.Name);
+            Assert.IsTrue(listOfListOfAgents[2][0].Name == agent4.Name || listOfListOfAgents[2][0].Name == agent3.Name);
+            Assert.IsTrue(listOfListOfAgents[2][1].Name == agent4.Name || listOfListOfAgents[2][1].Name == agent3.Name);
+
+            Assert.AreEqual((99999999 + 150) / 2, averageDesires[0]);
+            Assert.AreEqual(2222, averageDesires[1]);
+            Assert.AreEqual((44 + 33) / 2, averageDesires[2]);
 
         }
 
