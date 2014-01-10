@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace NabfProject.ServerMessages
 {
-    public class AuthenticationMessage : ServerMessage
+    public class AuthenticationRequestMessage : SendMessage
     {
         private string username;
         private string password;
 
-        public AuthenticationMessage(string username, string password)
+        public AuthenticationRequestMessage(string username, string password)
         {
             this.username = username;
             this.password = password;

@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 namespace NabfProject.ServerMessages
 {
     [XmlRoot("message")]
-    public abstract class ServerMessage : IXmlSerializable 
+    public abstract class SendMessage : IXmlSerializable 
     {
         protected abstract string MessageType { get; }
 

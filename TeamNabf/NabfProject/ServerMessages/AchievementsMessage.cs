@@ -1,0 +1,32 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace NabfProject.ServerMessages
+{
+    public class AchievementsMessage : InternalReceiveMessage
+    {
+        private List<InternalReceiveMessage> achievementList = new List<InternalReceiveMessage>();
+
+        public List<InternalReceiveMessage> AchievementList
+        {
+            get { return achievementList; }
+        }
+
+        public override void ReadXml(System.Xml.XmlReader reader)
+        {
+            reader.MoveToContent();
+            reader.Read();
+
+            while (reader.LocalName != "achievements")
+            {                
+                var message = ServerMessageFactory.Instance.ConstructMessage(reader.LocalName);
+                message.ReadXml(reader);
+                achievementList.Add(message);
+                reader.Read();
+            } 
+        }
+    }
+}
