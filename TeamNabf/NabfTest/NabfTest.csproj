@@ -82,12 +82,6 @@
       <Name>NabfProject</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\NabfProject\NabfProject.csproj">
-      <Project>{926590fe-c08e-4f55-8646-cece975b6d74}</Project>
-      <Name>NabfProject</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

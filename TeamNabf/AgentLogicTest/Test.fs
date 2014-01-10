@@ -2,7 +2,7 @@
 namespace AgentLogicTest
 open System
 open NUnit.Framework
-open AgentLogic
+open NabfAgentLogic.AgentLogic
 open Graph
 
 [<TestFixture>]

@@ -1,36 +1,34 @@
-﻿
-module AgentLogic
+﻿namespace NabfAgentLogic
+    module AgentLogic=
 
-    open Graph
+        open Graph
 
-    type Action = int
+        type Action = int
 
-    type AgentType =
-        | Saboteur
-        | Explorer
-        | Repairer
-        | Inspector
-        | Sentinel
+        type AgentType =
+            | Saboteur
+            | Explorer
+            | Repairer
+            | Inspector
+            | Sentinel
 
-    type Agent =
-        {
-            Id          : string;
-            Type        : AgentType;
-            Energy      : int;
-            Health      : int;
-            Strength    : int;
-            VisionRange : int;
-        }
+        type Agent =
+            {
+                Id          : string;
+                Type        : AgentType;
+                Energy      : int;
+                Health      : int;
+                Strength    : int;
+                VisionRange : int;
+            }
 
-    type Percept =
-        | EnemySeen of Agent
-        | NodeSeen of Graph.Vertex
+        type Percept =
+            | EnemySeen of Agent
+            | NodeSeen of Graph.Vertex
 
-    type State =
-        {
-            World : Graph;
-            Self : Agent;
-            Enemies : Agent list;
-        }
-
-    val multify : int -> int -> int
+        type State =
+            {
+                World : Graph;
+                Self : Agent;
+                Enemies : Agent list;
+            }

@@ -45,6 +45,7 @@
     <Compile Include="AgentLogic.fsi" />
     <Compile Include="AgentLogic.fs" />
     <Compile Include="IiLang.fs" />
+    <Compile Include="AgentInterfaces.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
