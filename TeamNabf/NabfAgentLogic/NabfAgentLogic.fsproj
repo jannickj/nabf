@@ -37,12 +37,14 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Graph.fsi" />
     <Compile Include="Graph.fs" />
     <Compile Include="AgentLogic.fsi" />
     <Compile Include="AgentLogic.fs" />
+    <Compile Include="ClassConversionTest.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -55,4 +57,10 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
+      <Project>{02121C4A-B1FB-46B8-BDE8-C5C6CA28C036}</Project>
+      <Name>JSLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>
