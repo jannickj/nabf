@@ -1,6 +1,8 @@
 ﻿namespace NabfAgentLogic
     module AgentLogic=
-
+        
+        open JSLibrary.IiLang
+        open JSLibrary.IiLang.DataContainers
         open Graph
 
         type Action = int
@@ -32,3 +34,12 @@
                 Self : Agent;
                 Enemies : Agent list;
             }
+
+        type Job = int
+
+
+        val chooseAction : State -> Action
+        val updateState : State*Percept list -> State
+
+        val parseIilPercepts : IilPerceptCollection -> Percept list
+        val buildIilAction : Action -> IilAction

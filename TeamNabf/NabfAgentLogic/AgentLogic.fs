@@ -2,8 +2,12 @@
     module AgentLogic=
         open System
         open Graph
+        open JSLibrary.IiLang
+        open JSLibrary.IiLang.DataContainers
 
         type Action = int
+
+        type Job = int
 
         type AgentType =
             | Saboteur
@@ -41,10 +45,16 @@
                 | _ -> state
 
         (* let updateState : State -> Percept list -> State *)
-        let updateState : State -> Percept list -> State = 
-            List.fold handlePercept
+        let updateState state percepts = 
+            List.fold handlePercept state percepts
 
         (* chooseAction : State -> Percept list -> Action *)
-        let chooseAction currentState percepts =
-            let newState = updateState currentState percepts
+        let chooseAction (currentState:State) =
+            //let newState = updateState currentState percepts
             0
+
+        let buildIilAction (action:Action) =
+            new IilAction "some action"
+
+        let parseIilPercepts (perceptCollection:IilPerceptCollection) =
+            List<Percept>.Empty
