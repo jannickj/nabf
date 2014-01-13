@@ -75,3 +75,32 @@ type GraphTest() =
              
             let actual = addEdge initialGraph testEdge
             Assert.AreEqual (expected, actual)
+
+        [<Test>]
+        member this.Join_TwoGraphsWithOneVertexInCommon_OneGraphWithoutDuplicates () =
+            
+            (*
+             *  A           D          A   D
+             *   \         /            \ /
+             *    B   +   B       =      B
+             *   /         \            / \ 
+             *  C           E          C   E
+             *)
+
+            let graph1 = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList}); 
+                           ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a")] |> Set.ofList}); 
+                           ("c", { Identifier = "c"; Value = None; Edges = [(None, "b")] |> Set.ofList}) ] |> Map.ofList
+
+            let graph2 = [ ("d", { Identifier = "d"; Value = None; Edges = [(None, "b")] |> Set.ofList}); 
+                           ("b", { Identifier = "b"; Value = None; Edges = [(None, "e"); (None, "d")] |> Set.ofList}); 
+                           ("e", { Identifier = "e"; Value = None; Edges = [(None, "b")] |> Set.ofList}) ] |> Map.ofList
+
+            let expectedGraph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList}); 
+                                  ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a"); (None, "e"); (None, "d")] |> Set.ofList}); 
+                                  ("c", { Identifier = "c"; Value = None; Edges = [(None, "b")] |> Set.ofList}); 
+                                  ("d", { Identifier = "d"; Value = None; Edges = [(None, "b")] |> Set.ofList}); 
+                                  ("e", { Identifier = "e"; Value = None; Edges = [(None, "b")] |> Set.ofList}) ] |> Map.ofList
+
+            let actualGraph = join graph1 graph2
+
+            Assert.AreEqual(expectedGraph,actualGraph)

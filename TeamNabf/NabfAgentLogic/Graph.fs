@@ -33,7 +33,33 @@
 
     let addEdge (graph : Graph) (weight, vertexId1, vertexId2) =
         addEdgeToVertex vertexId1 (weight, vertexId2) graph
-        |> addEdgeToVertex vertexId2 (weight, vertexId1)
+        |> addEdgeToVertex vertexId2 (weight, vertexId1)        
 
-    let join (graph : Graph) (graph' : Graph) = 
-        Map.empty<string, Vertex> : Graph
+    let contains l elem = List.exists ((=) elem) l
+
+    let containsId id l = List.exists (fun elem -> elem.Identifier = id) l
+
+    let getElem id l = List.find (fun elem -> elem.Identifier = id) l
+
+    let rec joinLists (l : Vertex List) (l' : Vertex List) =
+        match l with
+        | [] -> l'
+        | head :: tail -> 
+          if (containsId head.Identifier l') then 
+            let (e : Vertex) = getElem head.Identifier l'
+            let newEdgeSet = Set.union head.Edges e.Edges
+            let newList = List.filter ((<>) e) l'
+            joinLists tail ({Identifier=head.Identifier;Value=head.Value;Edges=newEdgeSet}::newList)
+          else
+            joinLists tail (head::l')
+
+    let rec addToMap l (m : Map<string, Vertex>) =
+        match l with
+        | [] -> m
+        | head :: tail -> addToMap tail (m.Add (head.Identifier, head))
+
+    let listFromGraph (graph : Graph) = List.map snd <| Map.toList graph
+              
+    let join (graph : Graph) (graph' : Graph) =
+        let joinedList = joinLists (listFromGraph graph) (listFromGraph graph')
+        (addToMap joinedList Map.empty<string, Vertex>) : Graph
