@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NabfProject.ServerMessages;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,19 +12,29 @@ namespace NabfProject.AI
     public class ServerCommunication
     {
         private XmlWriter stream;
-        private XmlSerializer xmlSer;
+        private XmlSerializer xmlSerSend;
+        private XmlReader reader;
+        private XmlSerializer xmlSerReceive;
 
-        public ServerCommunication(XmlWriter stream, XmlSerializer xmlSer)
+        public ServerCommunication(XmlWriter stream, XmlReader reader, XmlSerializer xmlSerSend, XmlSerializer xmlSerReceive)
         {
             // TODO: Complete member initialization
             this.stream = stream;
-            this.xmlSer = xmlSer;
+            this.xmlSerSend = xmlSerSend;
+            this.reader = reader;
+            this.xmlSerReceive = xmlSerReceive;
         }
         
-        public void SendMessage(ServerMessages.ServerMessage message)
+        public void SendMessage(ServerMessages.SendMessage message)
         {
             stream.WriteStartDocument(false);
-            xmlSer.Serialize(stream, message);
+            xmlSerSend.Serialize(stream, message);
+        }
+
+        public ServerMessages.ReceiveMessage ReceiveMessage()
+        {
+            return (ReceiveMessage) xmlSerReceive.Deserialize(reader);
+
         }
     }
 }
