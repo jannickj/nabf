@@ -17,7 +17,7 @@ module DijkstraTest =
                                         ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) ] |> Map.ofList
                 let correctPath = Some ["c"]
 
-                let actualPath = None
+                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["c"] graph
 
                 Assert.AreEqual (correctPath, actualPath)
 
@@ -29,7 +29,7 @@ module DijkstraTest =
                                         ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) ] |> Map.ofList
                 let correctPath = Some []
 
-                let actualPath = None
+                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["a"] graph
 
                 Assert.AreEqual (correctPath, actualPath)
 
@@ -54,15 +54,17 @@ module DijkstraTest =
                //     /            \
                //    A-------D------E
 
-                let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "e"); (None, "b")] |> Set.ofList}); 
+                let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b"); (None, "d")] |> Set.ofList}); 
                                         ("b", { Identifier = "b"; Value = None; Edges = [(None, "a"); (None, "c")] |> Set.ofList}); 
-                                        ("c", { Identifier = "c"; Value = None; Edges = [(None, "b"); (None, "d")] |> Set.ofList}); 
+                                        ("c", { Identifier = "c"; Value = None; Edges = [(None, "b"); (None, "e")] |> Set.ofList}); 
                                         ("d", { Identifier = "d"; Value = None; Edges = [(None, "a"); (None, "e")] |> Set.ofList}); 
                                         ("e", { Identifier = "e"; Value = None; Edges = [(None, "c"); (None, "d")] |> Set.ofList}); ] |> Map.ofList
 
                 let correctOutput = Some ["d","e"]
 
-                let actualOutput = None
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["e"] graph
+
+                printfn "path = %A" <| Dijkstra.dijkstra graph.["a"] graph.["e"] graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
@@ -97,7 +99,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["d","e","f","g"]
 
-                let actualOutput = None
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
             
@@ -132,7 +134,7 @@ module DijkstraTest =
 
                 let correctOutput1 = Some ["c","d"]
 
-                let actualOutput1 = None
+                let actualOutput1 = Dijkstra.dijkstra graph1.["a"] graph1.["d"] graph1
 
                 Assert.AreEqual (correctOutput1,actualOutput1)
 
@@ -162,8 +164,8 @@ module DijkstraTest =
                                         ("c", { Identifier = "c"; Value = None; Edges = [(Some 2, "a"); (Some 2, "d")] |> Set.ofList}); 
                                         ("d", { Identifier = "d"; Value = None; Edges = [(Some 1, "b"); (Some 2, "c")] |> Set.ofList}); ] |> Map.ofList
 
-                let correctOutput1 = Some ["b","d"]
+                let correctOutput = Some ["b","d"]
 
-                let actualOutput1 = None
+                let actualOutput = Dijkstra.dijkstra graph2.["a"] graph2.["d"] graph2
 
-                Assert.AreEqual (correctOutput1,actualOutput1)
+                Assert.AreEqual (correctOutput, actualOutput)
