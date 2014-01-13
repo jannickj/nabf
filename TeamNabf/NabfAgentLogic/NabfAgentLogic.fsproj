@@ -42,7 +42,6 @@
   <ItemGroup>
     <Compile Include="Graph.fsi" />
     <Compile Include="Graph.fs" />
-    <Compile Include="AgentLogic.fsi" />
     <Compile Include="AgentLogic.fs" />
     <Compile Include="IiLang.fs" />
     <Compile Include="AgentInterfaces.fs" />

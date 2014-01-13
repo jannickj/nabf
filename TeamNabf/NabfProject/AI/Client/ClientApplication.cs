@@ -32,8 +32,9 @@ namespace NabfProject.AI.Client
 
 			logic.EvaluationCompleted += logic_EvaluationCompleted;
 			logic.JobCreated += logic_JobCreated;
-			logic.PerceptsLoaded += logic_PerceptsLoaded;
-			logic.JobLoaded += logic_JobLoaded;
+			//logic.PerceptsLoaded += logic_PerceptsLoaded;
+			//logic.JobLoaded += logic_JobLoaded;
+			
 		}
 
 		void logic_JobLoaded(object sender, JSLibrary.Data.GenericEvents.UnaryValueEvent<int> evt)
@@ -101,12 +102,12 @@ namespace NabfProject.AI.Client
 		{
 			StartThread(() =>
 				{
-					var info = this.logic.EvaluateJob(jobid);
-					if (info.Item2)
-					{
+					//var info = this.logic.EvaluateJob(jobid);
+					//if (info.Item2)
+					//{
 						
-						this.AddPacket(info.Item1);
-					}
+					//	this.AddPacket(info.Item1);
+					//}
 
 				});
 		}
