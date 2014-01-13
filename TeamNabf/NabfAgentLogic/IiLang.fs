@@ -14,20 +14,23 @@ namespace IiLang
 
         type PerceptCollection = Data list
 
-        let rec buildIil (data : Element) : IilElement = 
+        let rec buildIil (data : Element) : IilParameter = 
             match data with
-            | ParameterList ls -> 
-                new IilParameterList (List.map buildIil ls |> List.toArray) 
-                :> IilElement
+            | ParameterList ls ->
+//                new IilParameterList ( Seq.append Seq.empty (new IilIdentifier (str)) ) 
+                let children = List.map buildIil ls |> List.toSeq<IilParameter>
+                new IilParameterList (children) 
+                :> IilParameter
             | Function (name, ls) -> 
-                new IilFunction (name, List.map buildIil ls |> List.toArray) 
-                :> IilElement
+                let children = List.map buildIil ls |> List.toSeq<IilParameter>
+                new IilFunction (name, children)
+                :> IilParameter
             | Numeral num -> 
                 new IilNumeral (num) 
-                :> IilElement
+                :> IilParameter
             | Identifier str -> 
                 new IilIdentifier (str) 
-                :> IilElement
+                :> IilParameter
 
         let rec evalIil (iil : IilParameter) = 
             match iil with
