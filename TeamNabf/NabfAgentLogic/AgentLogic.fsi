@@ -6,6 +6,8 @@
         open Graph
 
         type Action = int
+        type JobID = int
+        type Desirability = int
 
         type AgentType =
             | Saboteur
@@ -39,7 +41,11 @@
 
 
         val chooseAction : State -> Action
-        val updateState : State*Percept list -> State
+        val updateState : State -> Percept list -> State
+        val generateJobs : State -> Job List -> Job List
+        val generateActions : State -> Action List
+
+        val actionDesirability : State -> Action -> Desirability
 
         val parseIilPercepts : IilPerceptCollection -> Percept list
         val buildIilAction : Action -> IilAction

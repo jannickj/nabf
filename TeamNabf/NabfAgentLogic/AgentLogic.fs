@@ -7,6 +7,8 @@
 
         type Action = int
 
+        type JobID = int
+        type Desirability = int
         type Job = int
 
         type AgentType =
@@ -48,6 +50,8 @@
         let updateState state percepts = 
             List.fold handlePercept state percepts
 
+  
+
         (* chooseAction : State -> Percept list -> Action *)
         let chooseAction (currentState:State) =
             //let newState = updateState currentState percepts
@@ -58,3 +62,12 @@
 
         let parseIilPercepts (perceptCollection:IilPerceptCollection) =
             List<Percept>.Empty
+
+        let generateJobs  (state:State) (jobs:Job list) = 
+            List<Job>.Empty
+
+        let generateActions (state:State) =
+            List<Action>.Empty
+
+        let actionDesirability (state:State) (action:Action) =
+            0

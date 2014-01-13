@@ -13,6 +13,7 @@ using JSLibrary.IiLang.Parameters;
 using NabfAgentLogic.AgentInterfaces;
 using System.Collections.Concurrent;
 using Microsoft.FSharp.Collections;
+using NabfAgentLogic;
 
 namespace NabfProject.AI.Client
 {

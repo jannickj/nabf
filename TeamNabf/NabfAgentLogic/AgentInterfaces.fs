@@ -4,9 +4,9 @@ namespace NabfAgentLogic.AgentInterfaces
     open JSLibrary.IiLang.DataContainers;
     open JSLibrary.Data.GenericEvents;
     open System;
+    open NabfAgentLogic.AgentLogic
 
-    type JobID = int
-    type Desirability = int
+    
 
     type IAgentLogic = 
         abstract member EvaluateJob : JobID -> IilAction*bool
