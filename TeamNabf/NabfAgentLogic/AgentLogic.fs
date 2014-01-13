@@ -59,7 +59,8 @@
 
         type ServerData = 
             | PerceptCollection of Percept list
-            | JobCollection of Job list
+            | NewJobs of Job list
+            | AcceptedJob of JobID
             | SimulationEnd
 
         type State =
@@ -98,6 +99,9 @@
         let buildIilAction (action:Action) =
             new IilAction "some action"
 
+        let buildJobAccept (job:Job) =
+            new IilAction "some action"
+
         let parseIilPercepts (perceptCollection:IilPerceptCollection) =
             PerceptCollection (List<Percept>.Empty)
 
@@ -109,9 +113,13 @@
 
         let actionDesirability (state:State) (action:Action) =
             0
-
+        let actionDesirabilityBasedOnJob (state:State) (oldDesirability,action:Action) (job:Job) =
+            0
         let generateJob (jt:JobType) (s:State) (knownJobs:Job list)  =
             option<Job>.None
 
         let buildJob (job:Job) = 
             new IilAction "some action"
+        let decideJob (job:Job) =
+            let d:Desirability = 1
+            d

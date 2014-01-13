@@ -44,11 +44,11 @@ namespace NabfProject.AI.Client
 
 		void logic_PerceptsLoaded(object sender, EventArgs e)
 		{
-			var jobsToEval = logic.GetJobs;
-			foreach (var job in jobsToEval)
-			{
-				EvaluateJob(job.Item1);
-			}
+            //var jobsToEval = logic.GetJobs;
+            //foreach (var job in jobsToEval)
+            //{
+            //    EvaluateJob(job.Item1);
+            //}
 		}
 
 		void logic_JobCreated(object sender, JSLibrary.Data.GenericEvents.UnaryValueEvent<IilAction> evt)
