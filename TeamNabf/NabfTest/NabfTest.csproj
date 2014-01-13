@@ -46,6 +46,7 @@
     <Compile Include="NoticeBoardTest.cs" />
     <Compile Include="ExampleTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerApplicationTest.cs" />
     <Compile Include="ServerCommunicationTest.cs" />
   </ItemGroup>
   <ItemGroup>
