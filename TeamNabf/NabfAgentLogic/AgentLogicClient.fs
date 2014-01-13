@@ -16,6 +16,8 @@
         [<DefaultValue>] val mutable private localActions : Action List
         [<DefaultValue>] val mutable private decidedActions : List<Action*Desirability>
         
+        let mutable simEnded = false
+
         //Parallel helpers
         let stopDeciders = new CancellationTokenSource()
         let actionDeciderLock = new Object()
@@ -49,7 +51,9 @@
                 match data with
                 | JobCollection jobs -> ()
                     
-                | SimulationEnd -> ()              
+                | SimulationEnd -> 
+                    SimulationEndedEvent.Trigger(this, new EventArgs())
+                    ()              
                 | PerceptCollection percepts ->
                     this.BeliefData <- updateState this.BeliefData percepts
                     this.ReEvaluate()
