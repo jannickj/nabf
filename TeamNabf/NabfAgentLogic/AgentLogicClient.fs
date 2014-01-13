@@ -80,7 +80,27 @@
             stopDeciders.Cancel()
             simEnded <- true
 
-        
+        member private this.generateNewJobs() = 
+            let jobTypes = Enum.GetValues(typeof<JobType>)
+            let rec jobGenFunc jobtype state knownJobs =
+                let jobopt = generateJob jobtype state knownJobs
+                match jobopt with
+                | Some job ->
+                    JobCreatedEvent.Trigger (this, new UnaryValueEvent<IilAction>(buildJob job)) 
+                    jobGenFunc jobtype state (job::knownJobs)                            
+                | None -> ()
+
+            let jobTypeList = List.ofSeq (jobTypes.Cast<JobType>())
+            let knownjobs jobtype =List.filter (fun ((_, _, jt), _) -> jt = jobtype) this.KnownJobs
+            this.asyncCalculationMany (fun jobType -> jobGenFunc jobType this.BeliefData (knownjobs jobType) ) jobTypeList stopDeciders.Token
+
+        member private this.evaluateJob job =
+            let desire = decideJob(job)
+            let (_,maxAction) = List.maxBy (fun (_,desire ) -> desire) this.decidedActions
+            let maxCur = Math.Max(lastHighestDesire,maxAction)
+            if maxCur < desire then
+                JobDesiredEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildJobAccept job))
+                () 
         member private this.addDesiredAction (action,desire) =
             lock actionDeciderLock (fun () -> 
                 let value = List.tryFind (fun (a,d) -> a = action) this.decidedActions
@@ -108,14 +128,7 @@
                 match data with
                 | NewJobs jobs -> 
                     lock knonwJobsLock (fun () -> this.KnownJobs <- jobs@this.KnownJobs)
-                    let jobCalc job =
-                        let desire = decideJob(job)
-                        let (_,maxAction) = List.maxBy (fun (_,desire ) -> desire) this.decidedActions
-                        let maxCur = Math.Max(lastHighestDesire,maxAction)
-                        if maxCur < desire then
-                            JobDesiredEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildJobAccept job))
-                        ()
-                    this.asyncCalculationMany jobCalc jobs stopDeciders.Token
+                    this.asyncCalculationMany this.evaluateJob jobs stopDeciders.Token
                     () 
                 | AcceptedJob id ->  
                     let foundJob = List.tryFind (fun ((jid,_,_),_) -> jid = id) this.KnownJobs
@@ -143,19 +156,8 @@
                     ActionRequestedEvent.Trigger(this,new UnaryValueEvent<IilAction>( (this:>IAgentLogic).CurrentDecision))          
                 | PerceptCollection percepts ->
                     this.ReEvaluate percepts
-
-                    let jobTypes = Enum.GetValues(typeof<JobType>)
-                    let rec jobGenFunc jobtype state knownJobs =
-                        let jobopt = generateJob jobtype state knownJobs
-                        match jobopt with
-                        | Some job ->
-                            JobCreatedEvent.Trigger (this, new UnaryValueEvent<IilAction>(buildJob job)) 
-                            jobGenFunc jobtype state (job::knownJobs)                            
-                        | None -> ()
-
-                    let jobTypeList = List.ofSeq (jobTypes.Cast<JobType>())
-                    let knownjobs jobtype =List.filter (fun ((_, _, jt), _) -> jt = jobtype) this.KnownJobs
-                    this.asyncCalculationMany (fun jobType -> jobGenFunc jobType this.BeliefData (knownjobs jobType) ) jobTypeList stopDeciders.Token
+                    this.asyncCalculationMany this.evaluateJob this.KnownJobs stopDeciders.Token
+                    this.generateNewJobs()
                     ()
 
            

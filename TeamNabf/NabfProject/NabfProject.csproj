@@ -50,6 +50,7 @@
     <Compile Include="AI\AgentMaster.cs" />
     <Compile Include="AI\ServerApplication.cs" />
     <Compile Include="AI\ServerCommunication.cs" />
+    <Compile Include="Events\AgentReceivedPerceptsEvent.cs" />
     <Compile Include="NabfModel.cs" />
     <Compile Include="NoticeBoardModel\Notice.cs" />
     <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
