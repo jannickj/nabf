@@ -31,18 +31,19 @@
 
         let JobCreatedEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
         let JobDesiredEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
-        let EvaluationCompletedEvent = new Event<EventHandler, EventArgs>()
-        let EvaluationStartedEvent = new Event<EventHandler, EventArgs>()
+        let EvaluationCompletedEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
+        let EvaluationStartedEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
+        let ActionRequestedEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
         let SimulationEndedEvent = new Event<EventHandler, EventArgs>()
 
         member private this.asyncCalculation func stopToken =
             let changeCals value = 
                 lock runningCalcLock (fun () -> 
                 if runningCalc = 0 then
-                    EvaluationStartedEvent.Trigger(this, new EventArgs())
+                    EvaluationStartedEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildEvaluationStarted))
                 runningCalc <- runningCalc + value)
                 if runningCalc = 0 then
-                    EvaluationCompletedEvent.Trigger(this, new EventArgs())
+                    EvaluationCompletedEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildEvaluationEnded))
                     ()
             let asyncF f = 
                 async
@@ -96,6 +97,9 @@
             member this.Close() = 
                 stopLogic()
                 ()
+            member this.CurrentDecision = 
+                let (bestAction,_) = lock actionDeciderLock (fun () -> List.maxBy snd this.decidedActions)
+                buildIilAction bestAction
 
             member this.HandlePercepts(iilpercepts) = 
                 if simEnded then
@@ -134,7 +138,9 @@
                 | SimulationEnd -> 
                     SimulationEndedEvent.Trigger(this, new EventArgs())
                     stopLogic()
-                    ()              
+                    () 
+                | ActionRequest ->
+                    ActionRequestedEvent.Trigger(this,new UnaryValueEvent<IilAction>( (this:>IAgentLogic).CurrentDecision))          
                 | PerceptCollection percepts ->
                     this.ReEvaluate percepts
 
@@ -153,9 +159,7 @@
                     ()
 
            
-            member this.CurrentDecision = 
-                let (bestAction,_) = lock actionDeciderLock (fun () -> List.maxBy snd this.decidedActions)
-                buildIilAction bestAction
+            
 
 
             [<CLIEvent>]
@@ -166,5 +170,7 @@
             member this.EvaluationCompleted = EvaluationCompletedEvent.Publish
             [<CLIEvent>]
             member this.EvaluationStarted = EvaluationStartedEvent.Publish
+            [<CLIEvent>]
+            member this.ActionRequested = ActionRequestedEvent.Publish
             [<CLIEvent>]
             member this.SimulationEnded  = SimulationEndedEvent.Publish

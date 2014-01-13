@@ -61,6 +61,7 @@
             | PerceptCollection of Percept list
             | NewJobs of Job list
             | AcceptedJob of JobID
+            | ActionRequest
             | SimulationEnd
 
         type State =
@@ -123,3 +124,7 @@
         let decideJob (job:Job) =
             let d:Desirability = 1
             d
+        let buildEvaluationStarted =
+            new IilAction "evaluation_started"
+        let buildEvaluationEnded =
+            new IilAction "evaluation_ended"
