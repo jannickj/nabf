@@ -80,6 +80,11 @@ namespace NabfProject.AI
             
         }
 
+		public virtual void BeforeDeserialize(XmlReader reader, StreamReader sreader)
+		{
+
+		}
+
 		public virtual void AfterDeserialize(XmlReader reader, StreamReader sreader)
 		{
 

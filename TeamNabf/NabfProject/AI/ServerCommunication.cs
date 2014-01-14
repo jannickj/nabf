@@ -40,6 +40,11 @@ namespace NabfProject.AI
             return new SendMessage(data);
         }
 
+		public override void AfterDeserialize(XmlReader reader, StreamReader sreader)
+		{
+			while (sreader.BaseStream.ReadByte() != 0) { }
+		}
+
         public override void BeforeSerialize(XmlWriter writer, StreamWriter swriter, XmlTransmitterMessage<InternalSendMessage> packet)
         {
             //swriter.Write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
