@@ -7,19 +7,19 @@ using NabfProject.AI;
 
 namespace NabfProject.NoticeBoardModel
 {
-    public abstract class Notice : IComparable
+    public abstract class Notice : IEquatable<Notice>, IComparable
     {
-        public List<Node> WhichNodes { get; set; }
-        public int AgentsNeeded { get; set; }
-        public int Id { get; set; }
+        public List<Node> WhichNodes { get; protected set; }
+        public int AgentsNeeded { get; protected set; }
+        public Int64 Id { get; private set; }
 
-        public int HighestDesirabilityForNotice = -1;
-        public int HighestAverageDesirabilityForNotice = -1;
-        public List<NabfAgent> AgentsApplied = new List<NabfAgent>();
+        private int _highestAverageDesirabilityForNotice = -1;
+        public int HighestAverageDesirabilityForNotice { get { return _highestAverageDesirabilityForNotice; } set { _highestAverageDesirabilityForNotice = value; } }
+        private List<NabfAgent> _agentsApplied = new List<NabfAgent>();
         private List<NabfAgent> _topDesireAgents = new List<NabfAgent>();
-        public Dictionary<NabfAgent, int> AgentsToDesirability = new Dictionary<NabfAgent, int>(); 
+        private Dictionary<NabfAgent, int> _agentsToDesirability = new Dictionary<NabfAgent, int>(); 
 
-        public Notice(int id)
+        public Notice(Int64 id)
         {
             Id = id;
         }
@@ -39,27 +39,22 @@ namespace NabfProject.NoticeBoardModel
             _topDesireAgents.AddRange(toAdd);
         }
 
-        public int CompareTo(object obj)
+        public List<NabfAgent> GetAgentsApplied()
         {
-            if (obj is Notice)
-                if (((Notice)obj).HighestDesirabilityForNotice < HighestDesirabilityForNotice)
-                    return -1;
-                else if (((Notice)obj).HighestDesirabilityForNotice > HighestDesirabilityForNotice)
-                    return 1;
-                else
-                    return 0;
-            else if (obj == null)
-                throw new ArgumentException("Input of CompareTo of " + this.GetType().Name + " is null");
-            else
-                throw new ArgumentException("Object : " + obj.GetType().Name + " of CompareTo is not of type Notice");
+            return _agentsApplied.ToList();
         }
 
-        public bool ChildTypeIsEqualTo(Notice no)
+        public bool TryGetValueAgentToDesirabilityMap(NabfAgent agent, out int desire)
+        {
+            return _agentsToDesirability.TryGetValue(agent, out desire);
+        }
+
+        public bool ContentIsEqualTo(Notice no)
         {
             if (no == null)
-                throw new ArgumentException("Input of CompareTo of " + this.GetType().Name + " is null");
+                throw new ArgumentException("Input of ContentIsEqualTo of " + this.GetType().Name + " is null");
             else if (!(no is Notice))
-                throw new ArgumentException("Object : " + no.GetType().Name + " of ChildTypeIsEqualTo is not of type Notice");
+                throw new ArgumentException("Object : " + no.GetType().Name + " of ContentIsEqualTo is not of type Notice");
 
             if (no.GetType() != this.GetType())
                 return false;
@@ -72,17 +67,15 @@ namespace NabfProject.NoticeBoardModel
 
         public void Apply(int desirability, NabfAgent a)
         {
-            if (HighestDesirabilityForNotice < desirability)
-                HighestDesirabilityForNotice = desirability;
-            AgentsToDesirability.Add(a, desirability);
-            AgentsApplied.Add(a);
+            _agentsToDesirability.Add(a, desirability);
+            _agentsApplied.Add(a);
         }
         public void UnApply(NabfAgent a, NoticeBoard nb)
         {
-            int des = -2, newMaxDes = -1;
-            AgentsToDesirability.TryGetValue(a, out des);
-            AgentsToDesirability.Remove(a);
-            AgentsApplied.Remove(a);
+            int des = -2;
+            _agentsToDesirability.TryGetValue(a, out des);
+            _agentsToDesirability.Remove(a);
+            _agentsApplied.Remove(a);
             bool b = _topDesireAgents.Remove(a);
             int lowestDesire;
             SortedList<int, NabfAgent> topDesires;
@@ -98,28 +91,49 @@ namespace NabfProject.NoticeBoardModel
                         _topDesireAgents.Clear();
                         _topDesireAgents.AddRange(agentsToAdd);
                         HighestAverageDesirabilityForNotice = topDesires.Keys.Sum() / topDesires.Keys.Count;
-                        nb.AddJob(this);//duplicate / false jobs are added here
+                        nb.AddJob(this);
                     }
                 }
                 else
                     nb.RemoveJob(this);
             }
-            if (HighestDesirabilityForNotice == des)
-            {
-                foreach (int i in AgentsToDesirability.Values)
-                {
-                    if (i > newMaxDes)
-                        HighestDesirabilityForNotice = i;
-                }
-            }
         }
 
+        public void UpdateNotice(List<Node> whichNodes, int agentsNeeded)
+        {
+            WhichNodes = whichNodes;
+            AgentsNeeded = agentsNeeded;
+        }
+
+        bool IEquatable<Notice>.Equals(Notice other)
+        {
+            if (other == null)
+                return false;
+            if (!(other is Notice))
+                return false;
+            return Id == other.Id;
+        }
+
+        int IComparable.CompareTo(object obj)
+        {
+            if (obj == null)
+                throw new ArgumentException("Input of CompareTo of " + this.GetType().Name + " is null");
+            else if (obj is Notice)
+                if (((Notice)obj).HighestAverageDesirabilityForNotice < HighestAverageDesirabilityForNotice)
+                    return -1;
+                else if (((Notice)obj).HighestAverageDesirabilityForNotice > HighestAverageDesirabilityForNotice)
+                    return 1;
+                else
+                    return 0;
+            else
+                throw new ArgumentException("Object : " + obj.GetType().Name + " of CompareTo is not of type Notice");
+        }
     }
     
     public class DisruptJob : Notice
     {
 
-        public DisruptJob(int agentsNeeded, List<Node> whichNodes, int id)
+        public DisruptJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
@@ -130,7 +144,7 @@ namespace NabfProject.NoticeBoardModel
     public class AttackJob : Notice
     {
 
-        public AttackJob(int agentsNeeded, List<Node> whichNodes, int id)
+        public AttackJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
@@ -141,7 +155,7 @@ namespace NabfProject.NoticeBoardModel
     public class OccupyJob : Notice
     {
 
-        public OccupyJob(int agentsNeeded, List<Node> whichNodes, int id)
+        public OccupyJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
@@ -152,7 +166,7 @@ namespace NabfProject.NoticeBoardModel
     public class RepairJob : Notice
     {
 
-        public RepairJob(List<Node> whichNodes, int id)
+        public RepairJob(List<Node> whichNodes, Int64 id)
             : base(id)
         {
             WhichNodes = whichNodes;

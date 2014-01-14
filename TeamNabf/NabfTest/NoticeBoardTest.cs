@@ -30,6 +30,7 @@ namespace NabfTest
             bool addSuccess = nb.AddNotice(no);
             Assert.True(addSuccess);
             Assert.AreEqual(1, nb.GetNoticeCount());
+            Assert.IsTrue(no.Equals(nb.GetNotices().First()));
 		}
 
         [Test]
@@ -186,18 +187,14 @@ namespace NabfTest
 
 
             nb.ApplyToNotice(possibleJobs[0], desirability, a1);
-            //int highest = (int)getField(n, true, "_highestDesirabilityForNotice");
-            Assert.AreEqual(desirability, n.HighestDesirabilityForNotice);
-            Assert.AreEqual(1, n.AgentsApplied.Count);
+            Assert.AreEqual(1, n.GetAgentsApplied().Count);
 
             nb.ApplyToNotice(possibleJobs[0], desirability2, a2);
-            Assert.AreEqual(desirability2, n.HighestDesirabilityForNotice);
-            Assert.AreEqual(2, n.AgentsApplied.Count);
+            Assert.AreEqual(2, n.GetAgentsApplied().Count);
 
 
             nb.UnApplyToNotice(possibleJobs[0], a2);
-            Assert.AreEqual(desirability, n.HighestDesirabilityForNotice);
-            Assert.AreEqual(1, n.AgentsApplied.Count);
+            Assert.AreEqual(1, n.GetAgentsApplied().Count);
         }
 
         [Test]
@@ -232,10 +229,7 @@ namespace NabfTest
             nb.AddNotice(no);
             nb.AddNotice(no2);
             nb.AddNotice(no3);
-            //List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt, NoticeBoard.JobType.Attack };
-            //List<NoticeBoard.JobType> jobs2 = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt, NoticeBoard.JobType.Attack, NoticeBoard.JobType.Occupy };
             
-            //int desirability = 1, desirability2 = 100, desirability3 = 50;
             NabfAgent a1 = new NabfAgent("agent1"), a2 = new NabfAgent("agent2"), a3 = new NabfAgent("agent3"), a4 = new NabfAgent("agent4");
 
 
@@ -251,6 +245,7 @@ namespace NabfTest
 
             int maxDesirabilityForFirstNotice = -1, maxDesirabilityForSecondNotice = -1, maxDesirabilityForThirdNotice = -1;
             int agentsAppliedToFirstNotice = -1, agentsAppliedToSecondNotice = -1, agentsAppliedToThirdNotice = -1;
+            NabfAgent agentAppliedToFirstNotice1 = null, agentAppliedToFirstNotice2 = null, agentAppliedToSecondNotice1 = null, agentAppliedToSecondNotice2 = null, agentAppliedToThirdNotice = null;
             NabfAgent agentOnFirstNotice1 = null, agentOnFirstNotice2 = null, agentOnSecondNotice = null, agentOnThirdNotice = null;
             int i = 0;
             Notice firstNotice = null, secondNotice = null, thirdNotice = null;
@@ -261,38 +256,48 @@ namespace NabfTest
                 if (i == 1)
                 {
                     firstNotice = evt.Notice;
-                    agentsAppliedToFirstNotice = evt.Notice.AgentsApplied.Count;
+                    agentsAppliedToFirstNotice = evt.Notice.GetAgentsApplied().Count;
                     maxDesirabilityForFirstNotice = evt.Notice.HighestAverageDesirabilityForNotice;
                     agentOnFirstNotice1 = evt.Agents[0];
                     agentOnFirstNotice2 = evt.Agents[1];
+                    agentAppliedToFirstNotice1 = evt.Notice.GetAgentsApplied()[0];
+                    agentAppliedToFirstNotice2 = evt.Notice.GetAgentsApplied()[1];
                 }
                 if (i == 2)
                 {
                     secondNotice = evt.Notice;
-                    agentsAppliedToSecondNotice = evt.Notice.AgentsApplied.Count;
+                    agentsAppliedToSecondNotice = evt.Notice.GetAgentsApplied().Count;
                     maxDesirabilityForSecondNotice = evt.Notice.HighestAverageDesirabilityForNotice;
                     agentOnSecondNotice = evt.Agents[0];
+                    agentAppliedToSecondNotice1 = evt.Notice.GetAgentsApplied()[0];
+                    agentAppliedToSecondNotice2 = evt.Notice.GetAgentsApplied()[1];
                 }
                 if (i == 3)
                 {
                     thirdNotice = evt.Notice;
-                    agentsAppliedToThirdNotice = evt.Notice.AgentsApplied.Count;
+                    agentsAppliedToThirdNotice = evt.Notice.GetAgentsApplied().Count;
                     maxDesirabilityForThirdNotice = evt.Notice.HighestAverageDesirabilityForNotice;
                     agentOnThirdNotice = evt.Agents[0];
+                    agentAppliedToThirdNotice = evt.Notice.GetAgentsApplied()[0];
                 }
             };
             nb.FindJobsForAgents();
 
             Assert.AreEqual(3, evtTriggered);
-            Assert.IsTrue(firstNotice.ChildTypeIsEqualTo(no3));
-            Assert.IsTrue(secondNotice.ChildTypeIsEqualTo(no2) || secondNotice.ChildTypeIsEqualTo(no));
-            Assert.IsTrue(thirdNotice.ChildTypeIsEqualTo(no2) || thirdNotice.ChildTypeIsEqualTo(no));
+            Assert.IsTrue(firstNotice.ContentIsEqualTo(no3));
+            Assert.IsTrue(secondNotice.ContentIsEqualTo(no2) || secondNotice.ContentIsEqualTo(no));
+            Assert.IsTrue(thirdNotice.ContentIsEqualTo(no2) || thirdNotice.ContentIsEqualTo(no));
             Assert.AreEqual(75, maxDesirabilityForFirstNotice);
             Assert.AreEqual(50, maxDesirabilityForSecondNotice);
             Assert.AreEqual(50, maxDesirabilityForThirdNotice);
-            //Assert.AreEqual(2, agentsAppliedToFirstNotice);
-            //Assert.AreEqual(3, agentsAppliedToSecondNotice);
-            //Assert.AreEqual(2, agentsAppliedToThirdNotice);
+            Assert.AreEqual(2, agentsAppliedToFirstNotice);
+            Assert.AreEqual(2, agentsAppliedToSecondNotice);
+            Assert.AreEqual(1, agentsAppliedToThirdNotice);
+            Assert.IsTrue(a3.Name == agentAppliedToFirstNotice1.Name || a4.Name == agentAppliedToFirstNotice1.Name);
+            Assert.IsTrue(a3.Name == agentAppliedToFirstNotice2.Name || a4.Name == agentAppliedToFirstNotice2.Name);
+            Assert.IsTrue(a1.Name == agentAppliedToSecondNotice1.Name || a2.Name == agentAppliedToSecondNotice1.Name);
+            Assert.IsTrue(a1.Name == agentAppliedToSecondNotice2.Name || a2.Name == agentAppliedToSecondNotice2.Name);
+            Assert.IsTrue(a1.Name == agentAppliedToThirdNotice.Name || a2.Name == agentAppliedToThirdNotice.Name);
             Assert.AreEqual(a3.Name, agentOnFirstNotice1.Name);
             Assert.AreEqual(a4.Name, agentOnFirstNotice2.Name);
             Assert.AreEqual(a2.Name, agentOnSecondNotice.Name);
@@ -359,7 +364,6 @@ namespace NabfTest
             Assert.AreEqual(3, evtTriggered);
 
             Assert.AreEqual(notice1, notices[0]);
-            //Assert.AreEqual(0, notices);
             Assert.AreEqual(notice4, notices[1]);
             Assert.AreEqual(notice3, notices[2]);
 
@@ -374,11 +378,6 @@ namespace NabfTest
             Assert.AreEqual((44 + 33) / 2, averageDesires[2]);
 
         }
-
-
-
-
-
 
 
 
