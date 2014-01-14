@@ -74,16 +74,22 @@ let dijkstra start (goal : Vertex) (graph : Graph) =
             None
 
     let rec constructPath (current : string) (vertexTree : Map<string, string>) =
+        printfn "current: %s" current
         if current = start.Identifier then
+            printfn "end of list"
             []
         else
+            printfn "not end"
             (constructPath vertexTree.[current] vertexTree) @ [current]
-
-    let costMap = constructCostMap graph start
-    let vertexTree = dijkstraHelper start (Set.singleton start.Identifier) List.empty 0 Map.empty<string, string> costMap
-    printfn "vertexTree: %A" <| Map.toList<string, string> vertexTree.Value
-    match vertexTree with
-    | Some tree -> Some <| constructPath goal.Identifier tree
-    | None -> None
+    
+    if start.Identifier = goal.Identifier then
+        Some []
+    else
+        let costMap = constructCostMap graph start
+        let vertexTree = dijkstraHelper start (Set.singleton start.Identifier) List.empty 0 Map.empty<string, string> costMap
+        //printfn "\nvertexTree: %A" <| Map.toList<string, string> vertexTree.Value
+        match vertexTree with
+        | Some tree -> Some <| constructPath goal.Identifier tree
+        | None -> None
      
     

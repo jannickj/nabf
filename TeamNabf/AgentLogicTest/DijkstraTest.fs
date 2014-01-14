@@ -22,11 +22,13 @@ module DijkstraTest =
                 Assert.AreEqual (correctPath, actualPath)
 
             [<Test>]
-            member this.FindPath_AlreadyThere_ReturnPathOfLengthOne () =
+            member this.FindPath_AlreadyThere_ReturnEmptyPath () =
 
-                let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "c"); (None, "b")] |> Set.ofList}); 
-                                        ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a")] |> Set.ofList}); 
-                                        ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) ] |> Map.ofList
+                let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "c"); (None, "b")] |> Set.ofList})
+                            ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a")] |> Set.ofList})
+                            ; ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) 
+                            ] |> Map.ofList
+
                 let correctPath = Some []
 
                 let actualPath = Dijkstra.dijkstra graph.["a"] graph.["a"] graph
@@ -36,11 +38,12 @@ module DijkstraTest =
             [<Test>]
             member this.FindPath_NoPathExists_ReturnsNone () =
 
-                let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [] |> Set.ofList}); 
-                                        ("b", { Identifier = "b"; Value = None; Edges = [] |> Set.ofList}) ] |> Map.ofList
+                let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [] |> Set.ofList})
+                            ; ("b", { Identifier = "b"; Value = None; Edges = [] |> Set.ofList}) 
+                            ] |> Map.ofList
                 let correctOutput = None
 
-                let actualOutput = Some []
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["b"] graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
