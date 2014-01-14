@@ -71,6 +71,7 @@
     <Compile Include="ServerMessages\ReceiveMessage.cs" />
     <Compile Include="ServerMessages\RequestActionMessage.cs" />
     <Compile Include="ServerMessages\SelfMessage.cs" />
+    <Compile Include="ServerMessages\InternalSendMessage.cs" />
     <Compile Include="ServerMessages\SendMessage.cs" />
     <Compile Include="ServerMessages\ServerMessageFactory.cs" />
     <Compile Include="ServerMessages\ServerResponseTypes.cs" />

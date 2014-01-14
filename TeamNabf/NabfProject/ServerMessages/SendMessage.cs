@@ -1,31 +1,23 @@
-﻿using System;
+﻿using NabfProject.AI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace NabfProject.ServerMessages
 {
-    [XmlRoot("message")]
-    public abstract class SendMessage : IXmlSerializable 
+    public class SendMessage : XmlTransmitterMessage<InternalSendMessage>
     {
-        protected abstract string MessageType { get; }
-
-        public System.Xml.Schema.XmlSchema GetSchema()
+        public override string NodeName
         {
-            throw new NotImplementedException();
+            get
+            {
+                return "message";
+            }
         }
 
-        public abstract void ReadXml(System.Xml.XmlReader reader);
-
-        public void WriteXml(System.Xml.XmlWriter writer)
-        {
-            writer.WriteAttributeString("type", MessageType);
-            WriteXmlInternal(writer);
-        }
-
-        protected abstract void WriteXmlInternal(System.Xml.XmlWriter writer);
-
+        public SendMessage(InternalSendMessage iMessage)
+            : base(iMessage)
+        { }
     }
 }
