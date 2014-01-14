@@ -57,12 +57,35 @@
             | Achievement    of string
             | SimulationStep of int
 
-        type ServerData = 
-            | PerceptCollection of Percept list
-            | NewJobs of Job list
+        type Deadline = int
+        type CurrentTime = int
+        type Rank = int
+        type Score = int
+        type ActionID = int
+        
+
+        type AgentServerMessage =
+            | NewJobs of Job List
             | AcceptedJob of JobID
-            | ActionRequest
-            | SimulationEnd
+            | SharedPercepts of Percept list
+
+        type MarsServerMessage =  
+            | ActionRequest of  Deadline*CurrentTime*ActionID*(Percept list)
+            | SimulationStart
+            | SimulationEnd of Rank*Score
+            | ServerClosed
+
+        type ServerMessage = 
+            | AgentServerMsg of AgentServerMessage
+            | MarsServerMsg of MarsServerMessage
+            
+
+//        type ServerData = 
+//            | PerceptCollection of Percept list
+//            | NewJobs of Job list
+//            | AcceptedJob of JobID
+//            | ActionRequest
+//            | SimulationEnd
 
         type State =
             { World          : Graph
@@ -96,6 +119,9 @@
         let chooseAction (currentState:State) =
             //let newState = updateState currentState percepts
             0
+        
+        let sharedPercepts (percepts:Percept list) =
+            []:(Percept list)
 
         let buildIilAction (action:Action) =
             new IilAction "some action"
@@ -103,8 +129,8 @@
         let buildJobAccept (job:Job) =
             new IilAction "some action"
 
-        let parseIilPercepts (perceptCollection:IilPerceptCollection) =
-            PerceptCollection (List<Percept>.Empty)
+        let parseIilPercepts (perceptCollection:IilPerceptCollection) : ServerMessage =
+            AgentServerMsg (AcceptedJob 1) 
 
         let generateJobs  (state:State) (jobs:Job list) = 
             List<Job>.Empty
@@ -128,3 +154,6 @@
             new IilAction "evaluation_started"
         let buildEvaluationEnded =
             new IilAction "evaluation_ended"
+
+        let buildSharePerceptsAction (percepts:Percept list) =
+            new IilAction "percepts"

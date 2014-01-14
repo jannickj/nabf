@@ -8,6 +8,7 @@
     open System.Threading;
     open System.Linq;
 
+
     type public AgentLogicClient() = 
         
         
@@ -16,18 +17,23 @@
         //[<DefaultValue>] val mutable private DesiredJobs : List<Job*Desirability>
         [<DefaultValue>] val mutable private possibleActions : List<Action>
         [<DefaultValue>] val mutable private decidedActions : List<Action*Desirability>
-        
+        [<DefaultValue>] val mutable private awaitingPercepts : List<Percept>
         
         let mutable simEnded = false
         let mutable runningCalc = 0
         let mutable lastHighestDesire:Desirability = 0
+        
 
         //Parallel helpers
         let stopDeciders = new CancellationTokenSource()
         let actionDeciderLock = new Object()
         let runningCalcLock = new Object()
         let knonwJobsLock = new Object()
+        let awaitingPerceptsLock = new Object()
 
+
+        let SendAgentServerEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
+        let SendMarsServerEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
 
         let JobCreatedEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
         let JobDesiredEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
@@ -63,7 +69,11 @@
 
         member private this.ReEvaluate percepts =
             stopDeciders.Cancel()
-            this.BeliefData <- updateState this.BeliefData percepts
+            let sharedPercepts = lock awaitingPerceptsLock (fun () -> 
+                                        let percepts = this.awaitingPercepts
+                                        this.awaitingPercepts <- []
+                                        percepts)
+            this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
             runningCalc <- 0
             lastHighestDesire <- List.max (List.map (fun (_,desire) -> desire) this.decidedActions)
             this.decidedActions <- []
@@ -79,6 +89,24 @@
         let stopLogic () =
             stopDeciders.Cancel()
             simEnded <- true
+        
+        member private this.CalculateAcceptedJob id =
+            let foundJob = List.tryFind (fun ((jid,_,_),_) -> jid = id) this.KnownJobs
+            if foundJob.IsNone then
+                ()
+            else
+                let acceptedJob = foundJob.Value
+                let full = lock actionDeciderLock (fun () ->
+                        let contains elem = List.exists (fun (e, _) -> e = elem)
+                        let unique l l' = List.filter (fun elem -> not <| (contains elem l')) l
+                        let u = List.map (fun elem -> (elem,0)) (unique this.possibleActions this.decidedActions)
+                        this.decidedActions@u)
+
+                let reEvalActions (desire,action) =
+                    let newDesire = actionDesirabilityBasedOnJob this.BeliefData (desire,action) acceptedJob
+                    this.addDesiredAction(action,newDesire)
+                    ()
+                this.asyncCalculationMany reEvalActions full stopDeciders.Token 
 
         member private this.generateNewJobs() = 
             let jobTypes = Enum.GetValues(typeof<JobType>)
@@ -124,45 +152,55 @@
             member this.HandlePercepts(iilpercepts) = 
                 if simEnded then
                     ()
-                let data = (parseIilPercepts iilpercepts)
-                match data with
-                | NewJobs jobs -> 
-                    lock knonwJobsLock (fun () -> this.KnownJobs <- jobs@this.KnownJobs)
-                    this.asyncCalculationMany this.evaluateJob jobs stopDeciders.Token
-                    () 
-                | AcceptedJob id ->  
-                    let foundJob = List.tryFind (fun ((jid,_,_),_) -> jid = id) this.KnownJobs
-                    if foundJob.IsNone then
+                let ServerMessage = (parseIilPercepts iilpercepts)
+                match ServerMessage with
+                | AgentServerMsg msg ->
+                    match msg with
+                    | NewJobs jobs ->
+                        lock knonwJobsLock (fun () -> this.KnownJobs <- jobs@this.KnownJobs)
+                        this.asyncCalculationMany this.evaluateJob jobs stopDeciders.Token
+                    | AcceptedJob id ->
+                        this.CalculateAcceptedJob(id)  
+                    | SharedPercepts percepts ->
+                        lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                         ()
-                    else
-                        let acceptedJob = foundJob.Value
-                        let full = lock actionDeciderLock (fun () ->
-                                let contains elem = List.exists (fun (e, _) -> e = elem)
-                                let unique l l' = List.filter (fun elem -> not <| (contains elem l')) l
-                                let u = List.map (fun elem -> (elem,0)) (unique this.possibleActions this.decidedActions)
-                                this.decidedActions@u)
-
-                        let reEvalActions (desire,action) =
-                            let newDesire = actionDesirabilityBasedOnJob this.BeliefData (desire,action) acceptedJob
-                            this.addDesiredAction(action,newDesire)
-                            ()
-                        this.asyncCalculationMany reEvalActions full stopDeciders.Token                         
+                |  MarsServerMsg msg ->
+                    match msg with
+                    | SimulationEnd _ -> 
+                        SimulationEndedEvent.Trigger(this, new EventArgs())
+                        stopLogic()
                         ()
-                | SimulationEnd -> 
-                    SimulationEndedEvent.Trigger(this, new EventArgs())
-                    stopLogic()
-                    () 
-                | ActionRequest ->
-                    ActionRequestedEvent.Trigger(this,new UnaryValueEvent<IilAction>( (this:>IAgentLogic).CurrentDecision))          
-                | PerceptCollection percepts ->
-                    this.ReEvaluate percepts
-                    this.asyncCalculationMany this.evaluateJob this.KnownJobs stopDeciders.Token
-                    this.generateNewJobs()
-                    ()
-
+                    | SimulationStart ->
+                        ()
+                    | ActionRequest (deadline,actionTime,id, percepts) ->
+                        let action = buildSharePerceptsAction (sharedPercepts percepts)
+                        SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
+                        this.ReEvaluate percepts
+                        this.asyncCalculationMany this.evaluateJob this.KnownJobs stopDeciders.Token
+                        this.generateNewJobs()
+                        let totalTime = deadline - actionTime
+                        let forceDecision start totaltime =
+                            async
+                                {
+                                    let awaitingDecision = ref true
+                                    while awaitingDecision.Value do 
+                                        do! Async.Sleep(200)
+                                        let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
+                                        let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
+                                        if (expired+int64(400)) > int64(totaltime) || runningCalcs = 0 then
+                                            SendAgentServerEvent.Trigger(this,new UnaryValueEvent<IilAction>((this:>IAgentLogic).CurrentDecision))
+                                            awaitingDecision:=false
+                                }
+                        Async.Start (forceDecision System.DateTime.Now.Ticks totalTime)
+                        ()
+                    | ServerClosed -> ()
            
             
 
+            [<CLIEvent>]
+            member this.SendAgentServerAction = SendAgentServerEvent.Publish
+            [<CLIEvent>]
+            member this.SendMarsServerAction = SendMarsServerEvent.Publish
 
             [<CLIEvent>]
             member this.JobCreated = JobCreatedEvent.Publish
