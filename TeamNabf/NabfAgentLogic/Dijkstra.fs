@@ -2,6 +2,8 @@ module Dijkstra
 
 open Graph
 
+type Cost = float * float
+
 let getNeighbours current (graph : Graph) = 
     current.Edges 
     |> Set.map (fun (edgeCost, otherId) -> 
@@ -33,17 +35,14 @@ let sortFrontier (costMap : Map<string, float>) frontier =
 let rec addNeighbours current neighbours frontier (costMap : Map<string, float>) vertexTree =
     match neighbours with
     | (neighbourCost, neighbourId) :: tail -> 
-        if neighbourCost < costMap.[neighbourId] then
-            let newCostMap = Map.add neighbourId neighbourCost costMap
-            let newFrontier = 
-                if costMap.[neighbourId] = infinity then
-                    (neighbourId :: frontier) |> sortFrontier newCostMap 
-                else
-                    frontier |> sortFrontier newCostMap
-            let newVertexTree = Map.add neighbourId current vertexTree
-            addNeighbours current tail newFrontier newCostMap newVertexTree
-        else 
+        if (Map.containsKey neighbourId costMap) && (costMap.[neighbourId] > neighbourCost) then
             addNeighbours current tail frontier costMap vertexTree
+        else
+            let newCostMap = Map.add neighbourId neighbourCost costMap
+            let newFrontier = (neighbourId :: frontier) |> sortFrontier newCostMap
+            let newVertexTree = Map.add neighbourId current vertexTree
+
+            addNeighbours current tail newFrontier newCostMap newVertexTree
     | [] -> (frontier, costMap, vertexTree)
 
 let constructCostMap (graph : Graph) (start : Vertex) = 
@@ -86,8 +85,7 @@ let dijkstra start (goal : Vertex) (graph : Graph) =
         Some []
     else
         let costMap = constructCostMap graph start
-        let vertexTree = dijkstraHelper start (Set.singleton start.Identifier) List.empty 0 Map.empty<string, string> costMap
-        //printfn "\nvertexTree: %A" <| Map.toList<string, string> vertexTree.Value
+        let vertexTree = dijkstraHelper start (Set.singleton start.Identifier) List.empty 0 Map.empty<string, string> Map.empty<string, float   >
         match vertexTree with
         | Some tree -> Some <| constructPath goal.Identifier tree
         | None -> None
