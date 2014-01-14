@@ -80,6 +80,12 @@ namespace NabfProject.AI
             
         }
 
+
+		protected void ChangeReader(XmlReader xmlReader)
+		{
+			this.xreader = xmlReader;
+		}
+
 		public virtual void BeforeDeserialize(XmlReader reader, StreamReader sreader)
 		{
 

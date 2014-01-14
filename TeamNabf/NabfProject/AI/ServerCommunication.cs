@@ -43,7 +43,9 @@ namespace NabfProject.AI
 		public override void AfterDeserialize(XmlReader reader, StreamReader sreader)
 		{
 			while (sreader.BaseStream.ReadByte() != 0) { }
+			this.ChangeReader(XmlReader.Create(sreader, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment }));
 		}
+
 
         public override void BeforeSerialize(XmlWriter writer, StreamWriter swriter, XmlTransmitterMessage<InternalSendMessage> packet)
         {
