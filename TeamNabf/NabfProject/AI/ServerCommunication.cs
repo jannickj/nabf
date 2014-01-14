@@ -39,5 +39,16 @@ namespace NabfProject.AI
         {
             return new SendMessage(data);
         }
+
+        public override void BeforeSerialize(XmlWriter writer, StreamWriter swriter, XmlTransmitterMessage<InternalSendMessage> packet)
+        {
+            //swriter.Write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
+        }
+
+        public override void AfterSerialize(XmlWriter writer, StreamWriter swriter, XmlTransmitterMessage<InternalSendMessage> packet)
+        {
+            swriter.BaseStream.WriteByte(0);
+            swriter.BaseStream.Flush();
+        }
     }
 }

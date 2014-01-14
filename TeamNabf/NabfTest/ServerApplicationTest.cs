@@ -27,13 +27,13 @@ namespace NabfTest
         public void ConnectToServerAndAuthenticate_Connected_AllAgentsAuthenticated()
         {
             int nrOfAgents = 28;
-            string agentName = "a";
-            string[] passwords = Enumerable.Repeat("pass", nrOfAgents).ToArray();
-            string authmessage = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
-                                + "<message type=\"auth-request\">"
-                                + "<authentication password=\"" + "pass" + "\" username=\"" + "a1" + "\"/>"
-                                + "</message>";
-            string authResponse;
+            //string agentName = "a";
+            //string[] passwords = Enumerable.Repeat("pass", nrOfAgents).ToArray();
+            //string authmessage = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
+            //                    + "<message type=\"auth-request\">"
+            //                    + "<authentication password=\"" + "pass" + "\" username=\"" + "a1" + "\"/>"
+            //                    + "</message>";
+            //string authResponse;
 
             tcpClient = new TcpClient();
             tcpClient.Connect("localhost", 12300);
@@ -58,11 +58,13 @@ namespace NabfTest
 
             servCom = new ServerCommunication(streamReader, streamWriter);
 
-            streamWriter.Write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
             servCom.SeralizePacket(new AuthenticationRequestMessage("Nabf1", "pass"));
-            stream.WriteByte(0);
-            stream.Flush();
-            var message = servCom.DeserializeMessage();
+
+            //servCom.SeralizePacket(new ActionMessage("recharge",""));
+            var authMessage = servCom.DeserializeMessage();
+
+            var simStartMessage = servCom.DeserializeMessage();
+
 
             //XmlWriter xmlWriter = XmlWriter.Create(streamWrite);
 
