@@ -15,29 +15,20 @@ namespace NabfTest
 {
     [TestFixture]
     public class ServerCommunicationTest
-    {
-        StringBuilder sb;
-        XmlWriterSettings xmlSettings;
-        XmlSerializer xmlSerSend;
-        XmlSerializer xmlSerReceive;
-        XmlReader reader;
-        XmlWriter sw;
+    { 
         ServerCommunication servCom;
         MemoryStream memStream;
+        StreamReader reader;
+        StreamWriter writer;
 
         [SetUp]
         public void Init()
         {
-            sb = new StringBuilder();
             memStream = new MemoryStream();
-            xmlSettings = new XmlWriterSettings() { OmitXmlDeclaration = false };
-            sw = XmlWriter.Create(memStream,xmlSettings);
-            
-            xmlSerSend = new XmlSerializer(typeof(SendMessage));
-            xmlSerReceive = new XmlSerializer(typeof(ReceiveMessage));
             memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
+            reader = new StreamReader(memStream);
+            writer = new StreamWriter(memStream);
+            servCom = new ServerCommunication(reader, writer);
         }
 
         [Test]
@@ -47,10 +38,11 @@ namespace NabfTest
             string password = "1";
 
             AuthenticationRequestMessage message = new AuthenticationRequestMessage(username, password);
-            servCom.SendMessage(message);
+            servCom.SeralizePacket(message);
+            memStream.Position = 0;
+            string data = reader.ReadToEnd();
 
-
-            string actual = XDocument.Parse(sb.ToString()).ToString();
+            string actual = XDocument.Parse(data).ToString();
             string expected = XDocument.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
                                 +"<message type=\"auth-request\">"
                                 +"<authentication password=\""+password+"\" username=\""+username+"\"/>"
@@ -66,10 +58,11 @@ namespace NabfTest
             string actionParam = "vertex1";
 
             ActionMessage message = new ActionMessage(actionType, actionParam);
-            servCom.SendMessage(message);
+            servCom.SeralizePacket(message);
+            memStream.Position = 0;
+            string data = reader.ReadToEnd();
 
-
-            string actual = XDocument.Parse(sb.ToString()).ToString();
+            string actual = XDocument.Parse(data).ToString();
             string expected = XDocument.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                                                 +"<message type=\"action\">"
                                                 +"<action type=\""+actionType+"\" param=\""+actionParam+"\"/>"
@@ -83,17 +76,17 @@ namespace NabfTest
         {
             string result = "ok";
 
-            sw.WriteRaw("<message timestamp=\"1297263037617\" type=\"auth-response\">"
+            writer.Write("<message timestamp=\"1297263037617\" type=\"auth-response\">"
                             + "<authentication result=\"" + result + "\"/>"
                             + "</message>");
 
-            sw.Flush();
+            writer.Flush();
 
             memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
             
-            InternalReceiveMessage message = servCom.ReceiveMessage().Message;
+            InternalReceiveMessage message = servCom.DeserializeMessage();
 
             Assert.IsInstanceOf<AuthenticationResponseMessage>(message);
             Assert.IsTrue(((AuthenticationResponseMessage)message).Response == ServerResponseTypes.Success);
@@ -108,17 +101,18 @@ namespace NabfTest
             string vertices = "20";
             string role = "Explorer";
 
-            sw.WriteRaw("<message timestamp=\"1297263004607\" type=\"sim-start\">"
+            writer.Write("<message timestamp=\"1297263004607\" type=\"sim-start\">"
                             + "<simulation edges=\""+edges+"\" id=\""+id+"\" steps=\""+steps+"\" vertices=\""+vertices+"\" role=\""+role+"\"/>"
                             + "</message>");
 
-            sw.Flush();
+            writer.Flush();
 
             memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
+            
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
 
-            InternalReceiveMessage message = servCom.ReceiveMessage().Message;
+            InternalReceiveMessage message = servCom.DeserializeMessage();
 
             Dictionary<string, string> simStartData = ((SimStartMessage)message).Response;
 
@@ -137,17 +131,18 @@ namespace NabfTest
             string ranking = "2";
             string score = "9";
 
-            sw.WriteRaw("<message timestamp=\"1297269179279\" type=\"sim-end\">"
+            writer.Write("<message timestamp=\"1297269179279\" type=\"sim-end\">"
                             + "<sim-result ranking=\""+ranking+"\" score=\""+score+"\"/>"
                             + "</message>");
 
-            sw.Flush();
+            writer.Flush();
 
             memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
 
-            InternalReceiveMessage message = servCom.ReceiveMessage().Message;
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
+
+            InternalReceiveMessage message = servCom.DeserializeMessage();
 
             Dictionary<string, string> simEndData = ((SimEndMessage)message).Response;
 
@@ -159,15 +154,16 @@ namespace NabfTest
         [Test]
         public void ReceiveMessageBye_Connected_XmlMessageReceived()
         {
-            sw.WriteRaw("<message timestamp=\"1204978760555\" type=\"bye\"/>");
+            writer.Write("<message timestamp=\"1204978760555\" type=\"bye\"/>");
 
-            sw.Flush();
+            writer.Flush();
 
             memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
 
-            InternalReceiveMessage message = servCom.ReceiveMessage().Message;
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
+
+            InternalReceiveMessage message = servCom.DeserializeMessage();
 
             Assert.IsInstanceOf<ByeMessage>(message);
             Assert.IsTrue(((ByeMessage)message).Response == ServerResponseTypes.Success);
@@ -206,7 +202,7 @@ namespace NabfTest
             int surveyedEdge_weight = 2;
             int inspectedEntity_maxHealth = 9;
 
-            sw.WriteRaw("<message timestamp=\""+timestamp+"\" type=\"request-action\">"
+            writer.Write("<message timestamp=\"" + timestamp + "\" type=\"request-action\">"
                             + "<perception deadline=\""+perception_deadline+"\" id=\""+perception_id+"\">"
                             + "<simulation step=\""+simulation_step+"\"/>"
                             + "<self energy=\""+self_energy+"\" health=\""+self_health+"\" lastAction=\""+self_lastAction+"\" " 
@@ -242,15 +238,17 @@ namespace NabfTest
                             + "</perception>"
                             + "</message>");
 
-            sw.Flush();
+            writer.Flush();
 
             memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
 
-            ReceiveMessage message = servCom.ReceiveMessage();
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
 
-            RequestActionMessage requestActionData = (RequestActionMessage) message.Message;
+            ReceiveMessage packet = (ReceiveMessage)servCom.DeserializePacket();
+            InternalReceiveMessage message = packet.Message;
+
+            RequestActionMessage requestActionData = (RequestActionMessage) message;
             PerceptionMessage perceptionData = (PerceptionMessage) requestActionData.Response;
             SimulationMessage simulationData = (SimulationMessage)perceptionData.Elements[0];
             SelfMessage selfData = (SelfMessage)perceptionData.Elements[1];
@@ -269,7 +267,7 @@ namespace NabfTest
             Assert.AreEqual("self", selfData.MessageName);
             Assert.AreEqual("team", teamData.MessageName);
 
-            Assert.AreEqual(timestamp, message.Timestamp);
+            Assert.AreEqual(timestamp, packet.Timestamp);
             Assert.AreEqual(perception_deadline, perceptionData.Deadline);
             Assert.AreEqual(perception_id, perceptionData.Id);
             Assert.AreEqual(simulation_step, simulationData.Step);

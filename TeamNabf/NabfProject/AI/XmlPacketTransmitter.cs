@@ -75,8 +75,9 @@ namespace NabfProject.AI
 
 			BeforeSerialize(xwriter, this.writer, packet);
             packet.WriteXml(this.xwriter,this.serializerSender);
-			AfterSerialize(xwriter, this.writer, packet);
             this.xwriter.Flush();
+			AfterSerialize(xwriter, this.writer, packet);
+            
         }
 
 		public virtual void AfterDeserialize(XmlReader reader, StreamReader sreader)

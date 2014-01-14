@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,60 +17,54 @@ namespace NabfTest
     [TestFixture]
     public class ServerApplicationTest
     {
-        StringBuilder sb;
-        XmlWriterSettings xmlSettings;
-        XmlSerializer xmlSerSend;
-        XmlSerializer xmlSerReceive;
-        XmlReader reader;
-        XmlWriter sw;
+        StreamReader reader;
+        StreamWriter writer;
         ServerCommunication servCom;
-        MemoryStream memStream;
         private TcpClient tcpClient;
 
-        [SetUp]
-        public void Init()
-        {
-            sb = new StringBuilder();
-            memStream = new MemoryStream();
-            xmlSettings = new XmlWriterSettings() { OmitXmlDeclaration = false };
-            sw = XmlWriter.Create(memStream, xmlSettings);
-
-            tcpClient = new TcpClient();
-
-            xmlSerSend = new XmlSerializer(typeof(SendMessage));
-            xmlSerReceive = new XmlSerializer(typeof(ReceiveMessage));
-            memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
-        }
 
         [Test]
         public void ConnectToServerAndAuthenticate_Connected_AllAgentsAuthenticated()
         {
             int nrOfAgents = 28;
-            string agentName = "a";
-            string[] passwords = Enumerable.Repeat("pass", nrOfAgents).ToArray();
-            string authmessage = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
-                                + "<message type=\"auth-request\">"
-                                + "<authentication password=\"" + "pass" + "\" username=\"" + "a1" + "\"/>"
-                                + "</message>";
-            string authResponse;
+            //string agentName = "a";
+            //string[] passwords = Enumerable.Repeat("pass", nrOfAgents).ToArray();
+            //string authmessage = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
+            //                    + "<message type=\"auth-request\">"
+            //                    + "<authentication password=\"" + "pass" + "\" username=\"" + "a1" + "\"/>"
+            //                    + "</message>";
+            //string authResponse;
 
-            tcpClient.Connect("10.16.174.83", 12300);
-            Assert.True(tcpClient.Connected);
+            tcpClient = new TcpClient();
+            tcpClient.Connect("localhost", 12300);
+            //IPAddress ipa = IPAddress.Parse("::1");
+            //IPEndPoint ipeh = new IPEndPoint(ipa, 12300);
+            //Socket connection = new Socket(
+            //       AddressFamily.InterNetworkV6,
+            //       SocketType.Stream,
+            //       ProtocolType.Tcp);
+            //connection.Connect(ipeh);
+            //Assert.True(connection.Connected);
             
             //Stream streamWrite = tcpClient.GetStream();
             //Stream streamRead = tcpClient.GetStream();
+
+            //Stream stream = new NetworkStream(connection);
 
             Stream stream = tcpClient.GetStream();
 
             StreamWriter streamWriter = new StreamWriter(stream);
             StreamReader streamReader = new StreamReader(stream);
 
-            streamWriter.Write(authmessage);
-            streamWriter.Flush();
-            int peek = streamReader.Peek();
-            authResponse = streamReader.Read().ToString();
+            servCom = new ServerCommunication(streamReader, streamWriter);
+
+            servCom.SeralizePacket(new AuthenticationRequestMessage("Nabf1", "pass"));
+
+            //servCom.SeralizePacket(new ActionMessage("recharge",""));
+            var authMessage = servCom.DeserializeMessage();
+
+            var simStartMessage = servCom.DeserializeMessage();
+
 
             //XmlWriter xmlWriter = XmlWriter.Create(streamWrite);
 

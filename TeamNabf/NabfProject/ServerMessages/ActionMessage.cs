@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NabfProject.ServerMessages
 {
-    public class ActionMessage : SendMessage
+    public class ActionMessage : InternalSendMessage
     {
         private string actionType;
         private string actionParam;
@@ -31,7 +31,8 @@ namespace NabfProject.ServerMessages
         {
             writer.WriteStartElement("action");
             writer.WriteAttributeString("type", actionType);
-            writer.WriteAttributeString("param", actionParam);
+            if  ("" != actionParam)
+                writer.WriteAttributeString("param", actionParam);
             writer.WriteEndElement();
         }
     }

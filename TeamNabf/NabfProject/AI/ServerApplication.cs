@@ -45,10 +45,10 @@ namespace NabfProject.AI
             for (int i = 1; i <= nrOfAgents; i++)
             {
                 var message = new AuthenticationRequestMessage(agentName + i, passwords[i - 1]);
-                
-                communication.SendMessage(message);
 
-                var receiveMessage = (AuthenticationResponseMessage) communication.ReceiveMessage().Message;
+                communication.SeralizePacket(message);
+
+                var receiveMessage = (AuthenticationResponseMessage)communication.DeserializeMessage();
 
                 if (receiveMessage.Response == ServerResponseTypes.Success)
                     Console.WriteLine(agentName + i + " connected to server.");
