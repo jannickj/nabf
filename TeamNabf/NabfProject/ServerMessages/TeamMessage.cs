@@ -42,9 +42,9 @@ namespace NabfProject.ServerMessages
 
         private InternalReceiveMessage achievements;
 
-        public InternalReceiveMessage Achievements
+        public AchievementsMessage Achievements
         {
-            get { return achievements; }
+            get { return (AchievementsMessage) achievements; }
         }
 
         public override void ReadXml(System.Xml.XmlReader reader)
