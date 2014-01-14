@@ -71,8 +71,20 @@ namespace NabfProject.AI
             if (xwriter == null)
                 xwriter = XmlWriter.Create(writer, new XmlWriterSettings() { ConformanceLevel = System.Xml.ConformanceLevel.Fragment });
 
+			BeforeSerialize(xwriter, this.writer, packet);
             packet.WriteXml(this.xwriter,this.serializerSender);
+			AfterSerialize(xwriter, this.writer, packet);
             this.xwriter.Flush();
         }
+
+		public virtual void BeforeSerialize(XmlWriter writer, StreamWriter swriter, XmlTransmitterMessage<TSend> packet)
+		{
+
+		}
+
+		public virtual void AfterSerialize(XmlWriter writer, StreamWriter swriter, XmlTransmitterMessage<TSend> packet)
+		{
+
+		}
 	}
 }
