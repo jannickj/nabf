@@ -36,9 +36,8 @@ module DijkstraTest =
             [<Test>]
             member this.FindPath_NoPathExists_ReturnsNone () =
 
-                let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "c"); (None, "b")] |> Set.ofList}); 
-                                        ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a")] |> Set.ofList}); 
-                                        ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) ] |> Map.ofList
+                let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [] |> Set.ofList}); 
+                                        ("b", { Identifier = "b"; Value = None; Edges = [] |> Set.ofList}) ] |> Map.ofList
                 let correctOutput = None
 
                 let actualOutput = Some [""]
@@ -104,11 +103,8 @@ module DijkstraTest =
                 Assert.AreEqual (correctOutput,actualOutput)
             
             [<Test>]
-            member this.FindPath_TwoCasesWithPathsThatTakeEqualTurns_AlwaysReturnsPathWithHighestFinalEnergy () =
+            member this.FindPath_TwoPathsThatTakeTheSameAmountOfTurnsPart1_ReturnsPathWithHighestFinalEnergy () =
 
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                  Case 1                                                 //
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //
                 //          B
                 //      2  / \  2
@@ -138,9 +134,10 @@ module DijkstraTest =
 
                 Assert.AreEqual (correctOutput1,actualOutput1)
 
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                  Case 2                                                 //
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            [<Test>]
+            member this.FindPath_TwoPathsThatTakeTheSameAmountOfTurnsPart2_ReturnsPathWithHighestFinalEnergy () =
+               
                 //
                 //          B
                 //      1  / \  1
