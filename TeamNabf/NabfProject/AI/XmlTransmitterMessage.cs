@@ -53,9 +53,17 @@ namespace NabfProject.AI
 			if (this.UseSeralizerOnMsg)
 				serializer.Serialize(writer, message);
 			else
+			{
+				BeforeWriteMessage(writer);
 				message.WriteXml(writer);
+			}
             writer.WriteEndElement();
         }
+
+		public virtual void BeforeWriteMessage(XmlWriter writer)
+		{
+
+		}
 
         public virtual Data ConstructMessage(XmlReader reader)
         {
