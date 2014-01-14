@@ -2,4 +2,4 @@
 
 open Graph
 
-val dijkstra : Vertex -> Vertex -> Graph -> (string list) option
+val dijkstra : Vertex -> Vertex -> int -> int -> Graph -> (string list) option

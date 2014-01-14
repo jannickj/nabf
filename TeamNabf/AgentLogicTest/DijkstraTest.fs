@@ -1,5 +1,4 @@
-﻿
-namespace AgentLogicTest
+﻿namespace NabfAgentLogic
 module DijkstraTest =
     open System
     open NUnit.Framework
@@ -17,7 +16,7 @@ module DijkstraTest =
                                         ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) ] |> Map.ofList
                 let correctPath = Some ["c"]
 
-                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["c"] graph
+                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["c"] Int32.MaxValue Int32.MaxValue graph
 
                 Assert.AreEqual (correctPath, actualPath)
 
@@ -31,7 +30,7 @@ module DijkstraTest =
 
                 let correctPath = Some []
 
-                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["a"] graph
+                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["a"] Int32.MaxValue Int32.MaxValue graph
 
                 Assert.AreEqual (correctPath, actualPath)
 
@@ -43,7 +42,7 @@ module DijkstraTest =
                             ] |> Map.ofList
                 let correctOutput = None
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["b"] graph
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["b"] Int32.MaxValue Int32.MaxValue graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
@@ -64,9 +63,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["d";"e"]
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["e"] graph
-
-                printfn "path = %A" <| Dijkstra.dijkstra graph.["a"] graph.["e"] graph
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["e"] Int32.MaxValue Int32.MaxValue graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
@@ -102,9 +99,9 @@ module DijkstraTest =
 
                 let correctOutput = Some ["d";"e";"f";"g"]
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] graph
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] 20 agent.Energy graph
 
-                Assert.AreEqual (correctOutput,actualOutput)
+                Assert.AreEqual (correctOutput, actualOutput)
             
             [<Test>]
             member this.FindPath_TwoPathsThatTakeTheSameAmountOfTurnsPart1_ReturnsPathWithHighestFinalEnergy () =
@@ -134,7 +131,7 @@ module DijkstraTest =
 
                 let correctOutput1 = Some ["c","d"]
 
-                let actualOutput1 = Dijkstra.dijkstra graph1.["a"] graph1.["d"] graph1
+                let actualOutput1 = Dijkstra.dijkstra graph1.["a"] graph1.["d"] 20 agent.Energy graph1
 
                 Assert.AreEqual (correctOutput1,actualOutput1)
 
@@ -167,6 +164,6 @@ module DijkstraTest =
 
                 let correctOutput = Some ["b","d"]
 
-                let actualOutput = Dijkstra.dijkstra graph2.["a"] graph2.["d"] graph2
+                let actualOutput = Dijkstra.dijkstra graph2.["a"] graph2.["d"] 20 agent.Energy graph2
 
                 Assert.AreEqual (correctOutput, actualOutput)

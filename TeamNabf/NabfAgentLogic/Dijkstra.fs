@@ -2,14 +2,19 @@ module Dijkstra
 
 open Graph
 
-type Cost = float * float
+type Cost = int * int
+type CostMap = Map<string, Cost>
+type Frontier = string list
+type VertexTree = Map<string, string>
+
+type DijkstraState = Frontier * CostMap * VertexTree
 
 let getNeighbours current (graph : Graph) = 
     current.Edges 
     |> Set.map (fun (edgeCost, otherId) -> 
         match edgeCost with
-        | Some cost -> (float cost , otherId)
-        | None -> (5., otherId))
+        | Some cost -> (cost, otherId)
+        | None -> (5, otherId))
     |> Set.toList
 
 let updateFrontier vertex currentCost explored frontier =
@@ -29,50 +34,72 @@ let rec removeDuplicatesFromSortedList ls =
         head :: removeDuplicatesFromSortedList tail
     | [] -> []
 
-let sortFrontier (costMap : Map<string, float>) frontier = 
-    List.sortBy (fun elem -> costMap.[elem]) frontier 
+let sortFrontier (costMap : CostMap) (frontier : Frontier) = 
+    List.sortBy (fun elem -> 
+        let (steps, energyLeft) = costMap.[elem]
+        (steps, -energyLeft)
+        ) frontier
 
-let rec addNeighbours current neighbours frontier (costMap : Map<string, float>) vertexTree =
-    match neighbours with
-    | (neighbourCost, neighbourId) :: tail -> 
-        if (Map.containsKey neighbourId costMap) && (costMap.[neighbourId] > neighbourCost) then
-            addNeighbours current tail frontier costMap vertexTree
-        else
-            let newCostMap = Map.add neighbourId neighbourCost costMap
-            let newFrontier = (neighbourId :: frontier) |> sortFrontier newCostMap
-            let newVertexTree = Map.add neighbourId current vertexTree
+let evaluateCost maxEnergy currentCost edgeCost =
+    let (steps, energyLeft) = currentCost
+    if energyLeft >= edgeCost then
+        (steps + 1, energyLeft - edgeCost)
+    else
+        (steps + 2, (energyLeft - edgeCost) + (maxEnergy / 2))
 
-            addNeighbours current tail newFrontier newCostMap newVertexTree
-    | [] -> (frontier, costMap, vertexTree)
-
-let constructCostMap (graph : Graph) (start : Vertex) = 
-    Map.toList graph
-    |> List.unzip
-    |> fst
-    |> List.map (fun elem -> 
-        if elem = start.Identifier then 
-            (elem, 0.0) 
+let compareCost cost cost' =
+        let (steps, energy) = cost
+        let (steps', energy') = cost'
+        if (steps > steps') then
+            1
+        elif (steps < steps') then
+            -1
+        elif (energy > energy') then
+            -1
+        elif (energy < energy') then
+            1
         else 
-            (elem, infinity))
-    |> Map.ofList
+            0            
 
-let dijkstra start (goal : Vertex) (graph : Graph) = 
-    let rec dijkstraHelper current explored frontier currentCost vertexTree (costMap : Map<string, float>) =
+let dijkstra start (goal : Vertex) maxEnergy currentEnergy (graph : Graph) = 
+    let rec dijkstraHelper current explored frontier vertexTree (costMap : CostMap) =
+        
+        let addNeighbour (dState : DijkstraState) neighbour =
+            let (thisFrontier, thisCostMap, thisVertexTree) = dState
+            let (edgeCost, neighbourId) = neighbour
+            let neighbourCost = evaluateCost maxEnergy costMap.[current.Identifier] edgeCost 
+
+            if (Map.containsKey neighbourId thisCostMap) && ((compareCost thisCostMap.[neighbourId] neighbourCost) = -1) then
+                dState
+            else
+                let newFrontier = 
+                    if (Map.containsKey neighbourId thisCostMap) then
+                        thisFrontier
+                    else
+                        (neighbourId :: thisFrontier)
+                let newCostMap = Map.add neighbourId neighbourCost thisCostMap
+                let newVertexTree = Map.add neighbourId current.Identifier thisVertexTree
+                (newFrontier |> sortFrontier newCostMap, newCostMap, newVertexTree)
+
         let newExplored = Set.add current.Identifier explored
-        let (newFrontier, newCostMap, newVertexTree) = addNeighbours current.Identifier (getNeighbours current graph) frontier costMap vertexTree
-        printfn "current: %s \nexplored: %A \nfrontier: %A \nvertexTree: %A\n" current.Identifier (Set.toList newExplored) newFrontier (Map.toList vertexTree)
+        let (newFrontier, newCostMap, newVertexTree) = 
+            getNeighbours current graph
+            |> List.filter (fun (_, id) -> not <| Set.contains id newExplored)
+            |> List.fold addNeighbour (frontier, costMap, vertexTree)
+        printfn "current: %s \nexplored: %A \nfrontier: %A \nvertexTree: %A \ncostMap: %A\n" current.Identifier (Set.toList newExplored) newFrontier (Map.toList newVertexTree) (Map.toList newCostMap)
 
         match newFrontier with
         | bestId :: _ when bestId = goal.Identifier ->
             printfn "goal: %s\n" bestId
-            Some <| Map.add goal.Identifier current.Identifier vertexTree
+            Some newVertexTree
         | bestId :: rest ->
             printfn "bestId: %s\n" bestId
-            dijkstraHelper graph.[bestId] newExplored rest (currentCost + 1) newVertexTree newCostMap
+            dijkstraHelper graph.[bestId] newExplored rest newVertexTree newCostMap
         | [] -> 
             None
 
     let rec constructPath (current : string) (vertexTree : Map<string, string>) =
+        printfn "vertexTree: %A" <| Map.toList vertexTree
         printfn "current: %s" current
         if current = start.Identifier then
             printfn "end of list"
@@ -84,8 +111,7 @@ let dijkstra start (goal : Vertex) (graph : Graph) =
     if start.Identifier = goal.Identifier then
         Some []
     else
-        let costMap = constructCostMap graph start
-        let vertexTree = dijkstraHelper start (Set.singleton start.Identifier) List.empty 0 Map.empty<string, string> Map.empty<string, float   >
+        let vertexTree = dijkstraHelper start (Set.singleton start.Identifier) List.empty Map.empty<string, string> (Map.ofList [(start.Identifier, (0, currentEnergy))])
         match vertexTree with
         | Some tree -> Some <| constructPath goal.Identifier tree
         | None -> None
