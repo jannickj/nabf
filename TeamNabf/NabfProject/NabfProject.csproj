@@ -50,6 +50,8 @@
     <Compile Include="AI\AgentMaster.cs" />
     <Compile Include="AI\ServerApplication.cs" />
     <Compile Include="AI\ServerCommunication.cs" />
+    <Compile Include="AI\XmlTransmitterMessage.cs" />
+    <Compile Include="Events\AgentReceivedPerceptsEvent.cs" />
     <Compile Include="NabfModel.cs" />
     <Compile Include="NoticeBoardModel\Notice.cs" />
     <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
@@ -69,6 +71,7 @@
     <Compile Include="ServerMessages\ReceiveMessage.cs" />
     <Compile Include="ServerMessages\RequestActionMessage.cs" />
     <Compile Include="ServerMessages\SelfMessage.cs" />
+    <Compile Include="ServerMessages\InternalSendMessage.cs" />
     <Compile Include="ServerMessages\SendMessage.cs" />
     <Compile Include="ServerMessages\ServerMessageFactory.cs" />
     <Compile Include="ServerMessages\ServerResponseTypes.cs" />
