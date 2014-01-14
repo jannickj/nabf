@@ -41,7 +41,7 @@ module DijkstraTest =
                                         ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) ] |> Map.ofList
                 let correctOutput = None
 
-                let actualOutput = Some [""]
+                let actualOutput = Some []
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
@@ -60,7 +60,7 @@ module DijkstraTest =
                                         ("d", { Identifier = "d"; Value = None; Edges = [(None, "a"); (None, "e")] |> Set.ofList}); 
                                         ("e", { Identifier = "e"; Value = None; Edges = [(None, "c"); (None, "d")] |> Set.ofList}); ] |> Map.ofList
 
-                let correctOutput = Some ["d","e"]
+                let correctOutput = Some ["d";"e"]
 
                 let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["e"] graph
 

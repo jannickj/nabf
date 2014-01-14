@@ -80,7 +80,7 @@
       <Name>XmasEngineView</Name>
     </ProjectReference>
     <ProjectReference Include="..\NabfAgentLogic\NabfAgentLogic.fsproj">
-      <Project>{039ee1f6-4fd5-4dc7-97ed-4d3e5e8b9c20}</Project>
+      <Project>039EE1F6-4FD5-4DC7-97ED-4D3E5E8B9C20</Project>
       <Name>NabfAgentLogic</Name>
     </ProjectReference>
   </ItemGroup>
