@@ -36,5 +36,6 @@ namespace NabfProject.AI
             return (ReceiveMessage) xmlSerReceive.Deserialize(reader);
 
         }
+	
     }
 }
