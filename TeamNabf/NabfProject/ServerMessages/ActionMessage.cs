@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NabfProject.ServerMessages
 {
-    public class ActionMessage : SendMessage
+    public class ActionMessage : InternalSendMessage
     {
         private string actionType;
         private string actionParam;

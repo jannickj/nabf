@@ -16,6 +16,13 @@ namespace NabfProject.ServerMessages
             }
         }
 
+        public override bool UseSeralizerOnMsg
+        {
+            get
+            {
+                return false;
+            }
+        }
         public SendMessage(InternalSendMessage iMessage)
             : base(iMessage)
         { }

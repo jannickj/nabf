@@ -20,7 +20,7 @@ namespace NabfProject.ServerMessages
 
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            //writer.WriteAttributeString("type", MessageType);
+            writer.WriteAttributeString("type", MessageType);
             WriteXmlInternal(writer);
         }
 
