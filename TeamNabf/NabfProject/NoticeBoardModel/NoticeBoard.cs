@@ -70,11 +70,11 @@ namespace NabfProject.NoticeBoardModel
 
         public void ResetNoticeBoard()
         {
-            //_availableJobs.Clear();
-            //_jobs.Clear();
-            //_idToNotice.Clear();
-            //_agentToNotice.Clear();
-            //_freeID = 0;
+            _availableJobs.Clear();
+            _jobs.Clear();
+            _idToNotice.Clear();
+            _agentToNotice.Clear();
+            _freeID = 0;
         }
 
         public Notice CreateNotice(JobType type, int agentsNeeded, List<Node> whichNodes)
