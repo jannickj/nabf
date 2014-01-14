@@ -15,15 +15,13 @@ namespace IiLang
         type PerceptCollection = Data list
 
         let rec buildIil (data : Element) : IilParameter = 
+            let unpackParameters ls = List.map buildIil ls |> List.toSeq<IilParameter>
             match data with
             | ParameterList ls ->
-//                new IilParameterList ( Seq.append Seq.empty (new IilIdentifier (str)) ) 
-                let children = List.map buildIil ls |> List.toSeq<IilParameter>
-                new IilParameterList (children) 
+                new IilParameterList (unpackParameters ls) 
                 :> IilParameter
             | Function (name, ls) -> 
-                let children = List.map buildIil ls |> List.toSeq<IilParameter>
-                new IilFunction (name, children)
+                new IilFunction (name, unpackParameters ls)
                 :> IilParameter
             | Numeral num -> 
                 new IilNumeral (num) 
