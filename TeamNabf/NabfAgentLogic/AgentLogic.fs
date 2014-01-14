@@ -30,6 +30,8 @@
             | EnemySeen      of Agent
             | VertexSeen     of Graph.Vertex
             | EdgeSeen       of Graph.Edge
+            | ProbedVertex   of Graph.Vertex
+            | SurveyedEdge   of Graph.Edge
             | Achievement    of string
             | SimulationStep of int
 
@@ -50,6 +52,10 @@
                     -> { state with World = addVertex state.World vertex }
                 | EdgeSeen edge          
                     -> { state with World = addEdge state.World edge }
+                | ProbedVertex vertex
+                    -> { state with World = addVertexValue state.World vertex }
+                | SurveyedEdge edge
+                    -> { state with World = addEdgeCost state.World edge}
                 | Achievement achievement 
                     -> { state with Achievements = state.Achievements.Add achievement }
                 | SimulationStep step

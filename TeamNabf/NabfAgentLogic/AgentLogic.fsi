@@ -30,6 +30,8 @@
             | EnemySeen      of Agent
             | VertexSeen     of Graph.Vertex
             | EdgeSeen       of Graph.Edge
+            | ProbedVertex   of Graph.Vertex
+            | SurveyedEdge   of Graph.Edge
             | Achievement    of string
             | SimulationStep of int
 
