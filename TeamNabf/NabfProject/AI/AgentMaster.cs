@@ -11,6 +11,7 @@ using NabfProject.Actions;
 using XmasEngineController.AI;
 using XmasEngineModel;
 using XmasEngineModel.EntityLib;
+using System.IO;
 
 namespace NabfProject.AI
 {
@@ -33,9 +34,11 @@ namespace NabfProject.AI
 			{ 
 			
 				Agent agent = new Agent(agentName);
-				XmlReader reader = XmlReader.Create(client.GetStream(),new XmlReaderSettings(){ConformanceLevel=ConformanceLevel.Fragment});
-				XmlWriter writer = XmlWriter.Create(client.GetStream(),new XmlWriterSettings(){ConformanceLevel = System.Xml.ConformanceLevel.Fragment});
-				XmlPacketTransmitter<IilAction, IilPerceptCollection> transmitter = new XmlPacketTransmitter<IilAction, IilPerceptCollection>(reader, writer);
+                //XmlReader reader = XmlReader.Create(client.GetStream(), new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment });
+				//XmlWriter writer = XmlWriter.Create(client.GetStream(),new XmlWriterSettings(){ConformanceLevel = System.Xml.ConformanceLevel.Fragment});
+                StreamReader sreader = new StreamReader(client.GetStream(), Encoding.UTF8);
+                StreamWriter swriter = new StreamWriter(client.GetStream(), Encoding.UTF8);
+				XmlPacketTransmitter<IilAction, IilPerceptCollection> transmitter = new XmlPacketTransmitter<IilAction, IilPerceptCollection>(sreader, swriter);
 				AgentConnection connection = new AgentConnection(agent,transmitter);
 				this.ActionManager.Queue(new AddStandbyAgentAction(agent));
 				return new KeyValuePair<string,AgentController>(agentName, connection);
