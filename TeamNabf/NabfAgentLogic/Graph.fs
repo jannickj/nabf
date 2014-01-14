@@ -31,6 +31,10 @@
     let addVertex graph vertex = 
         updateGraph vertex graph |> Map.add vertex.Identifier vertex
 
+    let removeVertex (vertex : Vertex) (graph : Graph) = graph
+//        let neighbours = 
+//        Map.remove vertex.Identifier graph
+
     let addEdge (graph : Graph) (weight, vertexId1, vertexId2) =
         addEdgeToVertex vertexId1 (weight, vertexId2) graph
         |> addEdgeToVertex vertexId2 (weight, vertexId1)        
