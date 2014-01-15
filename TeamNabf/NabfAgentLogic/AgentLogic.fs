@@ -4,79 +4,20 @@
         open Graph
         open JSLibrary.IiLang
         open JSLibrary.IiLang.DataContainers
+        open AgentTypes
 
-        type Action = int
-        type JobID = int
-        type JobValue = int
-        type Desirability = int
-        type AgentID = string
-
-        type JobType = 
-            | OccupyJob = 1
-            | RepairJob = 2
-            | DisruptJob = 3
-            | AttackJob = 4
-
-        type JobData =
-            | Occupy of Vertex list
-            | Repair of Vertex * AgentID
-            | Disrupt  of Vertex
-            | Attack of Vertex list
-
-        type JobHeader = JobID * JobValue * JobType
-
-        type Job = JobHeader * JobData
-
-
-
-        type AgentRole =
-            | Saboteur
-            | Explorer
-            | Repairer
-            | Inspector
-            | Sentinel
-
-        type Agent =
-            { Energy      : int
-            ; Health      : int
-            ; MaxEnergy   : int
-            ; MaxHealth   : int
-            ; Name        : string
-            ; Node        : string
-            ; Role        : AgentRole
-            ; Strength    : int
-            ; Team        : string
-            ; VisionRange : int
-            ; Position    : string
-            }
-
-        type Percept =
-            | EnemySeen      of Agent
-            | VertexSeen     of Graph.Vertex
-            | EdgeSeen       of Graph.Edge
-            | Achievement    of string
-            | SimulationStep of int
-
-        type ServerData = 
-            | PerceptCollection of Percept list
-            | NewJobs of Job list
-            | AcceptedJob of JobID
-            | ActionRequest
-            | SimulationEnd
-
-        type State =
-            { World          : Graph
-            ; Self           : Agent
-            ; Enemies        : Agent list
-            ; Achievements   : Set<string>
-            ; SimulationStep : int
-            }
+        open Saboteur
+        open Explorer
+        open Inspector
+        open Sentinel
+        open Repairer
+        
 
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
             match percept with
                 | EnemySeen enemy   
-                    -> { state with Enemies = enemy :: state.Enemies }
+                    -> { state with EnemyData = enemy :: state.EnemyData }
                 | VertexSeen vertex 
                     -> { state with World = addVertex state.World vertex }
                 | EdgeSeen edge          
@@ -90,12 +31,6 @@
         let updateState state percepts = 
             List.fold handlePercept state percepts
 
-  
-
-        (* chooseAction : State -> Percept list -> Action *)
-        let chooseAction (currentState:State) =
-            //let newState = updateState currentState percepts
-            0
 
         let buildIilAction (action:Action) =
             new IilAction "some action"
@@ -108,13 +43,31 @@
 
         let generateJobs  (state:State) (jobs:Job list) = 
             List<Job>.Empty
+        
+        let rec addGotoActions neighbours =
+            match neighbours with
+            | [] -> []
+            | (head:Vertex) :: tail -> List.append [Goto(head)] (addGotoActions tail)
 
+        //Generate a list of possible actions given the current state
         let generateActions (state:State) =
-            List<Action>.Empty
+            //Add generic actions
+            let actionList = [Skip;Recharge;Survey;Buy(Battery);Buy(Sensor);Buy(Shield)]
+            //Add goto actions
+            let actionList = List.append (addGotoActions (getNeighbours state.Self.Position state.World)) actionList
+            //Add type-specific actions
+            match state.Self.Role with
+            | Saboteur -> List.append (getSaboteurActions state) actionList
+            | Explorer -> List.append (getExplorerActions state) actionList 
+            | Repairer -> List.append (getRepairerActions state) actionList
+            | Inspector -> List.append (getInspectorActions state) actionList
+            | Sentinel -> List.append (getSentinelActions state) actionList
 
-        let actionDesirability (state:State) (action:Action) =
+        //Returns an integer value representing the desirability of a given action
+        let actionDesirability (state:State) (action:Action) = 
             0
-        let actionDesirabilityBasedOnJob (state:State) (oldDesirability,action:Action) (job:Job) =
+
+        let actionDesirabilityBasedOnJob (state:State) (action:Action,oldDesirability:Desirability) (job:Job) =
             0
         let generateJob (jt:JobType) (s:State) (knownJobs:Job list)  =
             option<Job>.None

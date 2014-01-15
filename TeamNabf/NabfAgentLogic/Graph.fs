@@ -12,6 +12,8 @@
 
     type Graph = Map<string, Vertex>
 
+    let getNeighbours identifier (graph:Graph) = List.map (fun id -> graph.[id]) (snd (List.unzip (Set.toList graph.[identifier].Edges)))
+
     let isVertexAdjacentTo identifier vertex = 
         Set.exists (fun (_, toVertex) -> toVertex = identifier) vertex.Edges 
 
