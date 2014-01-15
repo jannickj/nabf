@@ -42,13 +42,16 @@
   <ItemGroup>
     <Compile Include="Graph.fsi" />
     <Compile Include="Graph.fs" />
-    <Compile Include="AgentLogic.fsi" />
+    <Compile Include="AgentTypes.fs" />
+    <Compile Include="Saboteur.fs" />
+    <Compile Include="Explorer.fs" />
+    <Compile Include="Inspector.fs" />
+    <Compile Include="Sentinel.fs" />
+    <Compile Include="Repairer.fs" />
     <Compile Include="AgentLogic.fs" />
-    <Compile Include="AgentInterfaces.fs" />
-    <Compile Include="Dijkstra.fsi" />
-    <Compile Include="Dijkstra.fs" />
-    <Compile Include="IiLang.fsi" />
     <Compile Include="IiLang.fs" />
+    <Compile Include="AgentInterfaces.fs" />
+    <Compile Include="AgentLogicClient.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

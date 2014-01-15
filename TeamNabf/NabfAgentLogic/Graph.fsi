@@ -12,8 +12,7 @@
 
     type Graph = Map<string, Vertex>
 
-    val addVertexValue : Graph -> Vertex -> Graph
-    val addEdgeCost : Graph -> Edge -> Graph
+    val getNeighbours : string -> Graph -> Vertex list
     val addVertex : Graph -> Vertex -> Graph
     val addEdge : Graph -> Edge -> Graph
     val join : Graph -> Graph -> Graph
