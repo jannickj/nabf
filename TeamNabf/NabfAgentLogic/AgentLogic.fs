@@ -1,5 +1,5 @@
 ﻿namespace NabfAgentLogic
-    module AgentLogic=
+    module AgentLogic =
         open System
         open Graph
         open JSLibrary.IiLang
@@ -31,6 +31,8 @@
         let updateState state percepts = 
             List.fold handlePercept state percepts
 
+        let sharedPercepts (percepts:Percept list) =
+            []:(Percept list)
 
         let buildIilAction (action:Action) =
             new IilAction "some action"
@@ -38,8 +40,8 @@
         let buildJobAccept (job:Job) =
             new IilAction "some action"
 
-        let parseIilPercepts (perceptCollection:IilPerceptCollection) =
-            PerceptCollection (List<Percept>.Empty)
+        let parseIilPercepts (perceptCollection:IilPerceptCollection) : ServerMessage =
+            AgentServerMsg (AcceptedJob 1) 
 
         let generateJobs  (state:State) (jobs:Job list) = 
             List<Job>.Empty
@@ -81,3 +83,6 @@
             new IilAction "evaluation_started"
         let buildEvaluationEnded =
             new IilAction "evaluation_ended"
+
+        let buildSharePerceptsAction (percepts:Percept list) =
+            new IilAction "percepts"
