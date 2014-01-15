@@ -42,10 +42,12 @@
   <ItemGroup>
     <Compile Include="Graph.fsi" />
     <Compile Include="Graph.fs" />
+    <Compile Include="AgentLogic.fsi" />
     <Compile Include="AgentLogic.fs" />
     <Compile Include="IiLang.fs" />
     <Compile Include="AgentInterfaces.fs" />
-    <Compile Include="AgentLogicClient.fs" />
+    <Compile Include="Dijkstra.fsi" />
+    <Compile Include="Dijkstra.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

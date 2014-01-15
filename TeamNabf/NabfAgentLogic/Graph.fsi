@@ -13,5 +13,6 @@
     type Graph = Map<string, Vertex>
 
     val addVertex : Graph -> Vertex -> Graph
+    val removeVertex : Vertex -> Graph -> Graph
     val addEdge : Graph -> Edge -> Graph
     val join : Graph -> Graph -> Graph
