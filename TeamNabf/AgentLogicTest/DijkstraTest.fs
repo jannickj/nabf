@@ -12,24 +12,29 @@ module DijkstraTest =
             [<Test>]
             member this.FindPath_SimpleGraph_FindCorrectPath () =
 
+                let currentEnergy = 10
+                let maxEnergy = 20
+
                 let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "c"); (None, "b")] |> Set.ofList}); 
                               ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a")] |> Set.ofList}); 
                               ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) ] |> Map.ofList
                 let correctPath = Some ["c"]
 
-                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["c"] graph
+                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["c"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctPath, actualPath)
 
             [<Test>]
             member this.FindPath_AlreadyThere_ReturnEmptyPath () =
+                let currentEnergy = 10
+                let maxEnergy = 20
 
                 let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "c"); (None, "b")] |> Set.ofList}); 
                               ("b", { Identifier = "b"; Value = None; Edges = [(None, "c"); (None, "a")] |> Set.ofList});
                               ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) 
                             ] |> Map.ofList
 
-                let path = Dijkstra.dijkstra graph.["a"] graph.["a"] graph
+                let path = Dijkstra.dijkstra graph.["a"] graph.["a"] maxEnergy currentEnergy graph
 
                 // Verify that the result is Some []
                 Assert.IsEmpty(path.Value)
@@ -37,12 +42,15 @@ module DijkstraTest =
             [<Test>]
             member this.FindPath_NoPathExists_ReturnsNone () =
 
+                let currentEnergy = 10
+                let maxEnergy = 20
+
                 let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [] |> Set.ofList});
                               ("b", { Identifier = "b"; Value = None; Edges = [] |> Set.ofList}) 
                             ] |> Map.ofList
                 let correctOutput = None
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["b"] graph
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["b"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
@@ -55,6 +63,9 @@ module DijkstraTest =
                //     /            \
                //    A-------D------E
 
+                let currentEnergy = 10
+                let maxEnergy = 20
+
                 let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b"); (None, "d")] |> Set.ofList}); 
                               ("b", { Identifier = "b"; Value = None; Edges = [(None, "a"); (None, "c")] |> Set.ofList}); 
                               ("c", { Identifier = "c"; Value = None; Edges = [(None, "b"); (None, "e")] |> Set.ofList}); 
@@ -63,9 +74,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["d";"e"]
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["e"] graph
-
-                printfn "path = %A" <| Dijkstra.dijkstra graph.["a"] graph.["e"] graph
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["e"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
@@ -81,14 +90,8 @@ module DijkstraTest =
                 //     A---D---E---F---G
                 //       1   1   1   1
 
-                let agent = {   
-                                Id = "a1";
-                                Type = Explorer;
-                                Energy = 10;
-                                Health = 1;
-                                Strength = 1;
-                                VisionRange = 1
-                            }
+                let currentEnergy = 10
+                let maxEnergy = 20
 
                 let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 10, "b"); (Some 1, "d")] |> Set.ofList}); 
                               ("b", { Identifier = "b"; Value = None; Edges = [(Some 10, "a"); (Some 10, "c")] |> Set.ofList}); 
@@ -100,7 +103,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["d";"e";"f";"g"]
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] graph
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
             
@@ -116,14 +119,8 @@ module DijkstraTest =
                 //      1  \ /  1
                 //          C
 
-                let agent = {   
-                                Id = "a1";
-                                Type = Explorer;
-                                Energy = 10;
-                                Health = 1;
-                                Strength = 1;
-                                VisionRange = 1
-                            }
+                let currentEnergy = 10
+                let maxEnergy = 20
 
                 let graph1 = [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 2, "b"); (Some 1, "c")] |> Set.ofList}); 
                                ("b", { Identifier = "b"; Value = None; Edges = [(Some 2, "a"); (Some 2, "d")] |> Set.ofList}); 
@@ -132,7 +129,7 @@ module DijkstraTest =
 
                 let correctOutput1 = Some ["c";"d"]
 
-                let actualOutput1 = Dijkstra.dijkstra graph1.["a"] graph1.["d"] graph1
+                let actualOutput1 = Dijkstra.dijkstra graph1.["a"] graph1.["d"] maxEnergy currentEnergy graph1
 
                 Assert.AreEqual (correctOutput1,actualOutput1)
 
@@ -149,14 +146,8 @@ module DijkstraTest =
                 //      2  \ /  2
                 //          C
 
-                let agent = {   
-                                Id = "a1";
-                                Type = Explorer;
-                                Energy = 10;
-                                Health = 1;
-                                Strength = 1;
-                                VisionRange = 1
-                            }
+                let currentEnergy = 10
+                let maxEnergy = 20
 
                 let graph2 = [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 1, "b"); (Some 2, "c")] |> Set.ofList}); 
                                ("b", { Identifier = "b"; Value = None; Edges = [(Some 1, "a"); (Some 1, "d")] |> Set.ofList}); 
@@ -165,7 +156,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["b";"d"]
 
-                let actualOutput = Dijkstra.dijkstra graph2.["a"] graph2.["d"] graph2
+                let actualOutput = Dijkstra.dijkstra graph2.["a"] graph2.["d"] maxEnergy currentEnergy graph2
 
                 Assert.AreEqual (correctOutput, actualOutput)
 
@@ -181,14 +172,8 @@ module DijkstraTest =
                 //     A---D---E---F---G
                 //       1   1   1   1
 
-                let agent = {   
-                                Id = "a1";
-                                Type = Explorer;
-                                Energy = 10;
-                                Health = 1;
-                                Strength = 1;
-                                VisionRange = 1
-                            }
+                let currentEnergy = 10
+                let maxEnergy = 20
 
                 let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 2, "b"); (Some 1, "d")] |> Set.ofList}); 
                               ("b", { Identifier = "b"; Value = None; Edges = [(Some 2, "a"); (Some 2, "c")] |> Set.ofList}); 
@@ -200,7 +185,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["b";"c";"g"]
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] graph
+                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
             
