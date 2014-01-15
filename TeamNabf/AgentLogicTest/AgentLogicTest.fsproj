@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Test.fs" />
+    <Compile Include="DijkstraTest.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NabfAgentLogic\NabfAgentLogic.fsproj">
