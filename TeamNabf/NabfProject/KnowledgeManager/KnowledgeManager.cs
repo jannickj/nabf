@@ -12,42 +12,62 @@ namespace NabfProject.KnowledgeManager
 {
     public class KnowledgeManager
     {
-        private List<NabfAgent> _sharingList = new List<NabfAgent>();
+        private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
-        private List<Knowledge> _knowledgeBase = new List<Knowledge>();
+        //private Dictionary<Knowledge, bool> _knowledgeBase = new Dictionary<Knowledge, bool>();
+        private HashSet<Knowledge> _knowledgeBase = new HashSet<Knowledge>(); 
 
-        private Dictionary<Knowledge, NabfAgent> _knowledgeToAgent = new Dictionary<Knowledge, NabfAgent>();
-        private DictionaryList<NabfAgent, Knowledge> _agentToKnowledge = new DictionaryList<NabfAgent, Knowledge>();
+        //private DictionaryList<Knowledge, NabfAgent> _knowledgeToAgent = new DictionaryList<Knowledge, NabfAgent>();
+        //private DictionaryList<NabfAgent, Knowledge> _agentToKnowledge = new DictionaryList<NabfAgent, Knowledge>();
 
-        public void Subscribe(NabfAgent agent)
+        public bool Subscribe(NabfAgent agent)
         {
+            if (_sharingList.Contains(agent))
+                return false;
             _sharingList.Add(agent);
+            return true;
         }
         public bool Unsubscribe(NabfAgent agent)
         {
             return _sharingList.Remove(agent);
         }
 
-        public void SendKnowledge(List<Knowledge> knowledge, NabfAgent agent)
+        public void SendKnowledgeToManager(List<Knowledge> sentKnowledge, NabfAgent sender)
         {
-            Knowledge kl;
-            foreach (Knowledge k in knowledge)
+            //Knowledge kl;
+            foreach (Knowledge k in sentKnowledge)
             {
                 if (!_knowledgeBase.Contains(k))
                 {
                     _knowledgeBase.Add(k);
-                    _knowledgeToAgent.Add(k, agent);
-                    _agentToKnowledge.Add(agent, k);
+                    foreach (NabfAgent a in _sharingList)
+                    {
+                        if (a == sender)
+                            continue;
+                        a.Raise(new NewKnowledgeEvent(k));
+                    }
+                    //_knowledgeToAgent.Add(k, sender);
+                    //_agentToKnowledge.Add(sender, k);
                 }
-                else
-                {
-                    kl = _knowledgeBase.Find(pk => k.Equals(pk));
-                    _knowledgeToAgent.Add(kl, agent);
-                    _agentToKnowledge.Add(agent, kl);
-                }
+                //else
+                //{
+                    //kl = _knowledgeBase.Keys.First(pk => k.Equals(pk));
+                    //_knowledgeToAgent.Add(kl, sender);
+                    //_agentToKnowledge.Add(sender, kl);
+                //}
             }
+            //SendKnowledgeToSubscribedAgents();            
         }
+
+        //private void SendKnowledgeToSubscribedAgents()
+        //{
+        //    foreach(KeyValuePair<Knowledge, bool> kvp in _knowledgeBase)
+        //    {
+        //        if (kvp.Value)
+        //            continue;
+
+
+        //    }
+        //}
     }
-
-
 }

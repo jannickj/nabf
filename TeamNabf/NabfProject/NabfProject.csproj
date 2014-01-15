@@ -51,6 +51,8 @@
     <Compile Include="AI\ServerApplication.cs" />
     <Compile Include="AI\ServerCommunication.cs" />
     <Compile Include="IilLangParser.cs" />
+    <Compile Include="KnowledgeManager\EdgeKnowledge.cs" />
+    <Compile Include="KnowledgeManager\NewKnowledgeEvent.cs" />
     <Compile Include="KnowledgeManager\NodeKnowledge.cs" />
     <Compile Include="KnowledgeManager\Knowledge.cs" />
     <Compile Include="KnowledgeManager\KnowledgeManager.cs" />
