@@ -8,7 +8,7 @@ module Saboteur =
         match agents with
         | [] -> []
         | head :: tail -> 
-            if (not (head.Team = state.Self.Team)) && (head.Position = state.Self.Position)
+            if (not (head.Team = state.Self.Team)) && (head.Position = state.Self.Position)//Only range 0 for now
             then
                 List.append [Attack(head)] (getAttackActions tail state)
             else 

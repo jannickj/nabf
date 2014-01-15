@@ -38,7 +38,7 @@ module AgentTypes =
                 | Goto      of Vertex
                 | Probe     of Option<Vertex>
                 | Survey    
-                | Inspect   of Option<Agent>
+                | Inspect   of Agent
                 | Attack    of Agent
                 | Parry
                 | Repair    of Agent
