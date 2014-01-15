@@ -49,15 +49,9 @@
     <Compile Include="Sentinel.fs" />
     <Compile Include="Repairer.fs" />
 =======
-    <Compile Include="AgentLogic.fsi" />
->>>>>>> b63a50bab6eae128441077e7364f04038b2ff742
-    <Compile Include="AgentLogic.fs" />
-    <Compile Include="IiLang.fs" />
-    <Compile Include="AgentInterfaces.fs" />
-    <Compile Include="AgentLogicClient.fs" />
-    <Compile Include="Dijkstra.fsi" />
-    <Compile Include="Dijkstra.fs" />
-  </ItemGroup>
+    
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; b63a50bab6eae128441077e7364f04038b2ff742
+    <Compile Include="AgentLogic.fs" /><Compile Include="IiLang.fs" /><Compile Include="AgentInterfaces.fs" /><Compile Include="AgentLogicClient.fs" /><Compile Include="Dijkstra.fsi" /><Compile Include="Dijkstra.fs" /></ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>

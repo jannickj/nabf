@@ -7,6 +7,7 @@
     open NabfAgentLogic.AgentLogic;
     open System.Threading;
     open System.Linq;
+    open AgentTypes
 
 
     type public AgentLogicClient() = 
@@ -102,8 +103,8 @@
                         let u = List.map (fun elem -> (elem,0)) (unique this.possibleActions this.decidedActions)
                         this.decidedActions@u)
 
-                let reEvalActions (desire,action) =
-                    let newDesire = actionDesirabilityBasedOnJob this.BeliefData (desire,action) acceptedJob
+                let reEvalActions (action, desire) =
+                    let newDesire = actionDesirabilityBasedOnJob this.BeliefData (action,desire) acceptedJob
                     this.addDesiredAction(action,newDesire)
                     ()
                 this.asyncCalculationMany reEvalActions full stopDeciders.Token 

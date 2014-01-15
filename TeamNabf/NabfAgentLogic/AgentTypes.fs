@@ -72,12 +72,28 @@ module AgentTypes =
                 | Achievement    of string
                 | SimulationStep of int
 
-            type ServerData = 
-                | PerceptCollection of Percept list
-                | NewJobs of Job list
+            type Deadline = int
+            type CurrentTime = int
+            type Rank = int
+            type Score = int
+            type ActionID = int
+            
+
+            type AgentServerMessage =
+                | NewJobs of Job List
                 | AcceptedJob of JobID
-                | ActionRequest
-                | SimulationEnd
+                | SharedPercepts of Percept list
+
+            type MarsServerMessage =  
+                | ActionRequest of  Deadline*CurrentTime*ActionID*(Percept list)
+                | SimulationStart
+                | SimulationEnd of Rank*Score
+                | ServerClosed
+
+            type ServerMessage = 
+                | AgentServerMsg of AgentServerMessage
+                | MarsServerMsg of MarsServerMessage
+
 
             type State =
                 { 
