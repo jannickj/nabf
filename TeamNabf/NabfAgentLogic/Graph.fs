@@ -31,39 +31,23 @@
     let addVertex graph vertex = 
         updateGraph vertex graph |> Map.add vertex.Identifier vertex
 
-    let removeVertex (vertex : Vertex) (graph : Graph) = graph
-//        let neighbours = 
-//        Map.remove vertex.Identifier graph
-
     let addEdge (graph : Graph) (weight, vertexId1, vertexId2) =
         addEdgeToVertex vertexId1 (weight, vertexId2) graph
-        |> addEdgeToVertex vertexId2 (weight, vertexId1)        
+        |> addEdgeToVertex vertexId2 (weight, vertexId1)
 
-    let contains l elem = List.exists ((=) elem) l
+    let join (graph : Graph) (graph' : Graph) = 
+        Map.empty<string, Vertex> : Graph
 
-    let containsId id l = List.exists (fun elem -> elem.Identifier = id) l
+    let addVertexValue (graph : Graph) (vertex : Vertex) =
+        let vertex = graph.[vertex.Identifier]
+        let updatedVertex = { vertex with Value = vertex.Value }
+        Map.remove vertex.Identifier graph
+        |> Map.add vertex.Identifier updatedVertex
 
-    let getElem id l = List.find (fun elem -> elem.Identifier = id) l
-
-    let rec joinLists (l : Vertex List) (l' : Vertex List) =
-        match l with
-        | [] -> l'
-        | head :: tail -> 
-          if (containsId head.Identifier l') then 
-            let (e : Vertex) = getElem head.Identifier l'
-            let newEdgeSet = Set.union head.Edges e.Edges
-            let newList = List.filter ((<>) e) l'
-            joinLists tail ({Identifier=head.Identifier;Value=head.Value;Edges=newEdgeSet}::newList)
-          else
-            joinLists tail (head::l')
-
-    let rec addToMap l (m : Map<string, Vertex>) =
-        match l with
-        | [] -> m
-        | head :: tail -> addToMap tail (m.Add (head.Identifier, head))
-
-    let listFromGraph (graph : Graph) = List.map snd <| Map.toList graph
-              
-    let join (graph : Graph) (graph' : Graph) =
-        let joinedList = joinLists (listFromGraph graph) (listFromGraph graph')
-        (addToMap joinedList Map.empty<string, Vertex>) : Graph
+    let addEdgeCost (graph : Graph) ((v,s1,s2) : Edge) =
+        let v1 = graph.[s1]
+        let e1 = Set.map (fun (e : DirectedEdge) -> if e = (None,s2) then (v,s2) else (None,s2)) v1.Edges
+        let g1 = graph.Add (s1,{v1 with Edges = e1})
+        let v2 = g1.[s2]
+        let e2 = Set.map (fun (e : DirectedEdge) -> if e = (None,s1) then (v,s1) else (None,s1)) v2.Edges
+        g1.Add (s2,{v2 with Edges = e2})
