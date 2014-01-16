@@ -44,6 +44,8 @@
     <Compile Include="Graphing\Dijkstra.fsi" />
     <Compile Include="Graphing\Dijkstra.fs" />
     <Compile Include="AgentTypes.fs" />
+    <Compile Include="PathFinding.fsi" />
+    <Compile Include="PathFinding.fs" />
     <Compile Include="IiLang\IiLang.fs" />
     <Compile Include="IiLang\IilTranslator.fs" />
     <Compile Include="CommonLogic.fs" />

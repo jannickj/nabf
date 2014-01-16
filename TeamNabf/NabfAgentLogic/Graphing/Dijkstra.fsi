@@ -3,4 +3,10 @@
 
         open Graph
 
-        val dijkstra : Vertex -> Vertex -> int -> int -> Graph -> (string list) option
+        type 'a Problem when 'a : comparison =
+            { GoalEvaluator : Vertex -> bool
+            ; CostEvaluator : int -> 'a -> 'a
+            ; InitialCost   : 'a
+            }
+
+        val dijkstra : Vertex -> 'a Problem -> Graph -> (string list) option

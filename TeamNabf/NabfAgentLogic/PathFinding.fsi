@@ -1,0 +1,18 @@
+namespace NabfAgentLogic
+    module PathFinding = 
+        open Graphing.Graph
+        open Graphing.Dijkstra
+        open AgentTypes
+
+        [<CustomComparison; CustomEquality>]
+        type PathCost = 
+            { Steps : int
+            ; Energy : int
+            }
+            with
+            interface System.IComparable<PathCost> 
+            interface System.IComparable
+            interface System.IEquatable<PathCost>
+
+        val pathToNearest : Agent -> (Vertex -> bool) -> Graph -> (string list) option
+        val pathTo : Agent -> string -> Graph -> (string list) option

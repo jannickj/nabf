@@ -6,34 +6,15 @@ namespace Graphing
         type 'a Problem when 'a : comparison =
             { GoalEvaluator : Vertex -> bool
             ; CostEvaluator : int -> 'a -> 'a
+            ; InitialCost   : 'a
             }
-        
-        [<CustomComparison; CustomEquality>]
-        type pathCost = 
-            { Steps : int
-            ; Energy : int
-            }
-
-            with 
-                interface System.IComparable<pathCost> with
-                    member this.CompareTo other = 
-                        let (Steps', Energy') = (other.Steps, other.Energy)
-                        if (this.Steps > Steps') then      1
-                        elif (this.Steps < Steps') then   -1
-                        elif (this.Energy > Energy') then -1
-                        elif (this.Energy < Energy') then  1
-                        else                               0 
-                
-                interface System.IEquatable<pathCost> with
-                    member this.Equals other =
-                        (this.Steps = other.Steps) && (this.Energy = other.Energy)
 
         type Cost = int * int
-        type CostMap = Map<string, Cost>
+        type CostMap<'a> = Map<string, 'a>
         type Frontier = string list
         type VertexTree = Map<string, string>
 
-        type DijkstraState = Frontier * CostMap * VertexTree
+        type DijkstraState<'a> = Frontier * CostMap<'a> * VertexTree
 
         let getNeighbours current (graph : Graph) = 
             current.Edges 
@@ -43,13 +24,13 @@ namespace Graphing
                 | None -> (5, otherId))
             |> Set.toList
 
-        let updateFrontier vertex currentCost explored frontier =
-            vertex.Edges 
-            |> Set.toList 
-            |> List.filter (fun (_, id) -> not <| Set.contains id explored)
-            |> List.map (fun (cost, id) -> (1 + currentCost, id))
-            |> List.append frontier
-            |> List.sortBy (fun (cost, _) -> cost)
+//        let updateFrontier vertex currentCost explored frontier =
+//            vertex.Edges 
+//            |> Set.toList 
+//            |> List.filter (fun (_, id) -> not <| Set.contains id explored)
+//            |> List.map (fun (cost, id) -> (1 + currentCost, id))
+//            |> List.append frontier
+//            |> List.sortBy (fun (cost, _) -> cost)
 
 
         let rec removeDuplicatesFromSortedList ls = 
@@ -60,11 +41,8 @@ namespace Graphing
                 head :: removeDuplicatesFromSortedList tail
             | [] -> []
 
-        let sortFrontier (costMap : CostMap) (frontier : Frontier) = 
-            List.sortBy (fun elem -> 
-                let (steps, energyLeft) = costMap.[elem]
-                (steps, -energyLeft)
-                ) frontier
+        let sortFrontier (costMap : CostMap<'a>) (frontier : Frontier) = 
+            List.sortBy (fun elem -> costMap.[elem]) frontier
 
         let evaluateCost maxEnergy currentCost edgeCost =
             let (steps, energyLeft) = currentCost
@@ -87,15 +65,22 @@ namespace Graphing
                 else 
                     0            
 
-        let dijkstra start (goal : Vertex) maxEnergy currentEnergy (graph : Graph) = 
-            let rec dijkstraHelper current explored frontier vertexTree (costMap : CostMap) =
+        let dijkstra start (problem : 'a Problem) (graph : Graph) = 
+            
+            let rec constructPath (current : string) (vertexTree : Map<string, string>) =
+                if current = start.Identifier then
+                    []
+                else
+                    (constructPath vertexTree.[current] vertexTree) @ [current]
+
+            let rec dijkstraHelper current explored frontier vertexTree (costMap : CostMap<'a>) =
                 
-                let addNeighbour (dState : DijkstraState) neighbour =
+                let addNeighbour (dState : DijkstraState<'a>) neighbour =
                     let (thisFrontier, thisCostMap, thisVertexTree) = dState
                     let (edgeCost, neighbourId) = neighbour
-                    let neighbourCost = evaluateCost maxEnergy costMap.[current.Identifier] edgeCost 
+                    let neighbourCost = problem.CostEvaluator edgeCost costMap.[current.Identifier] 
 
-                    if (Map.containsKey neighbourId thisCostMap) && ((compareCost thisCostMap.[neighbourId] neighbourCost) = -1) then
+                    if (Map.containsKey neighbourId thisCostMap) && (thisCostMap.[neighbourId] < neighbourCost) then
                         dState
                     else
                         let newFrontier = 
@@ -112,34 +97,23 @@ namespace Graphing
                     getNeighbours current graph
                     |> List.filter (fun (_, id) -> not <| Set.contains id newExplored)
                     |> List.fold addNeighbour (frontier, costMap, vertexTree)
-                printfn "current: %s \nexplored: %A \nfrontier: %A \nvertexTree: %A \ncostMap: %A\n" current.Identifier (Set.toList newExplored) newFrontier (Map.toList newVertexTree) (Map.toList newCostMap)
 
                 match newFrontier with
-                | bestId :: _ when bestId = goal.Identifier ->
-                    printfn "goal: %s\n" bestId
-                    Some newVertexTree
+                | bestId :: _ when problem.GoalEvaluator graph.[bestId] ->
+                    Some <| constructPath bestId newVertexTree
                 | bestId :: rest ->
-                    printfn "bestId: %s\n" bestId
                     dijkstraHelper graph.[bestId] newExplored rest newVertexTree newCostMap
                 | [] -> 
                     None
 
-            let rec constructPath (current : string) (vertexTree : Map<string, string>) =
-                printfn "vertexTree: %A" <| Map.toList vertexTree
-                printfn "current: %s" current
-                if current = start.Identifier then
-                    printfn "end of list"
-                    []
-                else
-                    printfn "not end"
-                    (constructPath vertexTree.[current] vertexTree) @ [current]
-            
-            if start.Identifier = goal.Identifier then
+            if problem.GoalEvaluator start then
                 Some []
             else
-                let vertexTree = dijkstraHelper start (Set.singleton start.Identifier) List.empty Map.empty<string, string> (Map.ofList [(start.Identifier, (0, currentEnergy))])
-                match vertexTree with
-                | Some tree -> Some <| constructPath goal.Identifier tree
-                | None -> None
+                let explored = Set.singleton start.Identifier
+                let frontier = List.empty
+                let vertexTree = Map.empty<string, string>
+                let costMap = Map.ofList [(start.Identifier, problem.InitialCost)]
+                dijkstraHelper start explored frontier vertexTree costMap
+
              
             
