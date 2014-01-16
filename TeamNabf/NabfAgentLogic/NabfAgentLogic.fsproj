@@ -40,7 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Graph.fsi" />
     <Compile Include="Graph.fs" />
     <Compile Include="AgentTypes.fs" />
     <Compile Include="Saboteur.fs" />
@@ -48,7 +47,14 @@
     <Compile Include="Inspector.fs" />
     <Compile Include="Sentinel.fs" />
     <Compile Include="Repairer.fs" />
-    <Compile Include="AgentLogic.fs" /><Compile Include="IiLang.fs" /><Compile Include="AgentInterfaces.fs" /><Compile Include="AgentLogicClient.fs" /><Compile Include="Dijkstra.fsi" /><Compile Include="Dijkstra.fs" /></ItemGroup>
+    <Compile Include="AgentLogic.fs" />
+    <Compile Include="IiLang.fs" />
+    <Compile Include="AgentInterfaces.fs" />
+    <Compile Include="AgentLogicClient.fs" />
+    <Compile Include="Dijkstra.fsi" />
+    <Compile Include="Dijkstra.fs" />
+    <Compile Include="IilTranslator.fs" />
+  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>

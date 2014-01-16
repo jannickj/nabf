@@ -2,7 +2,7 @@
 
 module AgentTypes =
 
-    open Graph
+    open Graphing.Graph
 
     type Upgrade =
                 | Battery
@@ -28,8 +28,7 @@ module AgentTypes =
                 Role        : AgentRole; 
                 Strength    : int; 
                 Team        : string; 
-                VisionRange : int; 
-                Position    : string
+                VisionRange : int;
                 }
 
             type Action =
@@ -67,8 +66,8 @@ module AgentTypes =
 
             type Percept =
                 | EnemySeen      of Agent
-                | VertexSeen     of Graph.Vertex
-                | EdgeSeen       of Graph.Edge
+                | VertexSeen     of Vertex
+                | EdgeSeen       of Edge
                 | Achievement    of string
                 | SimulationStep of int
 

@@ -8,7 +8,7 @@ module Inspector =
         match agents with
         | [] -> []
         | head :: tail -> 
-            if (not (head.Team = state.Self.Team)) && (head.Position = state.Self.Position)//Only range 0 for now
+            if (not (head.Team = state.Self.Team)) && (head.Node = state.Self.Node)//Only range 0 for now
             then
                 List.append [Inspect(head)] (getInspectActions tail state)
             else 

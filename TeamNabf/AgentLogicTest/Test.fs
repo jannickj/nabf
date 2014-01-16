@@ -3,7 +3,7 @@ namespace AgentLogicTest
 open System
 open NUnit.Framework
 open NabfAgentLogic.AgentLogic
-open Graph
+open Graphing.Graph
 
 [<TestFixture>]
 type GraphTest() = 

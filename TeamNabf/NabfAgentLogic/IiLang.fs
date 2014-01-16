@@ -1,5 +1,5 @@
 namespace IiLang
-    module IiLangHandler =
+    module IiLang =
         open JSLibrary.IiLang
         open JSLibrary.IiLang.Parameters
         open JSLibrary.IiLang.DataContainers
@@ -9,9 +9,11 @@ namespace IiLang
                      | Function      of (string * Element list)
                      | Numeral       of float
                      | Identifier    of string
-
-        type Data = Percept of (string * Element list)
-                  | Action  of (string * Element list)
+        
+        type Data = string * Element list
+        
+        type DataContainer = Percept of Data
+                           | Action  of Data
 
         type PerceptCollection = Data list
 
