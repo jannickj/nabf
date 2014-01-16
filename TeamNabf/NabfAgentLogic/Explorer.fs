@@ -4,4 +4,8 @@ module Explorer =
 
     open AgentTypes
 
-    let getExplorerActions (state:State) = [Probe(None)]
+    let getExplorerTree : Decision<(State -> (bool*Option<Action>))> =
+        Options 
+            [
+                
+            ]
