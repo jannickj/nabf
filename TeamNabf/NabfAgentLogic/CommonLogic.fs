@@ -2,7 +2,7 @@
 module CommonLogic =
 
     open AgentTypes
-    open Graph
+    open Graphing.Graph
 
     let advancedGoto (v:Vertex) (s:State) =
         let edges = Set.toList s.World.[s.Self.Node].Edges
@@ -15,7 +15,7 @@ module CommonLogic =
             if value > s.Self.Energy then (true,Some(Recharge)) else (true,Some(Goto(v)))
 
     let reactToEnemyAgent (s:State) =
-        let agents = List.filter (fun a -> a.Node = s.Self.Position && a.Team <> s.Self.Team && (a.Role = Some Saboteur || a.Role = None)) s.NearbyAgents
+        let agents = List.filter (fun a -> a.Node = s.Self.Node && a.Team <> s.Self.Team && (a.Role = Some Saboteur || a.Role = None)) s.NearbyAgents
         if not agents.IsEmpty then
             match s.Self.Role.Value with
             | Saboteur -> (true,Some(Attack(agents.Head)))

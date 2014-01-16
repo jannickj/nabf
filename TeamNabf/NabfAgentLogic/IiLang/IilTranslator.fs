@@ -24,11 +24,12 @@ namespace NabfAgentLogic.IiLang
 
         let parseIilRole iilData = 
             match iilData with
-            | Identifier "Saboteur"  -> Saboteur
-            | Identifier "Explorer"  -> Explorer
-            | Identifier "Repairer"  -> Repairer
-            | Identifier "Inspector" -> Inspector
-            | Identifier "Sentinel"  -> Sentinel
+            | Identifier "Saboteur"  -> Some Saboteur
+            | Identifier "Explorer"  -> Some Explorer
+            | Identifier "Repairer"  -> Some Repairer
+            | Identifier "Inspector" -> Some Inspector
+            | Identifier "Sentinel"  -> Some Sentinel
+            | Identifier ""          -> None
             | _ -> raise <| InvalidIilException ("Role", iilData)
         
         let parseIilAgent iilData =

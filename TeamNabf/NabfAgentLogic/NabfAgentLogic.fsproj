@@ -42,11 +42,13 @@
   <ItemGroup>
     <Compile Include="Graph.fs" />
     <Compile Include="AgentTypes.fs" />
+    <Compile Include="CommonLogic.fs" />
     <Compile Include="Saboteur.fs" />
     <Compile Include="Explorer.fs" />
     <Compile Include="Inspector.fs" />
     <Compile Include="Sentinel.fs" />
     <Compile Include="Repairer.fs" />
+    <Compile Include="DecisionTree.fs" />
     <Compile Include="AgentLogic.fs" />
     <Compile Include="AgentInterfaces.fs" />
     <Compile Include="AgentLogicClient.fs" />

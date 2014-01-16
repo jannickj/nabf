@@ -1,7 +1,7 @@
 ﻿namespace NabfAgentLogic
     module AgentLogic =
         open System
-        open Graph
+        open Graphing.Graph
         open JSLibrary.IiLang
         open JSLibrary.IiLang.DataContainers
         open AgentTypes
