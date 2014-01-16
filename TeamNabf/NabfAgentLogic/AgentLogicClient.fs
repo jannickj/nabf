@@ -10,27 +10,33 @@
     open AgentTypes
 
 
-    type public AgentLogicClient() = 
+    type public AgentLogicClient() = class 
         
         
         [<DefaultValue>] val mutable private BeliefData : State
         [<DefaultValue>] val mutable private KnownJobs : List<Job>
         //[<DefaultValue>] val mutable private DesiredJobs : List<Job*Desirability>
-        [<DefaultValue>] val mutable private possibleActions : List<Action>
-        [<DefaultValue>] val mutable private decidedActions : List<Action*Desirability>
+        //[<DefaultValue>] val mutable private possibleActions : List<Action>
+        [<DefaultValue>] val mutable private decidedAction : (DecisionRank*Action)
+        //[<DefaultValue>] val mutable private undecidedDecisions : (DecisionRank*Decision<(State -> (bool*Option<Action>))>) list
         [<DefaultValue>] val mutable private awaitingPercepts : List<Percept>
         
+        let decisionTree = generateDecisionTree
         let mutable simEnded = false
         let mutable runningCalc = 0
-        let mutable lastHighestDesire:Desirability = 0
+        //let mutable lastHighestDesire:Desirability = 0
         
 
         //Parallel helpers
         let stopDeciders = new CancellationTokenSource()
+
+        let stateLock = new Object()
+        let decisionLock = new Object()
         let actionDeciderLock = new Object()
         let runningCalcLock = new Object()
         let knonwJobsLock = new Object()
         let awaitingPerceptsLock = new Object()
+        
 
 
         let SendAgentServerEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
@@ -43,7 +49,11 @@
         let ActionRequestedEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
         let SimulationEndedEvent = new Event<EventHandler, EventArgs>()
 
-        member private this.asyncCalculation func stopToken =
+        
+
+        member private this.asyncCalculation stopToken func = this.asyncCalculationAF stopToken (async { func() })
+
+        member private this.asyncCalculationAF stopToken func =
             let changeCals value = 
                 lock runningCalcLock (fun () -> 
                 if runningCalc = 0 then
@@ -55,7 +65,7 @@
             let asyncF f = 
                 async
                     {
-                        f()
+                        Async.RunSynchronously f
                         do! Async.Sleep(1)
                         changeCals(-1)
                         ()
@@ -65,8 +75,50 @@
             Async.Start ((asyncF func), stopToken)
             () 
 
+        member private this.EvaluateDecision (rankCur:DecisionRank) (stopToken:CancellationToken) (stopSource:CancellationTokenSource) (s:State,d:Decision<(State -> (bool*Option<Action>))>) =
+            match d with
+            | Choice f -> 
+                this.asyncCalculationAF stopToken (
+                    async
+                        { 
+                            use! handler = Async.OnCancel(fun () -> stopSource.Cancel())
+                            let (b,a) = f s
+                            lock decisionLock (fun () ->
+                                let (cR,cA) = this.decidedAction
+                                if b && cR > rankCur && a.IsSome then
+                                    this.decidedAction <- (rankCur,a.Value)
+                                    stopSource.Cancel()
+                                )
+                        }
+                    )
+            | Options ds -> 
+                ignore <| List.fold ( fun (r,c) t ->
+                                        let iteStopSource = new CancellationTokenSource()
+                                        this.EvaluateDecision r c iteStopSource (s,t)
+                                        (r+1,iteStopSource.Token)
+                                        ) (rankCur,stopToken) ds
+            | Condition (c,d) -> 
+                this.asyncCalculationAF stopToken (
+                            async
+                                {
+                                    use! handler = Async.OnCancel(fun () -> stopSource.Cancel())
+                                    let (b,_) = c s
+                                    let source = new CancellationTokenSource()
+                                    this.EvaluateDecision rankCur stopSource.Token source (s,d)
+                                })
+                    
+
+
+
+
+            
+
+        member private this.EvaluteState (s:State) =
+            this.EvaluateDecision 0 stopDeciders.Token (new CancellationTokenSource()) (s,decisionTree)
+            
+
         member private this.asyncCalculationMany func values stopToken =
-            List.iter (fun v -> (this.asyncCalculation (fun () -> func v) stopToken)) values
+            List.iter (fun v -> (this.asyncCalculation stopToken (fun () -> func v))) values
 
         member private this.ReEvaluate percepts =
             stopDeciders.Cancel()
@@ -74,18 +126,15 @@
                                         let percepts = this.awaitingPercepts
                                         this.awaitingPercepts <- []
                                         percepts)
-            this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
+            let mutable a = 0
+
+            let b = a <- 1
+                    a
+
+            let stateData = lock stateLock (fun () -> this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
+                                                      this.BeliefData)
             runningCalc <- 0
-            lastHighestDesire <- List.max (List.map (fun (_,desire) -> desire) this.decidedActions)
-            this.decidedActions <- []
-            this.possibleActions <- generateActions this.BeliefData
-            let actionDecider state action =
-                let desire = 10//actionDesirability state action
-                this.addDesiredAction (action,desire)
-                        
-            //List.iter (fun action -> Async.Start ((),stopDeciders.Token)) localActions       
-            this.asyncCalculationMany (fun action -> actionDecider this.BeliefData action) this.possibleActions stopDeciders.Token
-            ()
+            this.EvaluteState stateData
 
         let stopLogic () =
             stopDeciders.Cancel()
@@ -93,21 +142,18 @@
         
         member private this.CalculateAcceptedJob id =
             let foundJob = List.tryFind (fun ((jid,_,_),_) -> jid = id) this.KnownJobs
-            if foundJob.IsNone then
+            if foundJob.IsSome then
+                let update = 
+                    async
+                        {
+                            let ajob = foundJob.Value
+                            let stateData = lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob 
+                                                                        this.BeliefData)
+                            this.EvaluteState stateData
+                            ()
+                        }
                 ()
-            else
-                let acceptedJob = foundJob.Value
-                let full = lock actionDeciderLock (fun () ->
-                        let contains elem = List.exists (fun (e, _) -> e = elem)
-                        let unique l l' = List.filter (fun elem -> not <| (contains elem l')) l
-                        let u = List.map (fun elem -> (elem,0)) (unique this.possibleActions this.decidedActions)
-                        this.decidedActions@u)
-
-                let reEvalActions (action, desire) =
-                    let newDesire = 10//actionDesirabilityBasedOnJob this.BeliefData (action,desire) acceptedJob
-                    this.addDesiredAction(action,newDesire)
-                    ()
-                this.asyncCalculationMany reEvalActions full stopDeciders.Token 
+            
 
         member private this.generateNewJobs() = 
             let jobTypes = Enum.GetValues(typeof<JobType>)
@@ -121,7 +167,8 @@
 
             let jobTypeList = List.ofSeq (jobTypes.Cast<JobType>())
             let knownjobs jobtype =List.filter (fun ((_, _, jt), _) -> jt = jobtype) this.KnownJobs
-            this.asyncCalculationMany (fun jobType -> jobGenFunc jobType this.BeliefData (knownjobs jobType) ) jobTypeList stopDeciders.Token
+            let stateData = lock stateLock (fun () -> this.BeliefData)
+            this.asyncCalculationMany (fun jobType -> jobGenFunc jobType stateData (knownjobs jobType) ) jobTypeList stopDeciders.Token
 
         member private this.evaluateJob job =
             let desire = decideJob(job)
@@ -215,3 +262,4 @@
             member this.ActionRequested = ActionRequestedEvent.Publish
             [<CLIEvent>]
             member this.SimulationEnded  = SimulationEndedEvent.Publish
+    end

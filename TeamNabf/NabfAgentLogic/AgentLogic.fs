@@ -33,6 +33,9 @@
 
         let sharedPercepts (percepts:Percept list) =
             []:(Percept list)
+        
+        let updateStateWhenGivenJob (state:State) (job:Job) =
+            state
 
         let buildIilAction (action:Action) =
             new IilAction "some action"
@@ -65,7 +68,7 @@
             | Inspector -> List.append (getInspectorActions state) actionList
             | Sentinel -> List.append (getSentinelActions state) actionList
 
-        let generateDecisionTree : Decision<(State -> (bool*Option<Action>))> =
+        let generateDecisionTree : Decision<OptionFunc> =
             Options []
 
         

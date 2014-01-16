@@ -13,6 +13,7 @@ module AgentTypes =
                 | Options of Decision<'a> list
 
            
+
             type Upgrade =
                 | Battery
                 | Sensor
@@ -113,3 +114,7 @@ module AgentTypes =
                     SimulationStep : int;
                     NearbyAgents   : Agent list
                 }
+
+            type OptionFunc = State -> (bool*Option<Action>)
+
+            type DecisionRank = int
