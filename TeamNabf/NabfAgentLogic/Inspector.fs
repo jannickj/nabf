@@ -9,3 +9,9 @@ module Inspector =
             [
                 
             ]
+
+    let inspectorReact =
+        Options
+            [
+                
+            ]

@@ -9,3 +9,9 @@ module Explorer =
             [
                 
             ]
+
+    let explorerReact =
+        Options
+            [
+                
+            ]

@@ -15,17 +15,16 @@ module CommonLogic =
             if value > s.Self.Energy then (true,Some(Recharge)) else (true,Some(Goto(v)))
 
     let reactToEnemyAgent (s:State) =
-        let agents = List.filter (fun a -> a.Node = s.Self.Position && a.Team <> s.Self.Team && (a.Role = Some Saboteur || a.Role = None)) s.NearbyAgents
-        if not agents.IsEmpty then
+        let agents = List.partition (fun a -> a.Node = s.Self.Position && a.Team <> s.Self.Team) s.NearbyAgents
+        if not (fst agents).IsEmpty then
             match s.Self.Role.Value with
-            | Saboteur -> (true,Some(Attack(agents.Head)))
+            | Saboteur -> (true,Some(Attack((fst agents).Head)))
             | Repairer
             | Sentinel -> (true,Some(Parry))
             | Explorer -> (true,Some(Goto((getNeighbours s.Self.Node s.World).Head)))
             | Inspector -> (true,Some(Recharge))
         else
             (false,None)
-
 
     let exploreLocalGraph (s:State) =
         let neighbours = getNeighbours s.Self.Node s.World
