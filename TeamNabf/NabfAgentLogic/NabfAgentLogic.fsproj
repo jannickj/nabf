@@ -40,8 +40,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Graph.fs" />
+    <Compile Include="Graphing\Graph.fs" />
+    <Compile Include="Graphing\Dijkstra.fsi" />
+    <Compile Include="Graphing\Dijkstra.fs" />
     <Compile Include="AgentTypes.fs" />
+    <Compile Include="IiLang\IiLang.fs" />
+    <Compile Include="IiLang\IilTranslator.fs" />
     <Compile Include="CommonLogic.fs" />
     <Compile Include="Saboteur.fs" />
     <Compile Include="Explorer.fs" />
@@ -52,10 +56,6 @@
     <Compile Include="AgentLogic.fs" />
     <Compile Include="AgentInterfaces.fs" />
     <Compile Include="AgentLogicClient.fs" />
-    <Compile Include="Dijkstra.fsi" />
-    <Compile Include="Dijkstra.fs" />
-    <Compile Include="IiLang\IiLang.fs" />
-    <Compile Include="IiLang\IilTranslator.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -76,5 +76,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="IiLang\" />
+    <Folder Include="Graphing\" />
   </ItemGroup>
 </Project>
