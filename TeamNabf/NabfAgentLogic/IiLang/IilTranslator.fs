@@ -1,8 +1,8 @@
-namespace NabfAgentLogic
+namespace NabfAgentLogic.IiLang
     module IilTranslator = 
-        open IiLang.IiLang
-        open AgentTypes
         open Graphing.Graph
+        open IiLangDefinitions
+        open NabfAgentLogic.AgentTypes
 
         exception InvalidIilException of string * Element
 
@@ -65,10 +65,5 @@ namespace NabfAgentLogic
             | Percept ("Achievement", [Identifier id])   -> Achievement id
             | Percept ("SimulationStep", [Numeral step]) -> SimulationStep (int step)
             | Percept (invalid, _) -> failwith "Percept %s not recognized"
-
-//        let parseIilDataContainer (iilData : DataContainer) = 
-//            match iilData with
-//            | Percept data -> parseIilPercept data
-//            | Action data -> 
 
 

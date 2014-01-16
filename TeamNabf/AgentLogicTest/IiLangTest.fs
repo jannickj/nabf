@@ -4,9 +4,7 @@ open JSLibrary.IiLang
 open JSLibrary.IiLang.Parameters
 open JSLibrary.IiLang.DataContainers
 open NUnit.Framework
-open NabfAgentLogic
-open Graphing.Graph
-open IiLang.IiLang
+open NabfAgentLogic.IiLang.IiLangDefinitions
 
 [<TestFixture>]
 type IiLangTest() = 

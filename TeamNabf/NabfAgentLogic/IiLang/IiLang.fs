@@ -1,5 +1,5 @@
-namespace IiLang
-    module IiLang =
+namespace NabfAgentLogic.IiLang
+    module IiLangDefinitions =
         open JSLibrary.IiLang
         open JSLibrary.IiLang.Parameters
         open JSLibrary.IiLang.DataContainers
