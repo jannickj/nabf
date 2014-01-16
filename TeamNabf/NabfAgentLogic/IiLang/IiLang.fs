@@ -1,16 +1,19 @@
-namespace IiLang
-    module IiLangHandler =
+namespace NabfAgentLogic.IiLang
+    module IiLangDefinitions =
         open JSLibrary.IiLang
         open JSLibrary.IiLang.Parameters
+        open JSLibrary.IiLang.DataContainers
         open System.Xml.Serialization
 
         type Element = ParameterList of Element list
                      | Function      of (string * Element list)
                      | Numeral       of float
                      | Identifier    of string
-
-        type Data = Percept of (string * Element)
-                  | Action  of (string * Element)
+        
+        type Data = string * Element list
+        
+        type DataContainer = Percept of Data
+                           | Action  of Data
 
         type PerceptCollection = Data list
 
@@ -41,5 +44,8 @@ namespace IiLang
             | :? Parameters.IilNumeral as num             
                 -> Numeral num.Value
             | _ -> failwith "the object %O is not a recognized iilang element (IilElement)"
+
+        let parsePercept (iilPercept : IilPercept) = 
+            Percept <| (iilPercept.Name, List.ofSeq iilPercept.Parameters |> List.map evalIil) 
 
    

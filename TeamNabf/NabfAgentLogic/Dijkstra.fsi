@@ -1,5 +1,6 @@
-﻿module Dijkstra
+﻿namespace Graphing
+    module Dijkstra =
 
-open Graph
+        open Graph
 
-val dijkstra : Vertex -> Vertex -> int -> int -> Graph -> (string list) option
+        val dijkstra : Vertex -> Vertex -> int -> int -> Graph -> (string list) option

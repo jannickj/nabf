@@ -9,7 +9,7 @@ module Repairer =
         | [] -> []
         | head :: tail -> 
             if (head.Team = state.Self.Team) //Only allies
-                && (head.Position = state.Self.Position) //Only range 0 for now
+                && (head.Node = state.Self.Node) //Only range 0 for now
                 && (not (head.Health = head.MaxHealth)) //Only damaged agents
             then
                 List.append [Repair(head)] (getRepairActions tail state)

@@ -4,7 +4,8 @@ module DijkstraTest =
     open System
     open NUnit.Framework
     open NabfAgentLogic.AgentLogic
-    open Graph
+    open Graphing.Graph
+    open Graphing.Dijkstra
 
     [<TestFixture>]
     type GraphTest() = 
@@ -20,7 +21,7 @@ module DijkstraTest =
                               ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) ] |> Map.ofList
                 let correctPath = Some ["c"]
 
-                let actualPath = Dijkstra.dijkstra graph.["a"] graph.["c"] maxEnergy currentEnergy graph
+                let actualPath = dijkstra graph.["a"] graph.["c"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctPath, actualPath)
 
@@ -34,7 +35,7 @@ module DijkstraTest =
                               ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList}) 
                             ] |> Map.ofList
 
-                let path = Dijkstra.dijkstra graph.["a"] graph.["a"] maxEnergy currentEnergy graph
+                let path = dijkstra graph.["a"] graph.["a"] maxEnergy currentEnergy graph
 
                 // Verify that the result is Some []
                 Assert.IsEmpty(path.Value)
@@ -50,7 +51,7 @@ module DijkstraTest =
                             ] |> Map.ofList
                 let correctOutput = None
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["b"] maxEnergy currentEnergy graph
+                let actualOutput = dijkstra graph.["a"] graph.["b"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
@@ -74,7 +75,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["d";"e"]
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["e"] maxEnergy currentEnergy graph
+                let actualOutput = dijkstra graph.["a"] graph.["e"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
 
@@ -103,7 +104,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["d";"e";"f";"g"]
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] maxEnergy currentEnergy graph
+                let actualOutput = dijkstra graph.["a"] graph.["g"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
             
@@ -129,7 +130,7 @@ module DijkstraTest =
 
                 let correctOutput1 = Some ["c";"d"]
 
-                let actualOutput1 = Dijkstra.dijkstra graph1.["a"] graph1.["d"] maxEnergy currentEnergy graph1
+                let actualOutput1 = dijkstra graph1.["a"] graph1.["d"] maxEnergy currentEnergy graph1
 
                 Assert.AreEqual (correctOutput1,actualOutput1)
 
@@ -156,7 +157,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["b";"d"]
 
-                let actualOutput = Dijkstra.dijkstra graph2.["a"] graph2.["d"] maxEnergy currentEnergy graph2
+                let actualOutput = dijkstra graph2.["a"] graph2.["d"] maxEnergy currentEnergy graph2
 
                 Assert.AreEqual (correctOutput, actualOutput)
 
@@ -185,7 +186,7 @@ module DijkstraTest =
 
                 let correctOutput = Some ["b";"c";"g"]
 
-                let actualOutput = Dijkstra.dijkstra graph.["a"] graph.["g"] maxEnergy currentEnergy graph
+                let actualOutput = dijkstra graph.["a"] graph.["g"] maxEnergy currentEnergy graph
 
                 Assert.AreEqual (correctOutput,actualOutput)
             

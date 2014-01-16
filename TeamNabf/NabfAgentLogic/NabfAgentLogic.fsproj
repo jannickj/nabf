@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -40,7 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Graph.fsi" />
     <Compile Include="Graph.fs" />
     <Compile Include="AgentTypes.fs" />
     <Compile Include="Saboteur.fs" />
@@ -48,7 +47,14 @@
     <Compile Include="Inspector.fs" />
     <Compile Include="Sentinel.fs" />
     <Compile Include="Repairer.fs" />
-    <Compile Include="AgentLogic.fs" /><Compile Include="IiLang.fs" /><Compile Include="AgentInterfaces.fs" /><Compile Include="AgentLogicClient.fs" /><Compile Include="Dijkstra.fsi" /><Compile Include="Dijkstra.fs" /></ItemGroup>
+    <Compile Include="AgentLogic.fs" />
+    <Compile Include="AgentInterfaces.fs" />
+    <Compile Include="AgentLogicClient.fs" />
+    <Compile Include="Dijkstra.fsi" />
+    <Compile Include="Dijkstra.fs" />
+    <Compile Include="IiLang\IiLang.fs" />
+    <Compile Include="IiLang\IilTranslator.fs" />
+  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -65,5 +71,8 @@
       <Project>{02121C4A-B1FB-46B8-BDE8-C5C6CA28C036}</Project>
       <Name>JSLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="IiLang\" />
   </ItemGroup>
 </Project>

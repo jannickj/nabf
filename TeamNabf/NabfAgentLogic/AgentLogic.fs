@@ -1,7 +1,7 @@
 ﻿namespace NabfAgentLogic
     module AgentLogic =
         open System
-        open Graph
+        open Graphing.Graph
         open JSLibrary.IiLang
         open JSLibrary.IiLang.DataContainers
         open AgentTypes
@@ -56,7 +56,7 @@
             //Add generic actions
             let actionList = [Skip;Recharge;Survey;Buy(Battery);Buy(Sensor);Buy(Shield)]
             //Add goto actions
-            let actionList = List.append (addGotoActions (getNeighbours state.Self.Position state.World)) actionList
+            let actionList = List.append (addGotoActions (getNeighbours state.Self.Node state.World)) actionList
             //Add type-specific actions
             match state.Self.Role with
             | Saboteur -> List.append (getSaboteurActions state) actionList
