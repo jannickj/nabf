@@ -2,9 +2,46 @@
 
 module AgentTypes =
 
-    open Graph
+    open System
 
-    type Upgrade =
+    open Graph
+          
+
+            type Decision<'a> =
+                | Condition of 'a * Decision<'a> list
+                | Choice of 'a
+                | Options of Decision<'a> list
+
+            let Explore value = value = 1
+
+            let decisionTree2  =  
+                Options
+                    [ 
+                        Choice(Explore)
+                    ]
+
+            let decisionTree =  
+                Options
+                    [ 
+                        Condition("late game",
+                            [ 
+                                Choice("explore")
+                                Choice("attack")
+                                Condition("see agent",
+                                    [
+                                        Choice("clap")
+                                        Choice("dance")
+                                    ])
+                            ])
+                        Condition("early game",
+                            [
+                                Choice("attack")
+                                Choice("explore")
+                            
+                            ])
+                    ]
+
+            type Upgrade =
                 | Battery
                 | Sensor
                 | Shield
