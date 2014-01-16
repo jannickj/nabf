@@ -5,14 +5,8 @@
         open JSLibrary.IiLang
         open JSLibrary.IiLang.DataContainers
         open AgentTypes
-
-        open Saboteur
-        open Explorer
-        open Inspector
-        open Sentinel
-        open Repairer
+        open DecisionTree
         
-
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
             match percept with
@@ -43,32 +37,14 @@
         let parseIilPercepts (perceptCollection:IilPerceptCollection) : ServerMessage =
             AgentServerMsg (AcceptedJob 1) 
 
-        let generateJobs  (state:State) (jobs:Job list) = 
-            List<Job>.Empty
+        let generateJobs  (state:State) (jobs:Job list) = []
         
-        let rec addGotoActions neighbours =
-            match neighbours with
-            | [] -> []
-            | (head:Vertex) :: tail -> List.append [Goto(head)] (addGotoActions tail)
-
-        //Generate a list of possible actions given the current state
-        let generateActions (state:State) =
-            //Add generic actions
-            let actionList = [Skip;Recharge;Survey;Buy(Battery);Buy(Sensor);Buy(Shield)]
-            //Add goto actions
-            let actionList = List.append (addGotoActions (getNeighbours state.Self.Position state.World)) actionList
-            //Add type-specific actions
-            match state.Self.Role with
-            | Saboteur -> List.append (getSaboteurActions state) actionList
-            | Explorer -> List.append (getExplorerActions state) actionList 
-            | Repairer -> List.append (getRepairerActions state) actionList
-            | Inspector -> List.append (getInspectorActions state) actionList
-            | Sentinel -> List.append (getSentinelActions state) actionList
-
-        let generateDecisionTree : Decision<(State -> (bool*Option<Action>))> =
-            Options []
-
+        //Obsolete
+        let generateActions (state:State) = []
         
+
+        let generateDecisionTree : Decision<(State -> (bool*Option<Action>))> = DecisionTree.getTree        
+
         let generateJob (jt:JobType) (s:State) (knownJobs:Job list)  =
             option<Job>.None
 

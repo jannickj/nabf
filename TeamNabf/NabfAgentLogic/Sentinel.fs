@@ -4,4 +4,8 @@ module Sentinel =
 
     open AgentTypes
 
-    let getSentinelActions (state:State) = [Parry]
+    let getSentinelTree : Decision<(State -> (bool*Option<Action>))> =
+        Options 
+            [
+                
+            ]

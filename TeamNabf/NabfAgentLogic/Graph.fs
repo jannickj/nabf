@@ -1,5 +1,5 @@
 ﻿module Graph
-    
+
     type Edge = Option<int> * string * string
     type DirectedEdge = Option<int> * string
 

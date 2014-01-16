@@ -34,7 +34,7 @@ module AgentTypes =
                 MaxHealth   : int; 
                 Name        : string; 
                 Node        : string; 
-                Role        : AgentRole; 
+                Role        : Option<AgentRole>; 
                 Strength    : int; 
                 Team        : string; 
                 VisionRange : int; 
