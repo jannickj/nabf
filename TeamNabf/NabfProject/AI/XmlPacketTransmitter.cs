@@ -46,9 +46,8 @@ namespace NabfProject.AI
 		public XmlTransmitterMessage<TRecieve> DeserializePacket()
 		{
             
-            if(xreader == null)
-                xreader = XmlReader.Create(reader, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment });
-
+            
+            this.BeforeDeserialize(xreader, reader);
             var msg = this.ConstrutReceiverMessage();
             msg.ReadXml(xreader);
 			this.AfterDeserialize(xreader, reader);
@@ -88,7 +87,8 @@ namespace NabfProject.AI
 
 		public virtual void BeforeDeserialize(XmlReader reader, StreamReader sreader)
 		{
-
+            if (xreader == null)
+                xreader = XmlReader.Create(reader, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment });
 		}
 
 		public virtual void AfterDeserialize(XmlReader reader, StreamReader sreader)

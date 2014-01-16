@@ -60,6 +60,7 @@ namespace NabfProject.ServerMessages
             reader.Read();
             if ("achievements" == reader.LocalName)
             {
+                reader.MoveToContent();
                 var message = ServerMessageFactory.Instance.ConstructMessage(reader.LocalName);
                 message.ReadXml(reader);
                 achievements = message;

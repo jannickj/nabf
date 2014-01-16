@@ -29,13 +29,16 @@ namespace NabfProject.ServerMessages
             id = Convert.ToInt32(reader["id"]);
             messageName = reader.LocalName;
             reader.Read();
+            reader.MoveToContent();
 
             while (reader.LocalName != "perception")
-            {                
+            {
+                reader.MoveToContent();
                 var message = ServerMessageFactory.Instance.ConstructMessage(reader.LocalName);
                 message.ReadXml(reader);
                 elements.Add(message);
                 reader.Read();
+                reader.MoveToContent();
             } 
             reader.ReadEndElement();
 

@@ -9,12 +9,18 @@ namespace NabfProject.ServerMessages
     public class ActionMessage : InternalSendMessage
     {
         private string actionType;
-        private string actionParam;
+        private string actionParam = "";
+        private int id;
 
-        public ActionMessage(string actionType, string actionParam)
+        public ActionMessage(int id, string actionType) : this(id, actionType, "")
+        {
+        }
+
+        public ActionMessage(int id, string actionType, string actionParam)
         {
             this.actionType = actionType;
             this.actionParam = actionParam;
+            this.id = id;
         }
 
         protected override string MessageType
@@ -30,6 +36,7 @@ namespace NabfProject.ServerMessages
         protected override void WriteXmlInternal(System.Xml.XmlWriter writer)
         {
             writer.WriteStartElement("action");
+            writer.WriteAttributeString("id", Convert.ToString(id));
             writer.WriteAttributeString("type", actionType);
             if  ("" != actionParam)
                 writer.WriteAttributeString("param", actionParam);

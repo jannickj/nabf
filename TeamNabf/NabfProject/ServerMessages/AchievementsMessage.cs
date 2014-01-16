@@ -19,13 +19,16 @@ namespace NabfProject.ServerMessages
         {
             reader.MoveToContent();
             reader.Read();
+            reader.MoveToContent();
 
             while (reader.LocalName != "achievements")
-            {                
+            {
+                reader.MoveToContent();
                 var message = ServerMessageFactory.Instance.ConstructMessage(reader.LocalName);
                 message.ReadXml(reader);
                 achievementList.Add(message);
                 reader.Read();
+                reader.MoveToContent();
             } 
         }
     }

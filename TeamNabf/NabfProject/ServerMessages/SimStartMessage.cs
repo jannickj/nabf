@@ -38,6 +38,7 @@ namespace NabfProject.ServerMessages
                 response.Add("role", role);
 
             reader.Read();
+            reader.MoveToContent();
         }
 
         

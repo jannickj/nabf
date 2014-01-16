@@ -39,6 +39,7 @@ namespace NabfProject.ServerMessages
 
         public override void ReadNode(System.Xml.XmlReader reader)
         {
+            reader.MoveToContent();
             Timestamp = Convert.ToInt64(reader["timestamp"]);
             Type = reader["type"];
         }

@@ -27,43 +27,54 @@ namespace NabfTest
         public void ConnectToServerAndAuthenticate_Connected_AllAgentsAuthenticated()
         {
             int nrOfAgents = 28;
-            //string agentName = "a";
-            //string[] passwords = Enumerable.Repeat("pass", nrOfAgents).ToArray();
-            //string authmessage = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
-            //                    + "<message type=\"auth-request\">"
-            //                    + "<authentication password=\"" + "pass" + "\" username=\"" + "a1" + "\"/>"
-            //                    + "</message>";
-            //string authResponse;
 
-            tcpClient = new TcpClient();
-            tcpClient.Connect("localhost", 12300);
-            //IPAddress ipa = IPAddress.Parse("::1");
-            //IPEndPoint ipeh = new IPEndPoint(ipa, 12300);
-            //Socket connection = new Socket(
-            //       AddressFamily.InterNetworkV6,
-            //       SocketType.Stream,
-            //       ProtocolType.Tcp);
-            //connection.Connect(ipeh);
-            //Assert.True(connection.Connected);
+            //tcpClient = new TcpClient();
+            //tcpClient.Connect("localhost", 12300);
+
+            //Stream stream = tcpClient.GetStream();
+
+            //StreamWriter streamWriter = new StreamWriter(stream);
+            //StreamReader streamReader = new StreamReader(stream);
+
+            //servCom = new ServerCommunication(streamReader, streamWriter);            
+
+            for (int i = 1; i <= nrOfAgents; i++)
+            {
+                tcpClient = new TcpClient();
+                tcpClient.Connect("localhost", 12300);
+
+                Stream stream = tcpClient.GetStream();
+
+                StreamWriter streamWriter = new StreamWriter(stream);
+                StreamReader streamReader = new StreamReader(stream);
+
+                servCom = new ServerCommunication(streamReader, streamWriter);
+                servCom.SeralizePacket(new AuthenticationRequestMessage("Nabf" + i, "pass"));
+
+                var authMessage = servCom.DeserializeMessage();
+
+                var simStartMessage = servCom.DeserializeMessage();
+            }
+
             
-            //Stream streamWrite = tcpClient.GetStream();
-            //Stream streamRead = tcpClient.GetStream();
+            
 
-            //Stream stream = new NetworkStream(connection);
+            //int id = Convert.ToInt32(((SimStartMessage)simStartMessage).Response["id"]);
+            //int simstartid = id;
 
-            Stream stream = tcpClient.GetStream();
+            //var actionReqMessage = (RequestActionMessage)servCom.DeserializeMessage();
 
-            StreamWriter streamWriter = new StreamWriter(stream);
-            StreamReader streamReader = new StreamReader(stream);
+            //id = ((PerceptionMessage)actionReqMessage.Response).Id;
+            //int firstactionid = id;
 
-            servCom = new ServerCommunication(streamReader, streamWriter);
+            //servCom.SeralizePacket(new ActionMessage(id, "recharge"));
 
-            servCom.SeralizePacket(new AuthenticationRequestMessage("Nabf1", "pass"));
+            //actionReqMessage = (RequestActionMessage)servCom.DeserializeMessage();
 
-            //servCom.SeralizePacket(new ActionMessage("recharge",""));
-            var authMessage = servCom.DeserializeMessage();
+            //id = ((PerceptionMessage)actionReqMessage.Response).Id;
+            //int secondactionid = id;
+            
 
-            var simStartMessage = servCom.DeserializeMessage();
 
 
             //XmlWriter xmlWriter = XmlWriter.Create(streamWrite);
@@ -75,6 +86,48 @@ namespace NabfTest
 
             //servApp.Start();
             
+        }
+
+        [Test]
+        public void SendActionToServer_Connected_ReceiveLastActionResultSuccessful()
+        {
+            int nrOfAgents = 1;        
+
+            tcpClient = new TcpClient();
+            tcpClient.Connect("localhost", 12300);
+
+            Stream stream = tcpClient.GetStream();
+
+            StreamWriter streamWriter = new StreamWriter(stream);
+            StreamReader streamReader = new StreamReader(stream);
+
+            servCom = new ServerCommunication(streamReader, streamWriter);
+            servCom.SeralizePacket(new AuthenticationRequestMessage("Nabf" + 1, "pass"));
+
+            var authMessage = servCom.DeserializeMessage();
+
+
+            var simStartMessage = servCom.DeserializeMessage();
+
+
+            int id = Convert.ToInt32(((SimStartMessage)simStartMessage).Response["id"]);
+            int simstartid = id;
+
+            var actionReqMessage = (RequestActionMessage)servCom.DeserializeMessage();
+
+            id = ((PerceptionMessage)actionReqMessage.Response).Id;
+            int firstactionid = id;
+
+            servCom.SeralizePacket(new ActionMessage(id, "recharge"));
+
+            actionReqMessage = (RequestActionMessage)servCom.DeserializeMessage();
+
+            string lastAction = ((SelfMessage)((PerceptionMessage)actionReqMessage.Response).Elements[1]).LastAction;
+            string lastActionResult = ((SelfMessage)((PerceptionMessage)actionReqMessage.Response).Elements[1]).LastActionResult;
+            Assert.AreEqual("successful", lastActionResult);
+            Assert.AreEqual("recharge", lastAction);
+
+
         }
     }
 }
