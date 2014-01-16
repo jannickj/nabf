@@ -80,7 +80,7 @@
             this.decidedActions <- []
             this.possibleActions <- generateActions this.BeliefData
             let actionDecider state action =
-                let desire = actionDesirability state action
+                let desire = 10//actionDesirability state action
                 this.addDesiredAction (action,desire)
                         
             //List.iter (fun action -> Async.Start ((),stopDeciders.Token)) localActions       
@@ -104,7 +104,7 @@
                         this.decidedActions@u)
 
                 let reEvalActions (action, desire) =
-                    let newDesire = actionDesirabilityBasedOnJob this.BeliefData (action,desire) acceptedJob
+                    let newDesire = 10//actionDesirabilityBasedOnJob this.BeliefData (action,desire) acceptedJob
                     this.addDesiredAction(action,newDesire)
                     ()
                 this.asyncCalculationMany reEvalActions full stopDeciders.Token 

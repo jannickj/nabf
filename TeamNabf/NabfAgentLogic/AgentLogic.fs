@@ -65,12 +65,10 @@
             | Inspector -> List.append (getInspectorActions state) actionList
             | Sentinel -> List.append (getSentinelActions state) actionList
 
-        //Returns an integer value representing the desirability of a given action
-        let actionDesirability (state:State) (action:Action) = 
-            0
+        let generateDecisionTree : Decision<(State -> (bool*Option<Action>))> =
+            Options []
 
-        let actionDesirabilityBasedOnJob (state:State) (action:Action,oldDesirability:Desirability) (job:Job) =
-            0
+        
         let generateJob (jt:JobType) (s:State) (knownJobs:Job list)  =
             option<Job>.None
 
