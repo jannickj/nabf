@@ -31,13 +31,17 @@ namespace NabfAgentLogic
                     | _                    -> failwith "%s is not a of type PathCost"
 
         let costEvaluator maxEnergy edgeCost currentCost = 
-            if currentCost.Energy >= edgeCost then
+            let edgeCostGuess = 
+                match edgeCost with
+                | Some cost -> cost
+                | None -> 5
+            if currentCost.Energy >= edgeCostGuess then
                 { Steps  = currentCost.Steps + 1
-                ; Energy = currentCost.Energy - edgeCost
+                ; Energy = currentCost.Energy - edgeCostGuess
                 }
             else
                 { Steps  = currentCost.Steps + 2
-                ; Energy = (currentCost.Energy - edgeCost) + (maxEnergy / 2)
+                ; Energy = (currentCost.Energy - edgeCostGuess) + (maxEnergy / 2)
                 }
         
         let stepProblem agent goalEvaluator = 

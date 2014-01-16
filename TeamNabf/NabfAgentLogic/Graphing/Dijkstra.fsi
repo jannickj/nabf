@@ -5,7 +5,7 @@
 
         type 'a Problem when 'a : comparison =
             { GoalEvaluator : Vertex -> bool
-            ; CostEvaluator : int -> 'a -> 'a
+            ; CostEvaluator : int option -> 'a -> 'a
             ; InitialCost   : 'a
             }
 

@@ -5,7 +5,7 @@ namespace Graphing
 
         type 'a Problem when 'a : comparison =
             { GoalEvaluator : Vertex -> bool
-            ; CostEvaluator : int -> 'a -> 'a
+            ; CostEvaluator : int option -> 'a -> 'a
             ; InitialCost   : 'a
             }
 
@@ -17,53 +17,11 @@ namespace Graphing
         type DijkstraState<'a> = Frontier * CostMap<'a> * VertexTree
 
         let getNeighbours current (graph : Graph) = 
-            current.Edges 
-            |> Set.map (fun (edgeCost, otherId) -> 
-                match edgeCost with
-                | Some cost -> (cost, otherId)
-                | None -> (5, otherId))
+            current.Edges
             |> Set.toList
-
-//        let updateFrontier vertex currentCost explored frontier =
-//            vertex.Edges 
-//            |> Set.toList 
-//            |> List.filter (fun (_, id) -> not <| Set.contains id explored)
-//            |> List.map (fun (cost, id) -> (1 + currentCost, id))
-//            |> List.append frontier
-//            |> List.sortBy (fun (cost, _) -> cost)
-
-
-        let rec removeDuplicatesFromSortedList ls = 
-            match ls with
-            | first :: second :: tail when first = second ->
-                second :: removeDuplicatesFromSortedList tail
-            | head :: tail -> 
-                head :: removeDuplicatesFromSortedList tail
-            | [] -> []
 
         let sortFrontier (costMap : CostMap<'a>) (frontier : Frontier) = 
             List.sortBy (fun elem -> costMap.[elem]) frontier
-
-        let evaluateCost maxEnergy currentCost edgeCost =
-            let (steps, energyLeft) = currentCost
-            if energyLeft >= edgeCost then
-                (steps + 1, energyLeft - edgeCost)
-            else
-                (steps + 2, (energyLeft - edgeCost) + (maxEnergy / 2))
-
-        let compareCost cost cost' =
-                let (steps, energy) = cost
-                let (steps', energy') = cost'
-                if (steps > steps') then
-                    1
-                elif (steps < steps') then
-                    -1
-                elif (energy > energy') then
-                    -1
-                elif (energy < energy') then
-                    1
-                else 
-                    0            
 
         let dijkstra start (problem : 'a Problem) (graph : Graph) = 
             
