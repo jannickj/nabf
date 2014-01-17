@@ -40,7 +40,7 @@
         let buildIilAction (action:Action) =
             new IilAction "some action"
 
-        let buildJobAccept (job:Job) =
+        let buildJobAccept (desire:Desirability,job:Job) =
             new IilAction "some action"
 
         let parseIilPercepts (perceptCollection:IilPerceptCollection) : ServerMessage =
@@ -77,9 +77,10 @@
 
         let buildJob (job:Job) = 
             new IilAction "some action"
-        let decideJob (job:Job) =
+        let decideJob (state:State) (job:Job) =
             let d:Desirability = 1
-            d
+            (d,true)
+
         let buildEvaluationStarted =
             new IilAction "evaluation_started"
         let buildEvaluationEnded =

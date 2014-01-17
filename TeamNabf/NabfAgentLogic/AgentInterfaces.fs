@@ -17,15 +17,9 @@ namespace NabfAgentLogic.AgentInterfaces
         [<CLIEvent>]
         abstract member SendMarsServerAction : IEvent<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>
         [<CLIEvent>]
-        abstract member JobCreated : IEvent<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>
-        [<CLIEvent>]
-        abstract member JobDesired : IEvent<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>
-        [<CLIEvent>]
         abstract member EvaluationCompleted : IEvent<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>
         [<CLIEvent>]
         abstract member EvaluationStarted : IEvent<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>
-        [<CLIEvent>]
-        abstract member ActionRequested : IEvent<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>
         [<CLIEvent>]
         abstract member SimulationEnded : IEvent<EventHandler, EventArgs>
         

@@ -32,14 +32,23 @@ namespace NabfProject.AI.Client
 			this.transmitter = transmitter;
 
             logic.EvaluationCompleted += logic_needMessageSent;
-            logic.JobCreated += logic_needMessageSent;
+            logic.SendAgentServerAction += logic_SendAgentServerAction;
+            logic.SendMarsServerAction += logic_SendMarsServerAction;
             logic.EvaluationStarted += logic_needMessageSent;
-            logic.JobDesired += logic_needMessageSent;
-            logic.ActionRequested += logic_needMessageSent;
 			//logic.PerceptsLoaded += logic_PerceptsLoaded;
 			//logic.JobLoaded += logic_JobLoaded;
 			
 		}
+
+        void logic_SendMarsServerAction(object sender, UnaryValueEvent<IilAction> evt)
+        {
+            throw new NotImplementedException();
+        }
+
+        void logic_SendAgentServerAction(object sender, UnaryValueEvent<IilAction> evt)
+        {
+            throw new NotImplementedException();
+        }
 
        
 		void logic_needMessageSent(object sender, JSLibrary.Data.GenericEvents.UnaryValueEvent<IilAction> evt)
