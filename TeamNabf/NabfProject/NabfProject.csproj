@@ -42,6 +42,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actions\AddStandbyAgentAction.cs" />
+    <Compile Include="AgentMessages\ConvertProbedVerticesToPercept.cs" />
+    <Compile Include="AgentMessages\ConvertVisibleEntitiesToPercept.cs" />
+    <Compile Include="AgentMessages\ConvertVisibleEdgesToPercept.cs" />
+    <Compile Include="AgentMessages\ConvertVisibleVerticesToPercept.cs" />
+    <Compile Include="AgentMessages\ConvertSelfToPercept.cs" />
+    <Compile Include="AgentMessages\ConvertSimulationToPercept.cs" />
+    <Compile Include="AgentMessages\ConvertTeamToPercept.cs" />
+    <Compile Include="AgentMessages\ConvertSurveyedEdgesToPercept.cs" />
+    <Compile Include="AgentMessages\ConvertInspectedEntitiesToPercept.cs" />
     <Compile Include="AgentStandbyManager.cs" />
     <Compile Include="AI\AgentConnection.cs" />
     <Compile Include="AI\Client\ClientApplication.cs" />
