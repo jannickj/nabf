@@ -14,7 +14,7 @@ namespace NabfProject.NoticeBoardModel
         private SortedList<int, Notice[]> _jobs = new SortedList<int, Notice[]>(new InvertedComparer<int>());
         private Dictionary<Int64, Notice> _idToNotice = new Dictionary<Int64, Notice>();
         private DictionaryList<NabfAgent, Notice> _agentToNotice = new DictionaryList<NabfAgent, Notice>();
-        private Int64 _freeID = 0;
+        private Int64 _freeID = 0; 
 
         public enum JobType { Disrupt, Occupy, Attack, Repair }
 
