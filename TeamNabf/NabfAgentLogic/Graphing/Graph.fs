@@ -54,3 +54,19 @@
             let v2 = g1.[s2]
             let e2 = Set.map (fun (e : DirectedEdge) -> if e = (None,s1) then (v,s1) else (None,s1)) v2.Edges
             g1.Add (s2,{v2 with Edges = e2})
+        
+        let removeEdgeFromVertex edge vertex =
+            { vertex with Edges = Set.remove edge vertex.Edges }
+
+        let removeVertex vertex (graph : Graph) =
+            let updateVertex (cost, id) (graph : Graph) = 
+                Map.add id (removeEdgeFromVertex (cost, vertex.Identifier) graph.[id]) graph
+            
+            printfn "edges: %A" <| Set.toList vertex.Edges
+             
+            vertex.Edges
+            |> Set.fold (fun graph edge -> updateVertex edge graph) graph
+            |> Map.remove vertex.Identifier
+
+
+

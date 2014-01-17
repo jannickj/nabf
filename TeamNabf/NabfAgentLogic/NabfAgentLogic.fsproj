@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Graphing\Graph.fsi" />
     <Compile Include="Graphing\Graph.fs" />
     <Compile Include="Graphing\Dijkstra.fsi" />
     <Compile Include="Graphing\Dijkstra.fs" />
