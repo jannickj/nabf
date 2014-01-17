@@ -9,7 +9,7 @@ using NabfProject.ServerMessages;
 
 namespace NabfProject.Parsers.AgentToMarsConverters
 {
-	public class ConvertIilActionGotoAction : JSConverterToForeign<IilAction, ActionMessage>
+	public class ConvertIilActionToMarsAction : JSConverterToForeign<IilAction, ActionMessage>
 	{
 
 		public override ActionMessage BeginConversionToForeign(IilAction gobj)
@@ -26,7 +26,7 @@ namespace NabfProject.Parsers.AgentToMarsConverters
 			{
 				var param = ((IilIdentifier)vals[1]).Value;
 				actmsg = new ActionMessage(id, acttype,param);
-			}
+			} 
 			return actmsg;
 		}
 
