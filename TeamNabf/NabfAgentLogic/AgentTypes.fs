@@ -38,8 +38,7 @@ module AgentTypes =
                 Role        : Option<AgentRole>; 
                 Strength    : int; 
                 Team        : string; 
-                VisionRange : int; 
-                Position    : string
+                VisionRange : int;
                 }
 
             type Action =

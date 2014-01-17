@@ -45,12 +45,13 @@
     <Compile Include="Dijkstra.fsi" />
     <Compile Include="Dijkstra.fs" />
     <Compile Include="AgentTypes.fs" />
-    <Compile Include="CommonLogic.fs" />
+    <Compile Include="AgentLogicLib.fs" />
     <Compile Include="Saboteur.fs" />
     <Compile Include="Explorer.fs" />
     <Compile Include="Inspector.fs" />
     <Compile Include="Sentinel.fs" />
     <Compile Include="Repairer.fs" />
+    <Compile Include="CommonLogic.fs" />
     <Compile Include="DecisionTree.fs" />
     <Compile Include="AgentLogic.fs" />
     <Compile Include="IiLang.fs" />
