@@ -24,12 +24,13 @@ namespace NabfProject.Parsers.MarsToAgentConverters
 		{
 			var simStart = (SimStartMessage)gobj.Message;
 			return new IilPerceptCollection(
-				new IilPercept("simStart",
-					new IilFunction("id", new IilNumeral(simStart.Id)),
-					new IilFunction("steps", new IilNumeral(simStart.Steps)),
-					new IilFunction("edges", new IilNumeral(simStart.Edges)),
-					new IilFunction("vertices", new IilNumeral(simStart.Vertices)),
-					new IilFunction("role", new IilIdentifier(simStart.Role))));
+				new IilPercept	(	"simStart"
+								,	new IilFunction("id", new IilNumeral(simStart.Id))
+								,	new IilFunction("steps", new IilNumeral(simStart.Steps))
+								,	new IilFunction("edges", new IilNumeral(simStart.Edges))
+								,	new IilFunction("vertices", new IilNumeral(simStart.Vertices))
+								,	new IilFunction("role", new IilIdentifier(simStart.Role)))
+								);
 
 		}
 	}
