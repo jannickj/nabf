@@ -5,15 +5,17 @@ using System.Text;
 
 namespace NabfProject.KnowledgeManager
 {
-    public class NodeKnowledge : Knowledge
+    public class RoleKnowledge : Knowledge
     {
-        public string Name { get; private set; }
-        public int Value { get; private set;}
+        public string Role { get; private set; }
+        public string AgentId { get; private set; }
+        public int Sureness { get; private set;}
 
-        public NodeKnowledge(string name, int value)
+        public RoleKnowledge(string role, string agentId, int sureness)
         {
-            Name = name;
-            Value = value;
+            Role = role;
+            AgentId = agentId;
+            Sureness = sureness;
         }
 
         bool IEquatable<Knowledge>.Equals(Knowledge other)
@@ -26,24 +28,24 @@ namespace NabfProject.KnowledgeManager
             if (other.GetType() != this.GetType())
                 return false;
 
-            NodeKnowledge nk = (NodeKnowledge)other;
-            
-            return nk.Name == this.Name;
+            RoleKnowledge ek = (RoleKnowledge)other;
+
+            return ek.Role == this.Role && ek.AgentId == this.AgentId;
         }
 
         int IComparable<Knowledge>.CompareTo(Knowledge other)
         {
             if (other == null)
                 throw new ArgumentException("Input of CompareTo of " + this.GetType().Name + " is null");
-            else if (other is NodeKnowledge)
-                if (((NodeKnowledge)other).Value < Value)
+            else if (other is RoleKnowledge)
+                if (((RoleKnowledge)other).Sureness < Sureness)
                     return -1;
-                else if (((NodeKnowledge)other).Value > Value)
+                else if (((RoleKnowledge)other).Sureness > Sureness)
                     return 1;
                 else
                     return 0;
             else
-                throw new ArgumentException("Object : " + other.GetType().Name + " of CompareTo is not of type NodeKnowledge");
+                throw new ArgumentException("Object : " + other.GetType().Name + " of CompareTo is not of type EdgeKnowledge");
         }
     }
 }
