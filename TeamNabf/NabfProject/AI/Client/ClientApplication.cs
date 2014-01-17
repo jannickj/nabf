@@ -74,7 +74,7 @@ namespace NabfProject.AI.Client
 
 		public void UpdateReceiver()
 		{
-			var data = transmitter.DeserializePacket();
+            var data = transmitter.DeserializeMessage();
 			if(data.Percepts.Count != 0)
 			{
 				logic.HandlePercepts(data);

@@ -7,11 +7,8 @@ using System.Xml.Serialization;
 
 namespace NabfProject.ServerMessages
 {
-    [XmlRoot("message")]
-    public abstract class ServerMessage : IXmlSerializable 
-    {
-        protected abstract string MessageType { get; }
-
+    public abstract class InternalReceiveMessage : IXmlSerializable
+    {       
         public System.Xml.Schema.XmlSchema GetSchema()
         {
             throw new NotImplementedException();
@@ -21,11 +18,9 @@ namespace NabfProject.ServerMessages
 
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            writer.WriteAttributeString("type", MessageType);
-            WriteXmlInternal(writer);
+            throw new NotImplementedException();
         }
 
-        protected abstract void WriteXmlInternal(System.Xml.XmlWriter writer);
-
+        
     }
 }
