@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AgentMessagesTest.cs" />
+    <Compile Include="ConverterTest.cs" />
     <Compile Include="NoticeBoardTest.cs" />
     <Compile Include="ExampleTest.cs" />
     <Compile Include="ServerCommunicationTest.cs" />
