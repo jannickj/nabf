@@ -8,7 +8,7 @@ using NabfProject.ServerMessages;
 
 namespace NabfProject.Parsers
 {
-	public class MarsToAgentParser : JSConversionTool<ReceiveMessage,IilPerceptCollection>
+	public class MarsToAgentParser : JSConversionTool<ReceiveMessage,IilElement>
 	{
 		public MarsToAgentParser()
 		{
