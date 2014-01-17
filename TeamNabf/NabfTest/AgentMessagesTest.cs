@@ -1,7 +1,7 @@
 ﻿using JSLibrary.Conversion;
 using JSLibrary.IiLang.DataContainers;
 using JSLibrary.IiLang.Parameters;
-using NabfProject.MarsToAgentConverters;
+using NabfProject.Parsers.MarsToAgentConverters;
 using NabfProject.ServerMessages;
 using NUnit.Framework;
 using System;
