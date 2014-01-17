@@ -27,13 +27,16 @@ namespace NabfProject.ServerMessages
             reader.MoveToContent();
             messageName = reader.LocalName;
             reader.Read();
+            reader.MoveToContent();
 
             while (reader.LocalName != "visibleVertices")
             {
+                reader.MoveToContent();
                 var message = ServerMessageFactory.Instance.ConstructMessage(reader.LocalName);
                 message.ReadXml(reader);
                 visibleVertices.Add(message);
                 reader.Read();
+                reader.MoveToContent();
             } 
         }
     }
