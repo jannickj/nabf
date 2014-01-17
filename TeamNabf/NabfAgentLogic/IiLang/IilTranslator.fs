@@ -58,13 +58,27 @@ namespace NabfAgentLogic.IiLang
                    }
             | _ -> raise <| InvalidIilException ("Agent", iilData)
 
-        let parseIilPercept iilPercept =
-            match iilPercept with
-            | Percept ("EnemySeen", [enemy])             -> EnemySeen <| parseIilAgent enemy
-            | Percept ("VertexSeen", [vertex])           -> VertexSeen <| parseIilVertex vertex
-            | Percept ("EdgeSeen", [edge])               -> EdgeSeen <| parseIilEdge edge
-            | Percept ("Achievement", [Identifier id])   -> Achievement id
-            | Percept ("SimulationStep", [Numeral step]) -> SimulationStep (int step)
-            | Percept (invalid, _) -> failwith "Percept %s not recognized"
+//        let parseIilActionRequest iilData =
+//            match iilData with
+//            | [ Function ("id", [Numeral id])
+//              ; Function ("deadline", [Numeral deadline])
+//              ; Function ("timestamp", [Numeral timestamp])
+//              ] -> 
+
+//        let parseIilPercept iilPercept =
+//            match iilPercept with
+//            | Percept (name, data) -> 
+//                match name with
+//                | "actionRequest"     -> 
+//                | "inspectedEntities" -> 
+//                | "probedVertices"    ->    
+//                | "self"              -> 
+//                | "step"              ->    
+//                | "surveyedEdges"     ->        
+//                | "team"              ->    
+//                | "visibleEdges"      ->    
+//                | "visibleEntities"   ->    
+//                | "visibleVertices"   ->    
+//            | _ -> failwith "no"            
 
 
