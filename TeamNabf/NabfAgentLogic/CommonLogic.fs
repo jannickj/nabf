@@ -2,7 +2,7 @@
 module CommonLogic =
 
     open AgentTypes
-    open Graph
+    open Graphing.Graph
     open Saboteur
     open Repairer
     open Sentinel

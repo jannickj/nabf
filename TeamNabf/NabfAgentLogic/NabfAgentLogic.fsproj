@@ -40,11 +40,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Graph.fsi" />
-    <Compile Include="Graph.fs" />
-    <Compile Include="Dijkstra.fsi" />
-    <Compile Include="Dijkstra.fs" />
+    <Compile Include="Graphing\Graph.fsi" />
+    <Compile Include="Graphing\Graph.fs" />
+    <Compile Include="Graphing\Dijkstra.fsi" />
+    <Compile Include="Graphing\Dijkstra.fs" />
     <Compile Include="AgentTypes.fs" />
+    <Compile Include="PathFinding.fsi" />
+    <Compile Include="PathFinding.fs" />
+    <Compile Include="IiLang\IiLang.fs" />
+    <Compile Include="IiLang\IilTranslator.fs" />
+    <Compile Include="CommonLogic.fs" />
     <Compile Include="AgentLogicLib.fs" />
     <Compile Include="Saboteur.fs" />
     <Compile Include="Explorer.fs" />
@@ -54,7 +59,6 @@
     <Compile Include="CommonLogic.fs" />
     <Compile Include="DecisionTree.fs" />
     <Compile Include="AgentLogic.fs" />
-    <Compile Include="IiLang.fs" />
     <Compile Include="AgentInterfaces.fs" />
     <Compile Include="AgentLogicClient.fs" />
   </ItemGroup>
@@ -74,5 +78,9 @@
       <Project>{02121C4A-B1FB-46B8-BDE8-C5C6CA28C036}</Project>
       <Name>JSLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="IiLang\" />
+    <Folder Include="Graphing\" />
   </ItemGroup>
 </Project>
