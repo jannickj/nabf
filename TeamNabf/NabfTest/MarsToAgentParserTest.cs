@@ -17,7 +17,7 @@ using JSLibrary.IiLang.DataContainers;
 namespace NabfTest
 {
     [TestFixture]
-    public class ConverterTest
+	public class MarsToAgentParserTest
     { 
         ServerCommunication serverCom;
         MemoryStream memoryStream;
