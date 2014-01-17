@@ -157,14 +157,14 @@ module DijkstraTest =
             [<Test>]
             member this.FindPath_PathWithLowestCostsIsLongest_ReturnsShortestPath () =
            
-                //          
-                //             2
+                //                          
+                //             2            
                 //     B---------------C         
                 //     |                |       Find a path
                 //   2 |                | 2     from A to G
-                //     |                |
-                //     A---D---E---F---G
-                //       1   1   1   1
+                //     |                |                   
+                //     A---D---E---F---G                    
+                //       1   1   1   1                      
 
                 let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 2, "b"); (Some 1, "d")] |> Set.ofList}); 
                               ("b", { Identifier = "b"; Value = None; Edges = [(Some 2, "a"); (Some 2, "c")] |> Set.ofList}); 
@@ -179,3 +179,80 @@ module DijkstraTest =
 
                 Assert.AreEqual (expected, actual)
             
+            [<Test>]
+            member this.RangeTo_CyclicGraph_LengthOfShortestPath () =
+                
+                (*                         
+                 *             2            
+                 *     B---------------C         
+                 *     |                |       
+                 *   2 |                | 2    
+                 *     |                |                   
+                 *     A---D---E---F---G                    
+                 *       1   1   1   1
+                 *)
+
+                let graph = 
+                    [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 2, "b"); (Some 1, "d")] |> Set.ofList}) 
+                    ; ("b", { Identifier = "b"; Value = None; Edges = [(Some 2, "a"); (Some 2, "c")] |> Set.ofList}) 
+                    ; ("c", { Identifier = "c"; Value = None; Edges = [(Some 2, "b"); (Some 2, "g")] |> Set.ofList}) 
+                    ; ("d", { Identifier = "d"; Value = None; Edges = [(Some 1, "a"); (Some 1, "e")] |> Set.ofList}) 
+                    ; ("e", { Identifier = "e"; Value = None; Edges = [(Some 1, "d"); (Some 1, "f")] |> Set.ofList})
+                    ; ("f", { Identifier = "f"; Value = None; Edges = [(Some 1, "e"); (Some 1, "g")] |> Set.ofList})
+                    ; ("g", { Identifier = "g"; Value = None; Edges = [(Some 1, "f"); (Some 2, "c")] |> Set.ofList}) 
+                    ] |> Map.ofList
+
+                let expected = 3
+                let actual = distanceTo testAgent "g" graph
+
+                Assert.AreEqual (expected, actual)
+
+            [<Test>]
+            member this.FindNearestUnProbed_GraphWithTwoUnprobedVertices_FindsPathToTheNearest () =
+                (* 
+                 *     A
+                 *    /|        Starting in A,
+                 * 4 / | 3      B and C are unprobed
+                 *  /  |
+                 * B---C
+                 *   *
+                 *)
+
+                let graph =
+                    [ ("a", { Identifier = "a"; Value = Some 1; Edges = [(Some 4, "b"); (Some 3, "c")] |> Set.ofList })
+                    ; ("b", { Identifier = "b"; Value = None; Edges = [(Some 4, "a"); (None, "c")] |> Set.ofList })
+                    ; ("c", { Identifier = "c"; Value = None; Edges = [(Some 3, "a"); (None, "b")] |> Set.ofList })
+                    ] |> Map.ofList
+                
+                let expected = Some ["c"]
+                let actual = pathToNearestUnProbed testAgent graph
+
+                Assert.AreEqual (expected, actual)
+
+            [<Test>]
+            member this.FindNearestUnExplored_GraphWithTwoUnExploredVertices_FindsPathToTheNearest () =
+                (*
+                 *  A---B       
+                 *    * 
+                 *
+                 * The agent starts at vertex A. Neither A nor B have any edges with known weights.
+                 * The nearest vertex that do not have any edges with known weights will therefore
+                 * be vertex A, but it is already explored. Here we check that the the function
+                 * correctly returns B. This case is only relevant in the very first turn.
+                 *
+                 *)
+                
+                let graph = 
+                    [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList })
+                    ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                    ] |> Map.ofList
+
+                let expected = Some ["b"] 
+                let actual = pathToNearestUnExplored testAgent graph
+
+                Assert.AreEqual (expected, actual)
+
+
+
+
+
