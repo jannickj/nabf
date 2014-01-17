@@ -23,6 +23,7 @@
         let decisionTree = decisionTreeGenerator()
         let mutable simEnded = false
         let mutable runningCalc = 0
+        let mutable decisionId = 0
         //let mutable decidedAction = false
         let mutable decidedAction = (Int32.MaxValue,Action.Recharge)
         //let mutable lastHighestDesire:Desirability = 0
@@ -85,7 +86,8 @@
                 this.asyncCalculationAF stopToken (
                     async
                         { 
-
+                            
+                            let dId = lock decisionLock (fun () -> decisionId)
                            
                             let cancelFunc() =
                                 stopSource.Cancel()                            
@@ -95,11 +97,14 @@
                             let success = Parallel.TryExecute<(bool*Option<Action>)>((fun () -> f s),timer,(fun () -> stopToken.IsCancellationRequested),output);
                             if success then
                                 lock decisionLock (fun () ->
-                                    let (b,a) = output.Value
-                                    let (cR,cA) = decidedAction
-                                    if b && a.IsSome && cR > rankCur then
-                                        decidedAction <- (rankCur,a.Value)
-                                        stopSource.Cancel() 
+                                    if dId = decisionId then
+                                        let (b,a) = output.Value
+                                        let (cR,cA) = decidedAction
+                                        if b && a.IsSome && cR > rankCur then
+                                            decidedAction <- (rankCur,a.Value)
+                                            stopSource.Cancel() 
+                                    else
+                                        stopSource.Cancel()
                                     )
                             else
                                 stopSource.Cancel() 
@@ -143,7 +148,10 @@
                                         percepts)
             lock stateLock (fun () -> this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts))
             runningCalc <- 0
-            decidedAction <- (Int32.MaxValue,Action.Recharge)
+            lock decisionLock ( fun () ->
+                                    decidedAction <- (Int32.MaxValue,Action.Recharge)
+                                    decisionId <- (decisionId + 1)
+                                )
             this.EvaluteState()
 
         let stopLogic () =
