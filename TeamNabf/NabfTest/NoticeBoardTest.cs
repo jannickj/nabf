@@ -26,11 +26,11 @@ namespace NabfTest
 		[Test]
 		public void AddInitialNotice_NoDuplicateListEmpty_Success()
 		{
-            Notice no = new DisruptJob(1, null, ID++);
-            bool addSuccess = nb.AddNotice(no);
+            Notice n;
+            bool addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, null, out n);
             Assert.True(addSuccess);
             Assert.AreEqual(1, nb.GetNoticeCount());
-            Assert.IsTrue(no.Equals(nb.GetNotices().First()));
+            Assert.IsTrue(n.Equals(nb.GetNotices().First()));
 		}
 
         [Test]
@@ -46,14 +46,14 @@ namespace NabfTest
             Notice no6 = new OccupyJob(2, testNodes, ID++);
             Notice no7 = new RepairJob(testNodes, ID++);
             Notice no8 = new RepairJob(testNodes, ID++);
-            bool addSuccess = nb.AddNotice(no);
-            bool addSuccess2 = nb.AddNotice(no2);
-            bool addSuccess3 = nb.AddNotice(no3);
-            bool addSuccess4 = nb.AddNotice(no4);
-            bool addSuccess5 = nb.AddNotice(no5);
-            bool addSuccess6 = nb.AddNotice(no6);
-            bool addSuccess7 = nb.AddNotice(no7);
-            bool addSuccess8 = nb.AddNotice(no8);
+            bool addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no);
+            bool addSuccess2 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no2);
+            bool addSuccess3 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 2, testNodes, out no3);
+            bool addSuccess4 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 2, testNodes, out no4);
+            bool addSuccess5 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 2, testNodes, out no5);
+            bool addSuccess6 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 2, testNodes, out no6);
+            bool addSuccess7 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no7);
+            bool addSuccess8 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no8);
             Assert.True(addSuccess);
             Assert.False(addSuccess2);
             Assert.True(addSuccess3);
@@ -81,16 +81,16 @@ namespace NabfTest
             Notice no8 = new AttackJob(1, testNodes2, ID++);
             Notice no9 = new RepairJob(testNodes, ID++);
             Notice no10 = new RepairJob(testNodes2, ID++);
-            bool addSuccess = nb.AddNotice(no);
-            bool addSuccess2 = nb.AddNotice(no2);
-            bool addSuccess3 = nb.AddNotice(no3);
-            bool addSuccess4 = nb.AddNotice(no4);
-            bool addSuccess5 = nb.AddNotice(no5);
-            bool addSuccess6 = nb.AddNotice(no6);
-            bool addSuccess7 = nb.AddNotice(no7);
-            bool addSuccess8 = nb.AddNotice(no8);
-            bool addSuccess9 = nb.AddNotice(no9);
-            bool addSuccess10 = nb.AddNotice(no10);
+            bool addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no);
+            bool addSuccess2 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes2, out no2);
+            bool addSuccess3 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, out no3);
+            bool addSuccess4 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes2, out no4);
+            bool addSuccess5 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 1, testNodes, out no5);
+            bool addSuccess6 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 1, testNodes2, out no6);
+            bool addSuccess7 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes, out no7);
+            bool addSuccess8 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes2, out no8);
+            bool addSuccess9 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no9);
+            bool addSuccess10 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes2, out no10);
             Assert.True(addSuccess);
             Assert.True(addSuccess2);
             Assert.True(addSuccess3);
@@ -112,8 +112,8 @@ namespace NabfTest
 
             Notice no = new DisruptJob(2, testNodes, ID++);
             Notice no2 = new DisruptJob(2, testNodes2, ID++);
-            nb.AddNotice(no);
-            nb.AddNotice(no2);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes2, out no2);
             bool removeSuccess = nb.RemoveNotice(no2);
             Assert.True(removeSuccess);
             Assert.AreEqual(1, nb.GetNoticeCount());
@@ -126,7 +126,7 @@ namespace NabfTest
 
             Notice no = new DisruptJob(1, testNodes, ID++);
             Notice no2 = new DisruptJob(3, testNodes, ID++);
-            nb.AddNotice(no);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, out no);
             bool removeSuccess = nb.RemoveNotice(no2);
             Assert.False(removeSuccess);
             Assert.AreEqual(1, nb.GetNoticeCount());
@@ -140,9 +140,9 @@ namespace NabfTest
             Notice no = new DisruptJob(1, testNodes, ID++);
             Notice no2 = new AttackJob(1, testNodes, ID++);
             Notice no3 = new OccupyJob(1, testNodes, ID++);
-            nb.AddNotice(no);
-            nb.AddNotice(no2);
-            nb.AddNotice(no3);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, out no);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes, out no2);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 1, testNodes, out no3);
             List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Repair };
             List<Notice> possibleJobs = new List<Notice>();
             possibleJobs.AddRange(nb.GetNotices(jobs));
@@ -158,9 +158,9 @@ namespace NabfTest
             Notice no = new DisruptJob(1, testNodes, ID++);
             Notice no2 = new AttackJob(1, testNodes, ID++);
             Notice no3 = new OccupyJob(1, testNodes, ID++);
-            nb.AddNotice(no);
-            nb.AddNotice(no2);
-            nb.AddNotice(no3);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, out no);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes, out no2);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 1, testNodes, out no3);
             List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>(){ NoticeBoard.JobType.Attack, NoticeBoard.JobType.Occupy };
             List<Notice> possibleJobs = new List<Notice>();
             possibleJobs.AddRange(nb.GetNotices(jobs));
@@ -174,7 +174,7 @@ namespace NabfTest
             List<Node> testNodes = new List<Node>() { new Node(), new Node() };
 
             Notice no = new DisruptJob(1, testNodes, ID++);
-            nb.AddNotice(no);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, out no);
             List<NoticeBoard.JobType> jobs = new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt };
             List<Notice> possibleJobs = new List<Notice>();
             possibleJobs.AddRange(nb.GetNotices(jobs));
@@ -200,11 +200,10 @@ namespace NabfTest
         [Test]
         public void UpdateNotice_NoticeExists_Success()
         {
-            int localID = ID++;
-            Notice no = new DisruptJob(1, null, localID);
-            nb.AddNotice(no);
+            Notice no = new DisruptJob(1, null, 0);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, null, out no);
             Assert.AreEqual(1, nb.GetNotices(new List<NoticeBoard.JobType>(){ NoticeBoard.JobType.Disrupt}).First<Notice>().AgentsNeeded);
-            bool updateSuccess = nb.UpdateNotice(localID, new List<Node>(), 10);
+            bool updateSuccess = nb.UpdateNotice(no.Id, new List<Node>(), 10);
             Assert.IsTrue(updateSuccess);
             Assert.AreEqual(10, nb.GetNotices(new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt }).First<Notice>().AgentsNeeded);
         }
@@ -212,9 +211,7 @@ namespace NabfTest
         [Test]
         public void UpdateNotice_NoticeDontExists_Failure()
         {
-            int localID = ID++;
-            Notice no = new DisruptJob(1, null, localID);
-            bool updateSuccess = nb.UpdateNotice(localID, new List<Node>(), 1);
+            bool updateSuccess = nb.UpdateNotice(0, new List<Node>(), 1);
             Assert.IsFalse(updateSuccess);
         }
 
@@ -226,9 +223,9 @@ namespace NabfTest
             List<Node> testNodes = new List<Node>() { new Node(), new Node() };
 
             Notice no = new DisruptJob(1, testNodes, ID++), no2 = new AttackJob(1, testNodes, ID++), no3 = new OccupyJob(2, testNodes, ID++);
-            nb.AddNotice(no);
-            nb.AddNotice(no2);
-            nb.AddNotice(no3);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, out no);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes, out no2);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 2, testNodes, out no3);
             
             NabfAgent a1 = new NabfAgent("agent1"), a2 = new NabfAgent("agent2"), a3 = new NabfAgent("agent3"), a4 = new NabfAgent("agent4");
 
@@ -316,7 +313,11 @@ namespace NabfTest
             Notice notice1 = new OccupyJob(2, nodes, ID++), notice2 = new DisruptJob(2, nodes, ID++), notice3 = new AttackJob(2, nodes, ID++), 
                 notice4 = new RepairJob(nodes, ID++);
 
-            nb.AddNotice(notice1); nb.AddNotice(notice2); nb.AddNotice(notice3); nb.AddNotice(notice4);
+            //nb.AddNotice(notice1); nb.AddNotice(notice2); nb.AddNotice(notice3); nb.AddNotice(notice4);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 2, nodes, out notice1);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, nodes, out notice2);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 2, nodes, out notice3);
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, nodes, out notice4);
             #endregion
 
             #region agent desirability

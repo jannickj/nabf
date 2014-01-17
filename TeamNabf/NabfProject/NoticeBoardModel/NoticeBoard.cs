@@ -77,7 +77,7 @@ namespace NabfProject.NoticeBoardModel
             _freeID = 0;
         }
 
-        public Notice CreateNotice(JobType type, int agentsNeeded, List<Node> whichNodes)
+        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, out Notice notice)
         {
             Notice n = null;
             Int64 id = _freeID;
@@ -99,11 +99,14 @@ namespace NabfProject.NoticeBoardModel
             }
             if (n == null)
                 throw new ArgumentException("Input to CreateNotice, JoType : " + type.GetType().Name + " was not of appropriate type. It's type was: " + type.GetType());
-            
-            return n;
+
+            bool b = AddNotice(n);
+            notice = n;
+
+            return b;
         }
 
-        public bool AddNotice(Notice no)
+        private bool AddNotice(Notice no)
         {
             if (AvailableJobsContainsContentEqual(no))
                 return false;
