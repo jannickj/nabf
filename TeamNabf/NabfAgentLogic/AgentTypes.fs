@@ -9,13 +9,7 @@ module AgentTypes =
         | Choice of 'a
         | Options of Decision<'a> list
 
-
-            type Decision<'a> =
-                | Condition of 'a * Decision<'a>
-                | Choice of 'a
-                | Options of Decision<'a> list
-
-           
+        
 
             type Upgrade =
                 | Battery

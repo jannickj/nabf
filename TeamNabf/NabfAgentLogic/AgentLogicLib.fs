@@ -1,7 +1,7 @@
 ﻿namespace NabfAgentLogic
 module AgentLogicLib =
 
-    open Graph
+    open Graphing.Graph
     open AgentTypes
 
     let ProbeCost = 1
