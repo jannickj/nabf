@@ -25,7 +25,7 @@ namespace NabfProject.Parsers.MarsToAgentConverters
             RequestActionMessage ram = (RequestActionMessage)gobj.Message;
             PerceptionMessage pm = (PerceptionMessage)ram.Response;
 
-            List<IilPercept> ipl = new List<IilPercept>(){new IilPercept("action_request", new IilFunction("id", new IilNumeral(pm.Id))
+            List<IilPercept> ipl = new List<IilPercept>(){new IilPercept("actionRequest", new IilFunction("id", new IilNumeral(pm.Id))
                 , new IilFunction("deadline", new IilNumeral(pm.Deadline)), new IilFunction("timestamp", new IilNumeral(gobj.Timestamp)))};
 
             foreach(IilPercept ip in ((IilPerceptCollection)this.ConvertToForeign(ram.Response)).Percepts)
