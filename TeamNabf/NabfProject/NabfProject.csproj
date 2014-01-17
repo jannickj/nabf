@@ -46,6 +46,7 @@
     <Compile Include="Parsers\MarsToAgentConverters\ConvertActionRequestMessageToPerceptCollection.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertPerceptionMessageToIilPerceptCollection.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertProbedVerticesToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertSimStartToIilPerceptCollection.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertVisibleEntitiesToPercept.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertVisibleEdgesToPercept.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertVisibleVerticesToPercept.cs" />
@@ -68,6 +69,8 @@
     <Compile Include="NoticeBoardModel\Notice.cs" />
     <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
     <Compile Include="Parsers\AgentToMarsParser.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertSimEndToIilPerceptCollection.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertByeMessageToIilPerceptCollection.cs" />
     <Compile Include="Parsers\MarsToAgentParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerMessages\AchievementMessage.cs" />

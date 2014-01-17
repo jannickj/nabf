@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using JSLibrary.Conversion;
 using JSLibrary.IiLang.DataContainers;
+using NabfProject.Parsers.AgentToMarsConverters;
 using NabfProject.ServerMessages;
 
 namespace NabfProject.Parsers
@@ -12,7 +13,8 @@ namespace NabfProject.Parsers
 	{
 		public AgentToMarsParser()
 		{
-			this.IdOfKnown = new JSConversionIDFetcherSimple<IilAction>(fetchId);
+			//this.IdOfKnown = new JSConversionIDFetcherSimple<IilAction>(fetchId);
+			this.AddConverter(new ConvertIilActionToMarsAction());
 		}
 
 		private object fetchId(IilAction action)

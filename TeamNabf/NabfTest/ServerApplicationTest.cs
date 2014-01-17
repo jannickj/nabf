@@ -109,8 +109,9 @@ namespace NabfTest
 
             var simStartMessage = servCom.DeserializeMessage();
 
+			var simMsg = (SimStartMessage)simStartMessage;
 
-            int id = Convert.ToInt32(((SimStartMessage)simStartMessage).Response["id"]);
+            int id = simMsg.Id;
             int simstartid = id;
 
             var actionReqMessage = (RequestActionMessage)servCom.DeserializeMessage();
