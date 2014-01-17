@@ -42,15 +42,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actions\AddStandbyAgentAction.cs" />
-    <Compile Include="AgentMessages\ConvertProbedVerticesToPercept.cs" />
-    <Compile Include="AgentMessages\ConvertVisibleEntitiesToPercept.cs" />
-    <Compile Include="AgentMessages\ConvertVisibleEdgesToPercept.cs" />
-    <Compile Include="AgentMessages\ConvertVisibleVerticesToPercept.cs" />
-    <Compile Include="AgentMessages\ConvertSelfToPercept.cs" />
-    <Compile Include="AgentMessages\ConvertSimulationToPercept.cs" />
-    <Compile Include="AgentMessages\ConvertTeamToPercept.cs" />
-    <Compile Include="AgentMessages\ConvertSurveyedEdgesToPercept.cs" />
-    <Compile Include="AgentMessages\ConvertInspectedEntitiesToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertPerceptionToActionRequestMessage.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertProbedVerticesToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertVisibleEntitiesToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertVisibleEdgesToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertVisibleVerticesToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertSelfToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertSimulationToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertTeamToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertSurveyedEdgesToPercept.cs" />
+    <Compile Include="Parsers\MarsToAgentConverters\ConvertInspectedEntitiesToPercept.cs" />
     <Compile Include="AgentStandbyManager.cs" />
     <Compile Include="AI\AgentConnection.cs" />
     <Compile Include="AI\Client\ClientApplication.cs" />
@@ -126,8 +127,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="AgentMessages\" />
     <Folder Include="Parsers\AgentToMarsConverters\" />
-    <Folder Include="Parsers\MarsToAgentConverters\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
