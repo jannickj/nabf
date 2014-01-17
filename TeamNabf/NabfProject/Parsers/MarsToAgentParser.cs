@@ -29,7 +29,15 @@ namespace NabfProject.Parsers
 
 		private object fetchId(object message)
 		{
-			return ((ReceiveMessage)message).Message.GetType();
+			if (message is ReceiveMessage)
+				return ((ReceiveMessage)message).Message.GetType();
+			else if (message is InternalReceiveMessage)
+				return message.GetType();
+			else
+				throw new UnconvertableException(message);
+					
+
+			
 		}
 	}
 }

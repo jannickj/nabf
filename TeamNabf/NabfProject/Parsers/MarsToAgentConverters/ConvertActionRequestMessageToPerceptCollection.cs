@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using JSLibrary.Conversion;
 using JSLibrary.IiLang;
 using JSLibrary.IiLang.DataContainers;
 using JSLibrary.IiLang.Parameters;
@@ -9,7 +10,7 @@ using NabfProject.ServerMessages;
 
 namespace NabfProject.Parsers.MarsToAgentConverters
 {
-    public class ConvertActionRequestMessageToPerceptCollection : JSLibrary.Conversion.JSConverterToForeign<ReceiveMessage,IilPerceptCollection>
+    public class ConvertActionRequestMessageToPerceptCollection : JSConverterToForeign<ReceiveMessage,IilPerceptCollection>
     {
         public override object KnownID
         {
