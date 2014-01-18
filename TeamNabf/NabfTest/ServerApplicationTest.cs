@@ -236,7 +236,7 @@ namespace NabfTest
         {
             var simStartMessage = ((SimStartMessage)servCom2.DeserializeMessage());
 
-            int id = Convert.ToInt32(((SimStartMessage)simStartMessage).Response["id"]);
+            int id = ((SimStartMessage)simStartMessage).Id;
             int simstartid = id;
             return id;
         }
