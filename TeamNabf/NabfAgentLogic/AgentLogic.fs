@@ -16,10 +16,28 @@
                     -> { state with World = addVertex state.World vertex }
                 | EdgeSeen edge          
                     -> { state with World = addEdge state.World edge }
-                | Achievement achievement 
-                    -> { state with Achievements = state.Achievements.Add achievement }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
+        
+        let buildInitState (name ,simData:SimStartData) =
+            {   World = Map.empty
+            ;   Self =  {   Energy = 0
+                        ;   MaxEnergy = 0
+                        ;   Health = 0
+                        ;   MaxHealth = 0
+                        ;   Name = name
+                        ;   Node = ""
+                        ;   Role = Some (simData.SimRole)
+                        ;   Strength = 0
+                        ;   TeamName = ""
+                        ;   VisionRange = 0
+                        }
+            ;   EnemyData = List.Empty
+            ;   Achievements = Set.empty
+            ;   SimulationStep = 0
+            ;   NearbyAgents = List.Empty
+            ;   LastAction = (Skip,Successful)
+            }
 
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 

@@ -53,7 +53,7 @@ namespace NabfAgentLogic.IiLang
                    ; Node        = node
                    ; Role        = parseIilRole role
                    ; Strength    = int <| strength
-                   ; Team        = team
+                   ; TeamName    = team
                    ; VisionRange = int <| visionRange
                    }
             | _ -> raise <| InvalidIilException ("Agent", iilData)

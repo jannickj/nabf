@@ -20,7 +20,7 @@ module DijkstraTest =
                 ; Node        = "a"
                 ; Role        = None
                 ; Strength    = 0
-                ; Team        = ""
+                ; TeamName    = ""
                 ; VisionRange = 0
                 }
             

@@ -9,10 +9,16 @@ namespace NabfProject.AI
 {
     public class AgentLogicFactory
     {
+        private string name;
+
+        public AgentLogicFactory(string agentName)
+        {
+            this.name = agentName;
+        }
 
         public virtual IAgentLogic ConstructAgentLogic()
         {
-            return new AgentLogicClient();
+            return new AgentLogicClient(name);
         }
     }
 }
