@@ -31,9 +31,10 @@ namespace NabfClientApplication
 
             TcpClient marsClient = new TcpClient();
 
-            Console.WriteLine("Connecting to: " + mars_server + ", username=" + username + ", password=" + password);
+            Console.WriteLine("Connecting:: " + mars_server);
 
             marsClient.Connect(marsServerPoint);
+            Console.WriteLine("Successfully connected to mars server");
 
             AgentLogicFactory logicFactory = new AgentLogicFactory(username);
             ServerCommunication marsSerCom = new ServerCommunication(
@@ -45,18 +46,20 @@ namespace NabfClientApplication
 
             ClientApplication client = new ClientApplication(marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
 
+            Console.WriteLine("Authenticating: username=" + username + ", password=" + password);
+
             marsSerCom.SeralizePacket(new AuthenticationRequestMessage(username, password));
 
             AuthenticationResponseMessage authmsg = (AuthenticationResponseMessage)marsSerCom.DeserializeMessage();
 
             if (authmsg.Response == ServerResponseTypes.Success)
             {
-                Console.WriteLine("Successfully connected to mars server");
+                Console.WriteLine("Successfully Authenticated");
                 client.Start();
             }
             else
             {
-                Console.WriteLine("Failed to connect to mars server");
+                Console.WriteLine("Failed to Authenticate");
             }
 
             //mars_client.Connect(
