@@ -31,7 +31,7 @@ namespace NabfClientApplication
 
             TcpClient marsClient = new TcpClient();
 
-            Console.WriteLine("Connecting:: " + mars_server);
+            Console.WriteLine("Connecting to Mars Server: " + mars_server);
 
             marsClient.Connect(marsServerPoint);
             Console.WriteLine("Successfully connected to mars server");
