@@ -31,6 +31,8 @@ namespace NabfClientApplication
 
             TcpClient marsClient = new TcpClient();
 
+            Console.WriteLine("Connecting to: " + mars_server + ", username=" + username + ", password=" + password);
+
             marsClient.Connect(marsServerPoint);
 
             AgentLogicFactory logicFactory = new AgentLogicFactory(username);
