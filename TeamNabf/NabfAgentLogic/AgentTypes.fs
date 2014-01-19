@@ -198,7 +198,7 @@ module AgentTypes =
             EnemyData       : Agent list; 
             SimulationStep  : int;
             NearbyAgents    : Agent list;
-            TeamDatax        : Team 
+            TeamData        : Team 
         }
 
     type OptionFunc = State -> (bool*Option<Action>)

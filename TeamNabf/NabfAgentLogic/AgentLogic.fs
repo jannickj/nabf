@@ -23,7 +23,7 @@
                 | Self data 
                     -> { state with Self = data }
                 | TeamStats teamdata
-                    -> { state with  TeamDatax = teamdata }
+                    -> { state with  TeamData = teamdata }
                     
         
         let buildInitState (name ,simData:SimStartData) =
@@ -43,7 +43,7 @@
             ;   SimulationStep = 0
             ;   NearbyAgents = List.Empty
             ;   LastAction = (Skip,Successful)
-            ;   TeamDatax = {   LastStepScore = 0
+            ;   TeamData = {   LastStepScore = 0
                             ;   Money = 0           
                             ;   Score = 0           
                             ;   ZoneScores = 0      
