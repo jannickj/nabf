@@ -2,17 +2,14 @@
 
 module AgentTypes =
 
-    open System
+    open Graphing.Graph
 
-    open Graph
-          
+    type Decision<'a> =
+        | Condition of 'a * Decision<'a>
+        | Choice of 'a
+        | Options of Decision<'a> list
 
-            type Decision<'a> =
-                | Condition of 'a * Decision<'a>
-                | Choice of 'a
-                | Options of Decision<'a> list
-
-           
+        
 
             type Upgrade =
                 | Battery
@@ -38,8 +35,7 @@ module AgentTypes =
                 Role        : Option<AgentRole>; 
                 Strength    : int; 
                 Team        : string; 
-                VisionRange : int; 
-                Position    : string
+                VisionRange : int;
                 }
 
             type Action =
@@ -77,8 +73,8 @@ module AgentTypes =
 
             type Percept =
                 | EnemySeen      of Agent
-                | VertexSeen     of Graph.Vertex
-                | EdgeSeen       of Graph.Edge
+                | VertexSeen     of Vertex
+                | EdgeSeen       of Edge
                 | Achievement    of string
                 | SimulationStep of int
 

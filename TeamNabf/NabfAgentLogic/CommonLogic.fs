@@ -2,27 +2,23 @@
 module CommonLogic =
 
     open AgentTypes
-    open Graph
-
-    let advancedGoto (v:Vertex) (s:State) =
-        let edges = Set.toList s.World.[s.Self.Node].Edges
-        let edge = List.find (fun (_,id) -> id = v.Identifier) edges
-        if (fst edge) = None 
-        then 
-            if s.Self.Energy < 10 then (true,Some(Recharge)) else (true,Some(Goto(v)))
-        else
-            let value = (fst edge).Value
-            if value > s.Self.Energy then (true,Some(Recharge)) else (true,Some(Goto(v)))
+    open Graphing.Graph
+    open Saboteur
+    open Repairer
+    open Sentinel
+    open Explorer
+    open Inspector
+    open AgentLogicLib
 
     let reactToEnemyAgent (s:State) =
-        let agents = List.partition (fun a -> a.Node = s.Self.Position && a.Team <> s.Self.Team) s.NearbyAgents
+        let agents = List.partition (fun a -> a.Node = s.Self.Node && a.Team <> s.Self.Team) s.NearbyAgents
         if not (fst agents).IsEmpty then
             match s.Self.Role.Value with
-            | Saboteur -> (true,Some(Attack((fst agents).Head)))
-            | Repairer
-            | Sentinel -> (true,Some(Parry))
-            | Explorer -> (true,Some(Goto((getNeighbours s.Self.Node s.World).Head)))
-            | Inspector -> (true,Some(Recharge))
+            | Saboteur -> saboteurReact s agents
+            | Repairer -> repairerReact s agents
+            | Sentinel -> tryDo Parry s
+            | Explorer -> explorerReact s agents
+            | Inspector -> inspectorReact s agents
         else
             (false,None)
 
@@ -33,7 +29,7 @@ module CommonLogic =
         then 
             (false,None) 
         else
-            advancedGoto unexplored.Value s
+            tryGo unexplored.Value s
             
     let idle (s:State) = (true,Some(Recharge))
 
