@@ -1,6 +1,11 @@
-﻿using System;
+﻿using NabfClientApplication.Client;
+using NabfProject.AI;
+using NabfProject.Parsers;
+using NabfProject.ServerMessages;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -13,17 +18,45 @@ namespace NabfClientApplication
 	{
 		static void Main(string[] args)
 		{
-            string master_server = args[0];
-            string mars_server = args[1];
-            string username = args[2];
-            string password = args[3];
+            int marsinfo_pos = 0;
+            //string master_server = args[0];
+            string mars_server = args[marsinfo_pos];
+            string username = args[marsinfo_pos+1];
+            string password = args[marsinfo_pos+2];
 
 
 
-            IPEndPoint masterServerPoint = CreateIPEndPoint(master_server);
+            //IPEndPoint masterServerPoint = CreateIPEndPoint(master_server);
             IPEndPoint marsServerPoint = CreateIPEndPoint(mars_server);
 
             TcpClient marsClient = new TcpClient();
+
+            marsClient.Connect(marsServerPoint);
+
+            AgentLogicFactory logicFactory = new AgentLogicFactory(username);
+            ServerCommunication marsSerCom = new ServerCommunication(
+                new StreamReader(marsClient.GetStream()),
+                new StreamWriter(marsClient.GetStream()));
+
+            MarsToAgentParser marsToAgentParser = new MarsToAgentParser();
+            AgentToMarsParser agentToMarsParser = new AgentToMarsParser();
+
+            ClientApplication client = new ClientApplication(marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
+
+            marsSerCom.SeralizePacket(new AuthenticationRequestMessage(username, password));
+
+            AuthenticationResponseMessage authmsg = (AuthenticationResponseMessage)marsSerCom.DeserializeMessage();
+
+            if (authmsg.Response == ServerResponseTypes.Success)
+            {
+                Console.WriteLine("Successfully connected to mars server");
+                client.Start();
+            }
+            else
+            {
+                Console.WriteLine("Failed to connect to mars server");
+            }
+
             //mars_client.Connect(
 		}
 

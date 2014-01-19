@@ -1,4 +1,4 @@
-﻿ 
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NabfProject", "NabfProject\NabfProject.csproj", "{926590FE-C08E-4F55-8646-CECE975B6D74}"
@@ -20,6 +20,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NabfAgentLogic", "NabfAgentLogic\NabfAgentLogic.fsproj", "{039EE1F6-4FD5-4DC7-97ED-4D3E5E8B9C20}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AgentLogicTest", "AgentLogicTest\AgentLogicTest.fsproj", "{3CAC5B0F-6B66-4B12-B58E-BB326C989B84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NabfClientApplication", "NabfClientApplication\NabfClientApplication.csproj", "{B006D89B-7DF4-4C41-91DA-904B762EECC1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,6 +69,10 @@ Global
 		{3CAC5B0F-6B66-4B12-B58E-BB326C989B84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CAC5B0F-6B66-4B12-B58E-BB326C989B84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3CAC5B0F-6B66-4B12-B58E-BB326C989B84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B006D89B-7DF4-4C41-91DA-904B762EECC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B006D89B-7DF4-4C41-91DA-904B762EECC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B006D89B-7DF4-4C41-91DA-904B762EECC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B006D89B-7DF4-4C41-91DA-904B762EECC1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

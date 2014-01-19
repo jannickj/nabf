@@ -18,8 +18,9 @@ using JSLibrary.Data.GenericEvents;
 using XmasEngineModel.Interfaces;
 using NabfProject.ServerMessages;
 using NabfProject.Parsers;
+using NabfProject.AI;
 
-namespace NabfProject.AI.Client
+namespace NabfClientApplication.Client
 {
 	public class ClientApplication : IStartable
 	{
@@ -97,7 +98,7 @@ namespace NabfProject.AI.Client
             
 		}
 
-		public void StartThread(Action action)
+		private void StartThread(Action action)
 		{
 			var thread = new Thread(new ThreadStart(action));
 			lock (activeThreads)
