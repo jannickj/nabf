@@ -18,6 +18,13 @@
                     -> { state with World = addEdge state.World edge }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
+                | LastAction (action,result) 
+                    -> { state with LastAction = (action,result) }
+                | Self data 
+                    -> { state with Self = data }
+                | TeamStats teamdata
+                    -> { state with  TeamDatax = teamdata }
+                    
         
         let buildInitState (name ,simData:SimStartData) =
             {   World = Map.empty
@@ -33,11 +40,16 @@
                         ;   VisionRange = 0
                         }
             ;   EnemyData = List.Empty
-            ;   Achievements = Set.empty
             ;   SimulationStep = 0
             ;   NearbyAgents = List.Empty
             ;   LastAction = (Skip,Successful)
-            }
+            ;   TeamDatax = {   LastStepScore = 0
+                            ;   Money = 0           
+                            ;   Score = 0           
+                            ;   ZoneScores = 0      
+                            ;   Achievements = []   
+                            }
+            } : State
 
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 

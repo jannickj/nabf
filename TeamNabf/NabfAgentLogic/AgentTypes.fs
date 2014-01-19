@@ -192,13 +192,13 @@ module AgentTypes =
 
     type State =
         { 
-            World          : Graph; 
-            Self           : Agent;
-            LastAction     : Action*ActionResult 
-            EnemyData      : Agent list; 
-            Achievements   : Set<string>; 
-            SimulationStep : int;
-            NearbyAgents   : Agent list
+            World           : Graph; 
+            Self            : Agent;
+            LastAction      : Action*ActionResult 
+            EnemyData       : Agent list; 
+            SimulationStep  : int;
+            NearbyAgents    : Agent list;
+            TeamDatax        : Team 
         }
 
     type OptionFunc = State -> (bool*Option<Action>)
