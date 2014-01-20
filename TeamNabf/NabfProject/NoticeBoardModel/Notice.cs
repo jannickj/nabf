@@ -12,6 +12,7 @@ namespace NabfProject.NoticeBoardModel
         public List<Node> WhichNodes { get; protected set; }
         public int AgentsNeeded { get; protected set; }
         public Int64 Id { get; private set; }
+        public int Value { get; private set; }
 
         private int _highestAverageDesirabilityForNotice = -1;
         public int HighestAverageDesirabilityForNotice { get { return _highestAverageDesirabilityForNotice; } set { _highestAverageDesirabilityForNotice = value; } }
@@ -62,7 +63,7 @@ namespace NabfProject.NoticeBoardModel
                 if (no.WhichNodes.Except<Node>(this.WhichNodes).Count() != 0)
                     return false;
 
-            return no.AgentsNeeded == this.AgentsNeeded;
+            return no.AgentsNeeded == this.AgentsNeeded && no.Value == this.Value;
         }
 
         public void Apply(int desirability, NabfAgent a)
