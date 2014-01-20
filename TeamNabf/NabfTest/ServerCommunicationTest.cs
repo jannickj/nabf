@@ -1,69 +1,145 @@
-﻿using System;
+﻿using NabfProject.AI;
+using NabfProject.ServerMessages;
+using NUnit.Framework;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NUnit.Framework;
-using NabfProject.AI;
-using System.IO;
-using NabfProject.ServerMessages;
-using System.Xml.Serialization;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace NabfTest
 {
     [TestFixture]
-    public class ServerCommunicationTest
+    class ServerCommunicationTest
     {
-
         [Test]
-        public void SendMessage_Connected_XMLmessageSent()
+        public void BeforeDeserialize_OneZeroTerminatedMessage_ParsedMessage()
         {
-            string username = "a1";
-            string password = "1";
-           
-            StringBuilder sb = new StringBuilder();
-            //StreamReader strRead = new StreamReader(memStream);
-            XmlSerializer xmlSer = new XmlSerializer(typeof(ServerMessage));
-            XmlWriterSettings xmlSettings = new XmlWriterSettings() {OmitXmlDeclaration = false};
-            ServerCommunication servCom = new ServerCommunication(XmlWriter.Create(sb,xmlSettings), xmlSer);
-            AuthenticationMessage message = new AuthenticationMessage(username, password);
-            servCom.SendMessage(message);
+            MemoryStream memStream = new MemoryStream();
+            StreamReader reader = new StreamReader(memStream);
+            ServerCommunication servCom = new ServerCommunication(reader, null);
+            StreamWriter swriter = new StreamWriter(memStream);
+            int timeStamp = 1;
 
+            swriter.Write(GenerateXmlMessage(timeStamp));
 
-            string actual = XDocument.Parse(sb.ToString()).ToString();
-            string expected = XDocument.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
-                                +"<message type=\"auth-request\">"
-                                +"<authentication password=\""+password+"\" username=\""+username+"\"/>"
-                                + "</message>").ToString();
+            swriter.Flush();
 
-            Assert.AreEqual(expected, actual);
+            memStream.WriteByte(0);
+
+            memStream.Position = 0;
+
+            var message = (ReceiveMessage) servCom.DeserializePacket();
+
+            Assert.IsTrue(matchGeneratedMessage(message, timeStamp));
         }
 
         [Test]
-        public void SendMessage_Connected_XMLmessageSent2()
+        public void BeforeDeserialize_OneAndHalfZeroTerminatedMessage_ParsedMessage()
         {
-            string actionType = "goto";
-            string actionParam = "vertex1";
+            MemoryStream memStream = new MemoryStream();
+            StreamReader reader = new StreamReader(memStream);
+            ServerCommunication servCom = new ServerCommunication(reader, null);
+            StreamWriter swriter = new StreamWriter(memStream);
+            int timeStamp = 1;
+            int timeStamp2 = 2;
 
-            StringBuilder sb = new StringBuilder();
-            //StreamReader strRead = new StreamReader(memStream);
-            XmlSerializer xmlSer = new XmlSerializer(typeof(ServerMessage));
-            XmlWriterSettings xmlSettings = new XmlWriterSettings() { OmitXmlDeclaration = false };
-            ServerCommunication servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), xmlSer);
-            ActionMessage message = new ActionMessage(actionType, actionParam);
-            servCom.SendMessage(message);
+            swriter.Write(GenerateXmlMessage(timeStamp));
 
+            swriter.Flush();
 
-            string actual = XDocument.Parse(sb.ToString()).ToString();
-            string expected = XDocument.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                                                +"<message type=\"action\">"
-                                                +"<action type=\""+actionType+"\" param=\""+actionParam+"\">"
-                                                +"</message>").ToString();
+            memStream.WriteByte(0);
 
-            Assert.AreEqual(expected, actual);
+            string halfMsg = GenerateXmlMessage(timeStamp2).Substring(0, 60);
+            swriter.Write(halfMsg);
+            swriter.Flush();
+            memStream.Position = 0;
+
+            var message = (ReceiveMessage)servCom.DeserializePacket();
+            var curPos = memStream.Position;
+
+            Assert.IsTrue(matchGeneratedMessage(message, timeStamp));
+
+            string half2Msg = GenerateXmlMessage(timeStamp2).Substring(60);
+
+            memStream.Position = memStream.Length;            
+
+            swriter.Write(half2Msg);
+            swriter.Flush();
+            memStream.WriteByte(0);
+            memStream.Position = curPos;
+
+            var message2 = (ReceiveMessage)servCom.DeserializePacket();
+
+            Assert.IsTrue(matchGeneratedMessage(message2, timeStamp2));
+
+            
+
+            
+        }
+
+        [Test]
+        public void BeforeDeserialize_2andHalfZeroTerminatedMessage_ParsedMessage()
+        {
+            MemoryStream memStream = new MemoryStream();
+            StreamReader reader = new StreamReader(memStream);
+            ServerCommunication servCom = new ServerCommunication(reader, null);
+            StreamWriter swriter = new StreamWriter(memStream);
+            int timeStamp = 1;
+            int timeStamp2 = 2;
+            int timeStamp3 = 3;
+
+            swriter.Write(GenerateXmlMessage(timeStamp));
+
+            swriter.Flush();
+
+            memStream.WriteByte(0);
+
+            swriter.Write(GenerateXmlMessage(timeStamp2));
+            swriter.Flush();
+            memStream.WriteByte(0);
+
+            string halfMsg = GenerateXmlMessage(3).Substring(0, 60);
+            swriter.Write(halfMsg);
+            swriter.Flush();
+            memStream.Position = 0;
+
+            var message = (ReceiveMessage)servCom.DeserializePacket();
+            var curPos = memStream.Position;
+
+            Assert.IsTrue(matchGeneratedMessage(message, timeStamp));
+
+            string half2Msg = GenerateXmlMessage(timeStamp3).Substring(60);
+
+            memStream.Position = memStream.Length;
+
+            swriter.Write(half2Msg);
+            swriter.Flush();
+            memStream.WriteByte(0);
+            memStream.Position = curPos;
+
+            var message2 = (ReceiveMessage)servCom.DeserializePacket();
+
+            Assert.IsTrue(matchGeneratedMessage(message2, timeStamp2));
+
+            var message3 = (ReceiveMessage)servCom.DeserializePacket();
+
+            Assert.IsTrue(matchGeneratedMessage(message3, timeStamp3));
+
+        }
+
+        private string GenerateXmlMessage(int timeStamp)
+        {
+            string result = "ok";
+            return "<message timestamp=\""+timeStamp+"\" type=\"auth-response\">"
+                            + "<authentication result=\"" + result + "\"/>"
+                            + "</message>";
+        }
+
+        private bool matchGeneratedMessage(ReceiveMessage genMessage, int timeStamp)
+        {
+            return genMessage.Timestamp == timeStamp && ((AuthenticationResponseMessage)genMessage.Message).Response == ServerResponseTypes.Success;
         }
     }
-    
 }
