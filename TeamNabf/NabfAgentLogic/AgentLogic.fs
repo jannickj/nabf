@@ -6,6 +6,8 @@
         open JSLibrary.IiLang.DataContainers
         open AgentTypes
         open DecisionTree
+        open IiLang.IiLangDefinitions
+        open IiLang.IilTranslator
         
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
@@ -73,7 +75,8 @@
             new IilAction "some action"
 
         let parseIilPercepts (perceptCollection:IilPerceptCollection) : ServerMessage =
-            AgentServerMsg (AcceptedJob 1) 
+            let percepts = parsePerceptCollection perceptCollection
+            parseIilServerMessage percepts
 
         let generateJobs  (state:State) (jobs:Job list) = []
         

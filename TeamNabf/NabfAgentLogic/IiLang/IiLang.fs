@@ -48,4 +48,5 @@ namespace NabfAgentLogic.IiLang
         let parsePercept (iilPercept : IilPercept) = 
             Percept <| (iilPercept.Name, List.ofSeq iilPercept.Parameters |> List.map evalIil) 
 
-   
+        let parsePerceptCollection (iilPerceptCollection : IilPerceptCollection) =
+            (List.ofSeq iilPerceptCollection.Percepts |> List.map parsePercept)
