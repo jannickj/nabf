@@ -111,6 +111,8 @@
     <Compile Include="ServerMessages\VisibleEntityMessage.cs" />
     <Compile Include="ServerMessages\VisibleVertexMessage.cs" />
     <Compile Include="ServerMessages\VisibleVerticesMessage.cs" />
+    <Compile Include="SimManager\SimulationFactory.cs" />
+    <Compile Include="SimManager\SimulationManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">

@@ -59,6 +59,8 @@ namespace NabfProject.KnowledgeManagerModel
             //SendKnowledgeToSubscribedAgents();            
         }
 
+
+
         //private void SendKnowledgeToSubscribedAgents()
         //{
         //    foreach(KeyValuePair<Knowledge, bool> kvp in _knowledgeBase)

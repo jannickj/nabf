@@ -77,7 +77,7 @@ namespace NabfProject.NoticeBoardModel
             _freeID = 0;
         }
 
-        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, out Notice notice)
+        public Int64 CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, out Notice notice)
         {
             Notice n = null;
             Int64 id = _freeID;
@@ -103,7 +103,10 @@ namespace NabfProject.NoticeBoardModel
             bool b = AddNotice(n);
             notice = n;
 
-            return b;
+            if (b)
+                return id;
+            else
+                return -1;
         }
 
         private bool AddNotice(Notice no)

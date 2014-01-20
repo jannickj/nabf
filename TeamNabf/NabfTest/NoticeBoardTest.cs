@@ -27,8 +27,8 @@ namespace NabfTest
 		public void AddInitialNotice_NoDuplicateListEmpty_Success()
 		{
             Notice n;
-            bool addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, null, out n);
-            Assert.True(addSuccess);
+            Int64 addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, null, out n);
+            Assert.True(addSuccess != -1);
             Assert.AreEqual(1, nb.GetNoticeCount());
             Assert.IsTrue(n.Equals(nb.GetNotices().First()));
 		}
@@ -46,22 +46,22 @@ namespace NabfTest
             Notice no6 = new OccupyJob(2, testNodes, ID++);
             Notice no7 = new RepairJob(testNodes, ID++);
             Notice no8 = new RepairJob(testNodes, ID++);
-            bool addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no);
-            bool addSuccess2 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no2);
-            bool addSuccess3 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 2, testNodes, out no3);
-            bool addSuccess4 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 2, testNodes, out no4);
-            bool addSuccess5 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 2, testNodes, out no5);
-            bool addSuccess6 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 2, testNodes, out no6);
-            bool addSuccess7 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no7);
-            bool addSuccess8 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no8);
-            Assert.True(addSuccess);
-            Assert.False(addSuccess2);
-            Assert.True(addSuccess3);
-            Assert.False(addSuccess4);
-            Assert.True(addSuccess5);
-            Assert.False(addSuccess6);
-            Assert.True(addSuccess7);
-            Assert.False(addSuccess8);
+            Int64 addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no);
+            Int64 addSuccess2 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no2);
+            Int64 addSuccess3 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 2, testNodes, out no3);
+            Int64 addSuccess4 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 2, testNodes, out no4);
+            Int64 addSuccess5 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 2, testNodes, out no5);
+            Int64 addSuccess6 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 2, testNodes, out no6);
+            Int64 addSuccess7 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no7);
+            Int64 addSuccess8 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no8);
+            Assert.True(addSuccess != -1);
+            Assert.False(addSuccess2 != -1);
+            Assert.True(addSuccess3 != -1);
+            Assert.False(addSuccess4 != -1);
+            Assert.True(addSuccess5 != -1);
+            Assert.False(addSuccess6 != -1);
+            Assert.True(addSuccess7 != -1);
+            Assert.False(addSuccess8 != -1);
             Assert.AreEqual(4, nb.GetNoticeCount());
         }
 
@@ -81,26 +81,26 @@ namespace NabfTest
             Notice no8 = new AttackJob(1, testNodes2, ID++);
             Notice no9 = new RepairJob(testNodes, ID++);
             Notice no10 = new RepairJob(testNodes2, ID++);
-            bool addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no);
-            bool addSuccess2 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes2, out no2);
-            bool addSuccess3 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, out no3);
-            bool addSuccess4 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes2, out no4);
-            bool addSuccess5 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 1, testNodes, out no5);
-            bool addSuccess6 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 1, testNodes2, out no6);
-            bool addSuccess7 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes, out no7);
-            bool addSuccess8 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes2, out no8);
-            bool addSuccess9 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no9);
-            bool addSuccess10 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes2, out no10);
-            Assert.True(addSuccess);
-            Assert.True(addSuccess2);
-            Assert.True(addSuccess3);
-            Assert.True(addSuccess4);
-            Assert.True(addSuccess5);
-            Assert.True(addSuccess6);
-            Assert.True(addSuccess7);
-            Assert.True(addSuccess8);
-            Assert.True(addSuccess9);
-            Assert.True(addSuccess10);
+            Int64 addSuccess = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes, out no);
+            Int64 addSuccess2 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2, testNodes2, out no2);
+            Int64 addSuccess3 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, out no3);
+            Int64 addSuccess4 = nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes2, out no4);
+            Int64 addSuccess5 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 1, testNodes, out no5);
+            Int64 addSuccess6 = nb.CreateAndAddNotice(NoticeBoard.JobType.Occupy, 1, testNodes2, out no6);
+            Int64 addSuccess7 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes, out no7);
+            Int64 addSuccess8 = nb.CreateAndAddNotice(NoticeBoard.JobType.Attack, 1, testNodes2, out no8);
+            Int64 addSuccess9 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes, out no9);
+            Int64 addSuccess10 = nb.CreateAndAddNotice(NoticeBoard.JobType.Repair, 1, testNodes2, out no10);
+            Assert.True(addSuccess != -1);
+            Assert.True(addSuccess2 != -1);
+            Assert.True(addSuccess3 != -1);
+            Assert.True(addSuccess4 != -1);
+            Assert.True(addSuccess5 != -1);
+            Assert.True(addSuccess6 != -1);
+            Assert.True(addSuccess7 != -1);
+            Assert.True(addSuccess8 != -1);
+            Assert.True(addSuccess9 != -1);
+            Assert.True(addSuccess10 != -1);
             Assert.AreEqual(10, nb.GetNoticeCount());
         }
         
