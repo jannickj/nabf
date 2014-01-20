@@ -254,7 +254,7 @@ namespace NabfAgentLogic.IiLang
                 | "inspectedEntities" -> List.map (parseIilAgent >> Percept.EnemySeen) data
                 | "probedVertices"    -> List.map (parseIilProbedVertex >> Percept.VertexProbed) data
                 | "self"              -> parseIilSelf data
-                | "step"              -> [SimulationStep <| parseIilStep data]
+                | "simulation"              -> [SimulationStep <| parseIilStep data]
                 | "surveyedEdges"     -> List.map (parseIilSurveyedEdge >> Percept.EdgeSeen) data
                 | "team"              -> [Team <| parseIilTeam data]
                 | "visibleEdges"      -> List.map (parseIilVisibleEdge >> Percept.EdgeSeen) data

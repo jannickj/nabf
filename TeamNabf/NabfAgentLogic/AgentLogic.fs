@@ -28,6 +28,7 @@
 //                           }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
+                | _ -> state
         
         let buildInitState (name ,simData:SimStartData) =
             {   World = Map.empty
