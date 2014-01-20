@@ -25,7 +25,7 @@ namespace NabfClientApplication
             string username = args[marsinfo_pos+1];
             string password = args[marsinfo_pos+2];
 
-            Console.WriteLine("Got: Server_: " + mars_server + ", Username: " + username + ", Password: " + password);
+            Console.WriteLine("Got: Server: " + mars_server + ", Username: " + username + ", Password: " + password);
 
             //IPEndPoint masterServerPoint = CreateIPEndPoint(master_server);
             IPEndPoint[] marsServerPoints = CreateIPEndPoint(mars_server);
