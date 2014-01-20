@@ -12,32 +12,49 @@
             match percept with
                 | EnemySeen enemy   
                     -> { state with EnemyData = enemy :: state.EnemyData }
-                | VertexSeen vertex 
-                    -> { state with World = addVertex state.World vertex }
-                | EdgeSeen edge          
-                    -> { state with World = addEdge state.World edge }
+                | VertexSeen (id, team) when not <| Map.containsKey id state.World ->
+                    { state with
+                        World = Map.add id { Identifier = id; Value = None; Edges = Set.empty } state.World;
+                        NewVertices = (id, team) :: state.NewVertices
+                    } 
+//                | EdgeSeen (cost, node1, node2) 
+//                    when (not <| Map.containsKey node1 state.World) 
+//                    ||   (not <| Set.contains (cost, node2) state.World.[node1].Edges)
+//                        -> { state with 
+//                             World = addEdge state.World edge;
+//                             NewEdges = (cost, node1, node2) :: NewEdges
+//                           }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
         
         let buildInitState (name ,simData:SimStartData) =
             {   World = Map.empty
-            ;   Self =  {   Energy = 0
-                        ;   MaxEnergy = 0
-                        ;   Health = 0
-                        ;   MaxHealth = 0
+            ;   Self =  {   Energy = Some 0
+                        ;   MaxEnergy = Some 0
+                        ;   Health = Some 0
+                        ;   MaxHealth = Some 0
                         ;   Name = name
                         ;   Node = ""
                         ;   Role = Some (simData.SimRole)
-                        ;   Strength = 0
-                        ;   TeamName = ""
-                        ;   VisionRange = 0
+                        ;   Strength = Some 0
+                        ;   Team = ""
+                        ;   Status = Normal
+                        ;   VisionRange = Some 0
                         }
             ;   EnemyData = List.Empty
-            ;   Achievements = Set.empty
             ;   SimulationStep = 0
             ;   NearbyAgents = List.Empty
-            ;   LastAction = (Skip,Successful)
-            }
+            ;   OwnedVertices = Map.empty
+            ;   NewVertices = []
+            ;   NewEdges = []
+            ;   LastStepScore = 0
+            ;   LastAction = Skip
+            ;   LastActionResult = Successful
+            ;   Money = 0
+            ;   Score = 0
+            ;   ZoneScore = 0
+            ;   Achievements = []
+            } : State
 
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
