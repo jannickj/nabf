@@ -12,12 +12,18 @@
             match percept with
                 | EnemySeen enemy   
                     -> { state with EnemyData = enemy :: state.EnemyData }
-                | VertexSeen vertex 
-                    -> { state with World = addVertex state.World vertex }
-                | EdgeSeen edge          
-                    -> { state with World = addEdge state.World edge }
-                | Achievement achievement 
-                    -> { state with Achievements = state.Achievements.Add achievement }
+                | VertexSeen (id, team) when not <| Map.containsKey id state.World ->
+                    { state with
+                        World = Map.add id { Identifier = id; Value = None; Edges = Set.empty } state.World;
+                        NewVertices = (id, team) :: state.NewVertices
+                    } 
+//                | EdgeSeen (cost, node1, node2) 
+//                    when (not <| Map.containsKey node1 state.World) 
+//                    ||   (not <| Set.contains (cost, node2) state.World.[node1].Edges)
+//                        -> { state with 
+//                             World = addEdge state.World edge;
+//                             NewEdges = (cost, node1, node2) :: NewEdges
+//                           }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
 

@@ -44,10 +44,10 @@ namespace NabfAgentLogic
                 ; Energy = (currentCost.Energy - edgeCostGuess) + (maxEnergy / 2)
                 }
         
-        let stepProblem agent goalEvaluator = 
+        let stepProblem maxEnergy energy goalEvaluator = 
             { GoalEvaluator = goalEvaluator
-            ; CostEvaluator = costEvaluator agent.MaxEnergy
-            ; InitialCost   = { Steps = 0; Energy = agent.Energy }
+            ; CostEvaluator = costEvaluator maxEnergy
+            ; InitialCost   = { Steps = 0; Energy = energy }
             }
 
         let rangeProblem goalId =
@@ -57,7 +57,11 @@ namespace NabfAgentLogic
             }
         
         let pathToNearest agent goalEvaluator (graph : Graph) = 
-            dijkstra graph.[agent.Node] (stepProblem agent goalEvaluator) graph
+            match (agent.MaxEnergy, agent.Energy) with
+            | (Some maxEnergy, Some energy) -> 
+                dijkstra graph.[agent.Node] (stepProblem maxEnergy energy goalEvaluator) graph
+            | (_, _) -> 
+                failwithf "agent %s has unknown energy and/or maxEnergy" agent.Name
             
         let pathTo agent goal graph =
             pathToNearest agent (fun vertex -> vertex.Identifier = goal) graph
