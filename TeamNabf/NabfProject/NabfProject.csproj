@@ -57,6 +57,7 @@
     <Compile Include="KnowledgeManager\Knowledge.cs" />
     <Compile Include="KnowledgeManager\KnowledgeManager.cs" />
     <Compile Include="NabfModel.cs" />
+    <Compile Include="NoticeBoardModel\NoticeIsReadyToBeExecutedEvent.cs" />
     <Compile Include="NoticeBoardModel\Notice.cs" />
     <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

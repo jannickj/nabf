@@ -17,9 +17,7 @@ namespace NabfProject.NoticeBoardModel
         private Int64 _freeID = 0; 
 
         public enum JobType { Disrupt, Occupy, Attack, Repair }
-
-        public event EventHandler<NoticeIsReadyToBeExecutedEventArgs> NoticeIsReadyToBeExecutedEvent;
-
+        
         public NoticeBoard()
         {
         }
@@ -326,14 +324,15 @@ namespace NabfProject.NoticeBoardModel
 
         private bool RaiseEventForNotice(Notice n) 
         {
-            NoticeIsReadyToBeExecutedEventArgs args = new NoticeIsReadyToBeExecutedEventArgs();
-            args.Agents = n.GetTopDesireAgents();
-            args.Notice = n;
+            //NoticeIsReadyToBeExecutedEventArgs args = new NoticeIsReadyToBeExecutedEventArgs();
+            //args.Agents = n.GetTopDesireAgents();
+            //args.Notice = n;
 
-            if (NoticeIsReadyToBeExecutedEvent != null)
-                NoticeIsReadyToBeExecutedEvent(this, args);
+            //if (NoticeIsReadyToBeExecutedEvent != null)
+            //    NoticeIsReadyToBeExecutedEvent(this, args);
             foreach (NabfAgent a in n.GetTopDesireAgents())
-            { 
+            {
+                a.Raise(new NoticeIsReadyToBeExecutedEvent(n, n.GetTopDesireAgents()));
                 foreach (Notice no in _agentToNotice[a])
                 {
                     if (no.ContentIsEqualTo(n))
@@ -345,9 +344,5 @@ namespace NabfProject.NoticeBoardModel
         }
     }
 
-    public class NoticeIsReadyToBeExecutedEventArgs : EventArgs
-    {
-        public Notice Notice { get; set; }
-        public List<NabfAgent> Agents = new List<NabfAgent>();
-    }
+    
 }
