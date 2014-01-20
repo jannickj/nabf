@@ -123,8 +123,6 @@ module AgentTypes =
 
     type SeenVertex = VertexName * TeamName
 
-
-
     type Percept =
         | EnemySeen         of Agent
         | VertexSeen        of SeenVertex

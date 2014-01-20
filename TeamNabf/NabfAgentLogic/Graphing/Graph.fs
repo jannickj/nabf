@@ -44,6 +44,7 @@
             Map.empty<string, Vertex> : Graph
 
         let addVertexValue (graph : Graph) (vertex : Vertex) =
+//            Map.add id {graph.[id] with Value = value} graph
             let vertex = graph.[vertex.Identifier]
             let updatedVertex = { vertex with Value = vertex.Value }
             Map.remove vertex.Identifier graph

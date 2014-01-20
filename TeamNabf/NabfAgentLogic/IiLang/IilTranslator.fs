@@ -245,7 +245,14 @@ namespace NabfAgentLogic.IiLang
                    ; SimVertices = int vertices
                    ; SimRole = (parseIilRole role).Value
                    }
-                
+            | _ -> raise <| InvalidIilException ("simStart", iilSimStart)
+        
+        let parseIilSimEnd iilSimEnd =
+            match iilSimEnd with
+            | [ Function ("ranking", [Numeral ranking])
+              ; Function ("steps", [Numeral steps])
+              ] -> (int ranking, int steps)
+            | _ -> raise <| InvalidIilException ("simEnd", iilSimEnd)
 
         let parseIilPercept iilPercept =
             match iilPercept with
@@ -260,7 +267,7 @@ namespace NabfAgentLogic.IiLang
                 | "visibleEdges"      -> List.map (parseIilVisibleEdge >> Percept.EdgeSeen) data
                 | "visibleEntities"   -> List.map (parseIilVisibleEntity >> EnemySeen) data
                 | "visibleVertices"   -> List.map (parseIilVisibleVertex >> VertexSeen) data
-                | _ ->  raise <| InvalidIilException ("iilPercept", data)
+                | _ -> raise <| InvalidIilException ("iilPercept", data)
             | _ -> failwith "no"    
 
         let parseIilServerMessage iilServerMessage =
@@ -272,5 +279,7 @@ namespace NabfAgentLogic.IiLang
                     MarsServerMessage <| ActionRequest (parseIilActionRequest data, percepts)
                 | "simStart" -> 
                     MarsServerMessage <| (SimulationStart <| parseIilSimStart data)
+                | "simEnd" ->
+                    MarsServerMessage <| 
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"
