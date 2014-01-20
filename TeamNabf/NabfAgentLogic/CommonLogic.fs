@@ -3,6 +3,7 @@ module CommonLogic =
 
     open AgentTypes
     open Graphing.Graph
+    open PathFinding
     open Saboteur
     open Repairer
     open Sentinel
@@ -24,12 +25,12 @@ module CommonLogic =
 
     let exploreLocalGraph (s:State) =
         let neighbours = getNeighbours s.Self.Node s.World
-        let unexplored = List.tryFind (fun (v:Vertex) -> v.Edges.Count > 1) neighbours
+        let unexplored = (pathToNearestUnExplored s.Self s.World)
         if unexplored = None 
         then 
             (false,None) 
         else
-            tryGo unexplored.Value s
+            tryGo s.World.[unexplored.Value.Head] s
             
-    let idle (s:State) = (true,Some(Recharge))
+    let idle (s:State) = recharge
 
