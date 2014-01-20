@@ -227,6 +227,8 @@
                         stopLogic()
                         ()
                     | SimulationStart sData ->
+                        this.KnownJobs <- []
+                        this.awaitingPercepts <- []
                         this.BeliefData <- buildInitState (agentname,sData)
                     | ActionRequest (deadline,actionTime,id, percepts) ->
                         let action = buildSharePerceptsAction (sharedPercepts percepts)

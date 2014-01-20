@@ -157,7 +157,8 @@ namespace NabfClientApplication.Client
         {
             ReceiveMessage msg = (ReceiveMessage) marsServCom.DeserializePacket();
             SimStartMessage sMsg = (SimStartMessage) msg.Message;
-            var sMsgPercepts = (IilPerceptCollection) marsToAgentParser.ConvertToForeign(sMsg);
+            var sMsgPercepts = (IilPerceptCollection) marsToAgentParser.ConvertToForeign(msg);
+            StartSim(sMsg);
             currentLogic.HandlePercepts(sMsgPercepts);
 
             Thread marsSenderThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMarsSender(); }));

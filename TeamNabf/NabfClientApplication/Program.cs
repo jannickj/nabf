@@ -19,6 +19,7 @@ namespace NabfClientApplication
 		static void Main(string[] args)
 		{
             int marsinfo_pos = 0;
+            int selectIp = 0;
             //string master_server = args[0];
             string mars_server = args[marsinfo_pos];
             string username = args[marsinfo_pos+1];
@@ -27,13 +28,32 @@ namespace NabfClientApplication
 
 
             //IPEndPoint masterServerPoint = CreateIPEndPoint(master_server);
-            IPEndPoint marsServerPoint = CreateIPEndPoint(mars_server);
+            IPEndPoint[] marsServerPoints = CreateIPEndPoint(mars_server);
 
             TcpClient marsClient = new TcpClient();
 
             Console.WriteLine("Connecting to Mars Server: " + mars_server);
 
-            marsClient.Connect(marsServerPoint);
+            IPEndPoint marsServerPoint = marsServerPoints[selectIp];
+
+            for (int attempts = 0; attempts < 42; attempts++)
+            {
+                try
+                {
+                    marsClient.Connect(marsServerPoint);
+                    break;
+                }
+                catch (Exception)
+                {
+                    if (++selectIp >= marsServerPoints.Length)
+                        throw new Exception("Could not connect to server on any address");
+                    else
+                        marsServerPoint = marsServerPoints[selectIp];
+                }
+            }
+            
+
+            
             Console.WriteLine("Successfully connected to mars server");
 
             AgentLogicFactory logicFactory = new AgentLogicFactory(username);
@@ -65,9 +85,11 @@ namespace NabfClientApplication
             //mars_client.Connect(
 		}
 
-        public static IPEndPoint CreateIPEndPoint(string endPoint)
+        public static IPEndPoint[] CreateIPEndPoint(string endPoint)
         {
             string[] ep = endPoint.Split(':');
+            IPAddress[] addresses = new IPAddress[1];
+            IPEndPoint[] returnPoints;
             if (ep.Length < 2) throw new FormatException("Invalid endpoint format");
             IPAddress ip;
             if (ep.Length > 2)
@@ -81,7 +103,7 @@ namespace NabfClientApplication
             {
                 if (!IPAddress.TryParse(ep[0], out ip))
                 {
-                    var addresses = System.Net.Dns.GetHostAddresses(ep[0]);
+                    addresses = System.Net.Dns.GetHostAddresses(ep[0]);
                     if (addresses.Length == 0)
                     {
                         throw new FormatException(ep[0] + " is invalid ip-adress or is unable to retrieve address from specified host name ");
@@ -98,7 +120,10 @@ namespace NabfClientApplication
             {
                 throw new FormatException("Invalid port");
             }
-            return new IPEndPoint(ip, port);
+
+            returnPoints = Enumerable.Range(0, addresses.Length).Select(i => new IPEndPoint(addresses[i], port)).ToArray();
+            
+            return returnPoints;
         }
 	}
 }
