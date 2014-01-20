@@ -123,13 +123,14 @@ module AgentTypes =
 
     type SeenVertex = VertexName * TeamName
 
+
+
     type Percept =
         | EnemySeen         of Agent
         | VertexSeen        of SeenVertex
         | VertexProbed      of VertexName * int
         | EdgeSeen          of Edge
         | SimulationStep    of int
-        | ActionRequest     of (int * int * int)
         | Health            of int
         | MaxHealth         of int
         | Energy            of int
@@ -143,20 +144,19 @@ module AgentTypes =
         | VisionRange       of int
         | Self              of Agent
 
-
     type Deadline = int
     type CurrentTime = int
     type Rank = int
     type Score = int
     type ActionID = int
+    type ActionRequestData = Deadline * CurrentTime * ActionID
     
     type SimStartData =
-        {
-            SimId          :   int;
-            SimEdges       :   int;
-            SimVertices    :   int;
-            SimRole        :   AgentRole;
-            SimTotalSteps  :   int
+        { SimId          :   int
+        ; SimEdges       :   int
+        ; SimVertices    :   int
+        ; SimRole        :   AgentRole
+//        ; SimTotalSteps  :   int
         }
 
     type AgentServerMessage =
@@ -165,14 +165,14 @@ module AgentTypes =
         | SharedPercepts of Percept list
 
     type MarsServerMessage =  
-        | ActionRequest of  Deadline*CurrentTime*ActionID*(Percept list)
+        | ActionRequest of ActionRequestData * Percept list
         | SimulationStart of SimStartData
-        | SimulationEnd of Rank*Score
+        | SimulationEnd of Rank * Score
         | ServerClosed
 
     type ServerMessage = 
-        | AgentServerMsg of AgentServerMessage
-        | MarsServerMsg of MarsServerMessage
+        | AgentServerMessage of AgentServerMessage
+        | MarsServerMessage of MarsServerMessage
 
     type State =
         { 

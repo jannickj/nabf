@@ -212,7 +212,7 @@
                     ()
                 let ServerMessage = (parseIilPercepts iilpercepts)
                 match ServerMessage with
-                | AgentServerMsg msg ->
+                | AgentServerMessage msg ->
                     match msg with
                     | NewJobs jobs ->
                         this.evaluateJobs jobs
@@ -220,7 +220,7 @@
                         this.CalculateAcceptedJob id  
                     | SharedPercepts percepts ->
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
-                |  MarsServerMsg msg ->
+                |  MarsServerMessage msg ->
                     match msg with
                     | SimulationEnd _ -> 
                         SimulationEndedEvent.Trigger(this, new EventArgs())
@@ -230,7 +230,7 @@
                         this.KnownJobs <- []
                         this.awaitingPercepts <- []
                         this.BeliefData <- buildInitState (agentname,sData)
-                    | ActionRequest (deadline,actionTime,id, percepts) ->
+                    | ActionRequest ((deadline, actionTime, id), percepts) ->
                         let action = buildSharePerceptsAction (sharedPercepts percepts)
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
                         this.ReEvaluate percepts

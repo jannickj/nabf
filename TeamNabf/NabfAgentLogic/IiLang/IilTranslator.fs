@@ -55,7 +55,7 @@ namespace NabfAgentLogic.IiLang
             | [ Function ("id", [Numeral id])
               ; Function ("deadline", [Numeral deadline])
               ; Function ("timestamp", [Numeral timestamp])
-              ] -> Percept.ActionRequest (int id, int deadline, int timestamp)
+              ] -> (int id, int deadline, int timestamp) : ActionRequestData
             | _ -> raise <| InvalidIilException ("ActionRequest", iilData)
 
         let parseIilProbedVertex iilData =
@@ -92,8 +92,6 @@ namespace NabfAgentLogic.IiLang
             | (Identifier "inspect", Identifier agentName) -> Inspect <| stringToOption agentName
             | (Identifier "repair", Identifier agentName)  -> Repair agentName
             | (Identifier "buy", upgrade)                  -> Buy <| parseIilUpgrade upgrade
-            | (Identifier "recharge", _)                   -> Recharge
-            | (Identifier "skip", _)                       -> Skip
             | _ -> raise <| InvalidIilException ("iilAction", [iilAction; iilActionParam])
 
         let parseIilActionResult iilActionResult =
@@ -235,11 +233,24 @@ namespace NabfAgentLogic.IiLang
                 ]) -> (name, team)
             | _ -> raise <| InvalidIilException ("visibleVertex", [visibleVertex])
 
+        let parseIilSimStart iilSimStart = 
+            match iilSimStart with
+            | [ Function ("id", [Numeral id])
+              ; Function ("steps", [Numeral steps])
+              ; Function ("edges", [Numeral edges])
+              ; Function ("vertices", [Numeral vertices])
+              ; Function ("role", [role])
+              ] -> { SimId = int id
+                   ; SimEdges = int steps
+                   ; SimVertices = int vertices
+                   ; SimRole = (parseIilRole role).Value
+                   }
+                
+
         let parseIilPercept iilPercept =
             match iilPercept with
             | Percept (name, data) -> 
                 match name with
-                | "actionRequest"     -> [parseIilActionRequest data]
                 | "inspectedEntities" -> List.map (parseIilAgent >> Percept.EnemySeen) data
                 | "probedVertices"    -> List.map (parseIilProbedVertex >> Percept.VertexProbed) data
                 | "self"              -> parseIilSelf data
@@ -250,6 +261,16 @@ namespace NabfAgentLogic.IiLang
                 | "visibleEntities"   -> List.map (parseIilVisibleEntity >> EnemySeen) data
                 | "visibleVertices"   -> List.map (parseIilVisibleVertex >> VertexSeen) data
                 | _ ->  raise <| InvalidIilException ("iilPercept", data)
-            | _ -> failwith "no"            
+            | _ -> failwith "no"    
 
-
+        let parseIilServerMessage iilServerMessage =
+            match iilServerMessage with
+            | Percept (name, data) :: tail ->
+                match name with
+                | "actionRequest" -> 
+                    let percepts = List.concat <| List.map parseIilPercept tail
+                    MarsServerMessage <| ActionRequest (parseIilActionRequest data, percepts)
+                | "simStart" -> 
+                    MarsServerMessage <| (SimulationStart <| parseIilSimStart data)
+                | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
+            | _ -> failwith "nonono"
