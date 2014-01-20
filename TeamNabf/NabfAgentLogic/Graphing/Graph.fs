@@ -4,6 +4,8 @@
         type Edge = Option<int> * string * string
         type DirectedEdge = Option<int> * string
 
+        type VertexName = string
+
         type Vertex = 
             {
                 Identifier : string;

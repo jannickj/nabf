@@ -52,7 +52,7 @@
     <Compile Include="DijkstraTest.fs" />
     <Compile Include="IiLangTest.fs" />
     <Compile Include="AgentLogicClientTest.fs" />
-    <Compile Include="AgentLogicTest.fs" />
+    <Compile Include="IilPerceivingTest.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">

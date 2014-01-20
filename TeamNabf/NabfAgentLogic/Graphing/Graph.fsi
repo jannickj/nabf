@@ -4,9 +4,11 @@ namespace Graphing
         type Edge = Option<int> * string * string
         type DirectedEdge = Option<int> * string
 
+        type VertexName = string
+
         type Vertex = 
             {
-                Identifier : string;
+                Identifier : VertexName;
                 Value : Option<int>;
                 Edges : Set<DirectedEdge>;
             }
