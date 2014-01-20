@@ -1,5 +1,5 @@
 ﻿module Graph
-    
+
     type Edge = Option<int> * string * string
     type DirectedEdge = Option<int> * string
 
@@ -11,6 +11,8 @@
         }
 
     type Graph = Map<string, Vertex>
+
+    let getNeighbours identifier (graph:Graph) = List.map (fun id -> graph.[id]) (snd (List.unzip (Set.toList graph.[identifier].Edges)))
 
     let isVertexAdjacentTo identifier vertex = 
         Set.exists (fun (_, toVertex) -> toVertex = identifier) vertex.Edges 
@@ -37,3 +39,17 @@
 
     let join (graph : Graph) (graph' : Graph) = 
         Map.empty<string, Vertex> : Graph
+
+    let addVertexValue (graph : Graph) (vertex : Vertex) =
+        let vertex = graph.[vertex.Identifier]
+        let updatedVertex = { vertex with Value = vertex.Value }
+        Map.remove vertex.Identifier graph
+        |> Map.add vertex.Identifier updatedVertex
+
+    let addEdgeCost (graph : Graph) ((v,s1,s2) : Edge) =
+        let v1 = graph.[s1]
+        let e1 = Set.map (fun (e : DirectedEdge) -> if e = (None,s2) then (v,s2) else (None,s2)) v1.Edges
+        let g1 = graph.Add (s1,{v1 with Edges = e1})
+        let v2 = g1.[s2]
+        let e2 = Set.map (fun (e : DirectedEdge) -> if e = (None,s1) then (v,s1) else (None,s1)) v2.Edges
+        g1.Add (s2,{v2 with Edges = e2})

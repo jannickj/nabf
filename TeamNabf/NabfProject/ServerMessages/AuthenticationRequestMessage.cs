@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NabfProject.ServerMessages
 {
-    public class AuthenticationRequestMessage : SendMessage
+    public class AuthenticationRequestMessage : InternalSendMessage
     {
         private string username;
         private string password;

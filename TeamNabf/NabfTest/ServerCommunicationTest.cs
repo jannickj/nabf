@@ -1,325 +1,145 @@
-﻿using System;
+﻿using NabfProject.AI;
+using NabfProject.ServerMessages;
+using NUnit.Framework;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NUnit.Framework;
-using NabfProject.AI;
-using System.IO;
-using NabfProject.ServerMessages;
-using System.Xml.Serialization;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace NabfTest
 {
     [TestFixture]
-    public class ServerCommunicationTest
+    class ServerCommunicationTest
     {
-        StringBuilder sb;
-        XmlWriterSettings xmlSettings;
-        XmlSerializer xmlSerSend;
-        XmlSerializer xmlSerReceive;
-        XmlReader reader;
-        XmlWriter sw;
-        ServerCommunication servCom;
-        MemoryStream memStream;
-
-        [SetUp]
-        public void Init()
+        [Test]
+        public void BeforeDeserialize_OneZeroTerminatedMessage_ParsedMessage()
         {
-            sb = new StringBuilder();
-            memStream = new MemoryStream();
-            xmlSettings = new XmlWriterSettings() { OmitXmlDeclaration = false };
-            sw = XmlWriter.Create(memStream,xmlSettings);
-            
-            xmlSerSend = new XmlSerializer(typeof(SendMessage));
-            xmlSerReceive = new XmlSerializer(typeof(ReceiveMessage));
+            MemoryStream memStream = new MemoryStream();
+            StreamReader reader = new StreamReader(memStream);
+            ServerCommunication servCom = new ServerCommunication(reader, null);
+            StreamWriter swriter = new StreamWriter(memStream);
+            int timeStamp = 1;
+
+            swriter.Write(GenerateXmlMessage(timeStamp));
+
+            swriter.Flush();
+
+            memStream.WriteByte(0);
+
             memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
+
+            var message = (ReceiveMessage) servCom.DeserializePacket();
+
+            Assert.IsTrue(matchGeneratedMessage(message, timeStamp));
         }
 
         [Test]
-        public void SendMessageAuthentication_Connected_XMLmessageSent()
+        public void BeforeDeserialize_OneAndHalfZeroTerminatedMessage_ParsedMessage()
         {
-            string username = "a1";
-            string password = "1";
+            MemoryStream memStream = new MemoryStream();
+            StreamReader reader = new StreamReader(memStream);
+            ServerCommunication servCom = new ServerCommunication(reader, null);
+            StreamWriter swriter = new StreamWriter(memStream);
+            int timeStamp = 1;
+            int timeStamp2 = 2;
 
-            AuthenticationRequestMessage message = new AuthenticationRequestMessage(username, password);
-            servCom.SendMessage(message);
+            swriter.Write(GenerateXmlMessage(timeStamp));
 
+            swriter.Flush();
 
-            string actual = XDocument.Parse(sb.ToString()).ToString();
-            string expected = XDocument.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
-                                +"<message type=\"auth-request\">"
-                                +"<authentication password=\""+password+"\" username=\""+username+"\"/>"
-                                + "</message>").ToString();
+            memStream.WriteByte(0);
 
-            Assert.AreEqual(expected, actual);
+            string halfMsg = GenerateXmlMessage(timeStamp2).Substring(0, 60);
+            swriter.Write(halfMsg);
+            swriter.Flush();
+            memStream.Position = 0;
+
+            var message = (ReceiveMessage)servCom.DeserializePacket();
+            var curPos = memStream.Position;
+
+            Assert.IsTrue(matchGeneratedMessage(message, timeStamp));
+
+            string half2Msg = GenerateXmlMessage(timeStamp2).Substring(60);
+
+            memStream.Position = memStream.Length;            
+
+            swriter.Write(half2Msg);
+            swriter.Flush();
+            memStream.WriteByte(0);
+            memStream.Position = curPos;
+
+            var message2 = (ReceiveMessage)servCom.DeserializePacket();
+
+            Assert.IsTrue(matchGeneratedMessage(message2, timeStamp2));
+
+            
+
+            
         }
 
         [Test]
-        public void SendMessageAction_Connected_XMLmessageSent2()
+        public void BeforeDeserialize_2andHalfZeroTerminatedMessage_ParsedMessage()
         {
-            string actionType = "goto";
-            string actionParam = "vertex1";
+            MemoryStream memStream = new MemoryStream();
+            StreamReader reader = new StreamReader(memStream);
+            ServerCommunication servCom = new ServerCommunication(reader, null);
+            StreamWriter swriter = new StreamWriter(memStream);
+            int timeStamp = 1;
+            int timeStamp2 = 2;
+            int timeStamp3 = 3;
 
-            ActionMessage message = new ActionMessage(actionType, actionParam);
-            servCom.SendMessage(message);
+            swriter.Write(GenerateXmlMessage(timeStamp));
 
+            swriter.Flush();
 
-            string actual = XDocument.Parse(sb.ToString()).ToString();
-            string expected = XDocument.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                                                +"<message type=\"action\">"
-                                                +"<action type=\""+actionType+"\" param=\""+actionParam+"\"/>"
-                                                +"</message>").ToString();
+            memStream.WriteByte(0);
 
-            Assert.AreEqual(expected, actual);
+            swriter.Write(GenerateXmlMessage(timeStamp2));
+            swriter.Flush();
+            memStream.WriteByte(0);
+
+            string halfMsg = GenerateXmlMessage(3).Substring(0, 60);
+            swriter.Write(halfMsg);
+            swriter.Flush();
+            memStream.Position = 0;
+
+            var message = (ReceiveMessage)servCom.DeserializePacket();
+            var curPos = memStream.Position;
+
+            Assert.IsTrue(matchGeneratedMessage(message, timeStamp));
+
+            string half2Msg = GenerateXmlMessage(timeStamp3).Substring(60);
+
+            memStream.Position = memStream.Length;
+
+            swriter.Write(half2Msg);
+            swriter.Flush();
+            memStream.WriteByte(0);
+            memStream.Position = curPos;
+
+            var message2 = (ReceiveMessage)servCom.DeserializePacket();
+
+            Assert.IsTrue(matchGeneratedMessage(message2, timeStamp2));
+
+            var message3 = (ReceiveMessage)servCom.DeserializePacket();
+
+            Assert.IsTrue(matchGeneratedMessage(message3, timeStamp3));
+
         }
 
-        [Test]
-        public void ReceiveMessageAuthentication_Connected_XmlMessageReceived()
+        private string GenerateXmlMessage(int timeStamp)
         {
             string result = "ok";
-
-            sw.WriteRaw("<message timestamp=\"1297263037617\" type=\"auth-response\">"
+            return "<message timestamp=\""+timeStamp+"\" type=\"auth-response\">"
                             + "<authentication result=\"" + result + "\"/>"
-                            + "</message>");
-
-            sw.Flush();
-
-            memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
-            
-            InternalReceiveMessage message = servCom.ReceiveMessage().Message;
-
-            Assert.IsInstanceOf<AuthenticationResponseMessage>(message);
-            Assert.IsTrue(((AuthenticationResponseMessage)message).Response == ServerResponseTypes.Success);
+                            + "</message>";
         }
 
-        [Test]
-        public void ReceiveMessageSimStart_Connected_XmlMessageReceived()
+        private bool matchGeneratedMessage(ReceiveMessage genMessage, int timeStamp)
         {
-            string edges = "47";
-            string id = "0";
-            string steps = "500";
-            string vertices = "20";
-            string role = "Explorer";
-
-            sw.WriteRaw("<message timestamp=\"1297263004607\" type=\"sim-start\">"
-                            + "<simulation edges=\""+edges+"\" id=\""+id+"\" steps=\""+steps+"\" vertices=\""+vertices+"\" role=\""+role+"\"/>"
-                            + "</message>");
-
-            sw.Flush();
-
-            memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
-
-            InternalReceiveMessage message = servCom.ReceiveMessage().Message;
-
-            Dictionary<string, string> simStartData = ((SimStartMessage)message).Response;
-
-            Assert.IsInstanceOf<SimStartMessage>(message);
-            Assert.IsTrue(simStartData["edges"] == edges);
-            Assert.IsTrue(simStartData["id"] == id);
-            Assert.IsTrue(simStartData["steps"] == steps);
-            Assert.IsTrue(simStartData["vertices"] == vertices);
-            Assert.IsTrue(simStartData["role"] == role);
-
+            return genMessage.Timestamp == timeStamp && ((AuthenticationResponseMessage)genMessage.Message).Response == ServerResponseTypes.Success;
         }
-
-        [Test]
-        public void ReceiveMessageSimEnd_Connected_XmlMessageReceived()
-        {
-            string ranking = "2";
-            string score = "9";
-
-            sw.WriteRaw("<message timestamp=\"1297269179279\" type=\"sim-end\">"
-                            + "<sim-result ranking=\""+ranking+"\" score=\""+score+"\"/>"
-                            + "</message>");
-
-            sw.Flush();
-
-            memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
-
-            InternalReceiveMessage message = servCom.ReceiveMessage().Message;
-
-            Dictionary<string, string> simEndData = ((SimEndMessage)message).Response;
-
-            Assert.IsInstanceOf<SimEndMessage>(message);
-            Assert.IsTrue(simEndData["ranking"] == ranking);
-            Assert.IsTrue(simEndData["score"] == score);
-        }
-
-        [Test]
-        public void ReceiveMessageBye_Connected_XmlMessageReceived()
-        {
-            sw.WriteRaw("<message timestamp=\"1204978760555\" type=\"bye\"/>");
-
-            sw.Flush();
-
-            memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
-
-            InternalReceiveMessage message = servCom.ReceiveMessage().Message;
-
-            Assert.IsInstanceOf<ByeMessage>(message);
-            Assert.IsTrue(((ByeMessage)message).Response == ServerResponseTypes.Success);
-        }
-
-        [Test]
-        public void ReceiveMessageRequestAction_Connected_XmlMessageReceived()
-        {
-            long timestamp = 1297263230578;
-            long perception_deadline = 1297263232578;
-            int perception_id = 201;
-            int simulation_step = 200;
-            int self_energy = 19;
-            int self_health = 9;
-            string self_lastAction = "skip";
-            string self_lastActionParam = "";
-            string self_lastActionResult = "successful";
-            int self_maxEnergy = 19;
-            int self_maxEnergyDisabled = 9;
-            int self_maxHealth = 9;
-            string self_position = "vertex4";
-            int self_strength = 5;
-            int self_visRange = 5;
-            int self_zoneScore = 27;
-            int team_lastStepScore = 27;
-            int team_money = 1;
-            int team_score = 4270;
-            int team_zonesScore = 26;
-            string achievement_name = "area20";
-            string visibleVertex_name = "vertex19";
-            string visibleVertex_team = "none";
-            string visibleEdge_node1 = "vertex0";
-            string visibleEdge_node2 = "vertex11";
-            string visibleEntity_status = "normal";
-            int probedVertex_value = 4;
-            int surveyedEdge_weight = 2;
-            int inspectedEntity_maxHealth = 9;
-
-            sw.WriteRaw("<message timestamp=\""+timestamp+"\" type=\"request-action\">"
-                            + "<perception deadline=\""+perception_deadline+"\" id=\""+perception_id+"\">"
-                            + "<simulation step=\""+simulation_step+"\"/>"
-                            + "<self energy=\""+self_energy+"\" health=\""+self_health+"\" lastAction=\""+self_lastAction+"\" " 
-                            + "lastActionParam=\""+self_lastActionParam+"\" lastActionResult=\""+self_lastActionResult+"\" maxEnergy=\""+self_maxEnergy+"\" "
-                            + "maxEnergyDisabled=\""+self_maxEnergyDisabled+"\" maxHealth=\""+self_maxHealth+"\" position=\""+self_position+"\" "
-                            + "strength=\""+self_strength+"\" visRange=\""+self_visRange+"\" zoneScore=\""+self_zoneScore+"\"/>"
-                            + "<team lastStepScore=\""+team_lastStepScore+"\" money=\""+team_money+"\" score=\""+team_score+"\" zonesScore=\""+team_zonesScore+"\">"
-                            + "<achievements>"
-                            + "<achievement name=\""+achievement_name+"\"/>"
-                            + "</achievements>"
-                            + "</team>"
-                            + "<visibleVertices>"
-                            + "<visibleVertex name=\""+visibleVertex_name+"\" team=\""+visibleVertex_team+"\"/>"
-                            + "</visibleVertices>"
-                            + "<visibleEdges>"
-                            + "<visibleEdge node1=\""+visibleEdge_node1+"\" node2=\""+visibleEdge_node2+"\"/>"
-                            + "</visibleEdges>"
-                            + "<visibleEntities>"
-                            + "<visibleEntity name=\"b5\" team=\"B\" node=\"vertex0\" "
-                            + "status=\""+visibleEntity_status+"\"/>"
-                            + "</visibleEntities>"
-                            + "<probedVertices>"
-                            + "<probedVertex name=\"vertex18\" value=\""+probedVertex_value+"\"/>"
-                            + "</probedVertices>"
-                            + "<surveyedEdges>"
-                            + "<surveyedEdge node1=\"vertex3\" node2=\"vertex7\" weight=\""+surveyedEdge_weight+"\"/>"
-                            + "</surveyedEdges>"
-                            + "<inspectedEntities>"
-                            + "<inspectedEntity energy=\"8\" health=\"9\" maxEnergy=\"8\" "
-                            + "maxHealth=\""+inspectedEntity_maxHealth+"\" name=\"b5\" node=\"vertex10\" role=\"role2\" "
-                            + "strength=\"6\" team=\"B\" visRange=\"2\"/>"
-                            + "</inspectedEntities>"
-                            + "</perception>"
-                            + "</message>");
-
-            sw.Flush();
-
-            memStream.Position = 0;
-            reader = XmlReader.Create(memStream);
-            servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
-
-            ReceiveMessage message = servCom.ReceiveMessage();
-
-            RequestActionMessage requestActionData = (RequestActionMessage) message.Message;
-            PerceptionMessage perceptionData = (PerceptionMessage) requestActionData.Response;
-            SimulationMessage simulationData = (SimulationMessage)perceptionData.Elements[0];
-            SelfMessage selfData = (SelfMessage)perceptionData.Elements[1];
-            TeamMessage teamData = (TeamMessage)perceptionData.Elements[2];
-            AchievementsMessage achievementsData = (AchievementsMessage)teamData.Achievements;
-            List<InternalReceiveMessage> achievementData = (List<InternalReceiveMessage>)achievementsData.AchievementList;
-            VisibleVertexMessage visibleVertexData = (VisibleVertexMessage)((VisibleVerticesMessage)perceptionData.Elements[3]).VisibleVertices[0];
-            VisibleEdgeMessage visibleEdgeData = (VisibleEdgeMessage)((VisibleEdgesMessage)perceptionData.Elements[4]).VisibleEdges[0];
-            VisibleEntityMessage visibleEntityData = (VisibleEntityMessage)((VisibleEntitiesMessage)perceptionData.Elements[5]).VisibleEntities[0];
-            ProbedVertexMessage probedVertexData = (ProbedVertexMessage)((ProbedVerticesMessage)perceptionData.Elements[6]).ProbedVertices[0];
-            SurveyedEdgeMessage surveyedEdgeData = (SurveyedEdgeMessage)((SurveyedEdgesMessage)perceptionData.Elements[7]).SurveyedEdges[0];
-            InspectedEntityMessage inspectedEntityData = (InspectedEntityMessage)((InspectedEntitiesMessage)perceptionData.Elements[8]).InspectedEntities[0];
-
-            Assert.AreEqual("perception", perceptionData.MessageName);
-            Assert.AreEqual("simulation", simulationData.MessageName);
-            Assert.AreEqual("self", selfData.MessageName);
-            Assert.AreEqual("team", teamData.MessageName);
-
-            Assert.AreEqual(timestamp, message.Timestamp);
-            Assert.AreEqual(perception_deadline, perceptionData.Deadline);
-            Assert.AreEqual(perception_id, perceptionData.Id);
-            Assert.AreEqual(simulation_step, simulationData.Step);
-            Assert.AreEqual(self_energy, selfData.Energy);
-            Assert.AreEqual(self_lastActionParam, selfData.LastActionParam);
-            Assert.AreEqual(team_lastStepScore, teamData.LastStepScore);
-            Assert.AreEqual(achievement_name, ((AchievementMessage) achievementData[0]).Name);
-            Assert.AreEqual(visibleVertex_name, visibleVertexData.Name);
-            Assert.AreEqual(visibleEdge_node1, visibleEdgeData.Node1);
-            Assert.AreEqual(visibleEntity_status, visibleEntityData.Status);
-            Assert.AreEqual(probedVertex_value, probedVertexData.Value);
-            Assert.AreEqual(surveyedEdge_weight, surveyedEdgeData.Weight);
-            Assert.AreEqual(inspectedEntity_maxHealth, inspectedEntityData.MaxHealth);
-
-        }
-
-        //[Test]
-        //public void ReceiveMultipleMessages_Connected_XmlMessagesReceived()
-        //{
-        //    string result = "ok";
-
-        //    sw.WriteRaw( "<message timestamp=\"1297263037617\" type=\"auth-response\">"
-        //                                        + "<authentication result=\"" + result + "\"/>"
-        //                                        + "</message>"
-        //                                        + "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
-        //                                        + "<message timestamp=\"1297263037617\" type=\"auth-response\">"
-        //                                        + "<authentication result=\"" + result + "\"/>"
-        //                                        + "</message>"
-        //                                        + "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
-        //                                        + "<message timestamp=\"1297263037617\" type=\"auth-response\">"
-        //                                        + "<authentication result=\"" + result + "\"/>"
-        //                                        + "</message>");
-        //    sw.Flush();
-
-        //    memStream.Position = 0;
-        //    reader = XmlReader.Create(memStream, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment});
-        //    servCom = new ServerCommunication(XmlWriter.Create(sb, xmlSettings), reader, xmlSerSend, xmlSerReceive);
-
-            
-        //    for (int i = 0; i < 3; i++)
-        //    {
-        //        InternalReceiveMessage message = servCom.ReceiveMessage().Message;
-
-        //        Assert.IsInstanceOf<AuthenticationResponseMessage>(message);
-        //        Assert.IsTrue(((AuthenticationResponseMessage)message).Response == ServerResponseTypes.Success);
-        //    }
-            
-
-
-        //}
     }
-    
 }

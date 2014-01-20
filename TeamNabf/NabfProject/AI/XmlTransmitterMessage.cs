@@ -18,6 +18,14 @@ namespace NabfProject.AI
             get { return message; }
         }
 
+		public virtual bool UseSeralizerOnMsg
+		{
+			get
+			{
+				return true;
+			}
+		}
+
         public XmlTransmitterMessage()
         {
 
@@ -26,11 +34,6 @@ namespace NabfProject.AI
         public XmlTransmitterMessage(Data message)
         {
             this.message = message;
-        }
-
-        public System.Xml.Schema.XmlSchema GetSchema()
-        {
-            throw new NotImplementedException();
         }
 
         public void ReadXml(System.Xml.XmlReader reader)
@@ -47,10 +50,20 @@ namespace NabfProject.AI
         public void WriteXml(XmlWriter writer, XmlSerializer serializer)
         {
             writer.WriteStartElement(NodeName);
-            
-            serializer.Serialize(writer,message);
+			if (this.UseSeralizerOnMsg)
+				serializer.Serialize(writer, message);
+			else
+			{
+				BeforeWriteMessage(writer);
+				message.WriteXml(writer);
+			}
             writer.WriteEndElement();
         }
+
+		public virtual void BeforeWriteMessage(XmlWriter writer)
+		{
+
+		}
 
         public virtual Data ConstructMessage(XmlReader reader)
         {

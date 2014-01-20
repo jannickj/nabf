@@ -46,19 +46,20 @@ namespace NabfProject.AI
 		public XmlTransmitterMessage<TRecieve> DeserializePacket()
 		{
             
-            if(xreader == null)
-                xreader = XmlReader.Create(reader, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment });
-
+            
+            this.BeforeDeserialize(xreader, reader);
             var msg = this.ConstrutReceiverMessage();
             msg.ReadXml(xreader);
-
+			this.AfterDeserialize(xreader, reader);
 			return msg;
 
 		}
 
         public TRecieve DeserializeMessage()
         {
-            return this.DeserializePacket().Message;
+            var msg =  this.DeserializePacket().Message;
+			
+			return msg;
         }
 
 		public void SeralizePacket(TSend action)
@@ -71,8 +72,38 @@ namespace NabfProject.AI
             if (xwriter == null)
                 xwriter = XmlWriter.Create(writer, new XmlWriterSettings() { ConformanceLevel = System.Xml.ConformanceLevel.Fragment });
 
+			BeforeSerialize(xwriter, this.writer, packet);
             packet.WriteXml(this.xwriter,this.serializerSender);
             this.xwriter.Flush();
+			AfterSerialize(xwriter, this.writer, packet);
+            
         }
+
+
+		protected void ChangeReader(XmlReader xmlReader)
+		{
+			this.xreader = xmlReader;
+		}
+
+		public virtual void BeforeDeserialize(XmlReader reader, StreamReader sreader)
+		{
+            if (xreader == null)
+                xreader = XmlReader.Create(reader, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment });
+		}
+
+		public virtual void AfterDeserialize(XmlReader reader, StreamReader sreader)
+		{
+
+		}
+
+		public virtual void BeforeSerialize(XmlWriter writer, StreamWriter swriter, XmlTransmitterMessage<TSend> packet)
+		{
+
+		}
+
+		public virtual void AfterSerialize(XmlWriter writer, StreamWriter swriter, XmlTransmitterMessage<TSend> packet)
+		{
+
+		}
 	}
 }
