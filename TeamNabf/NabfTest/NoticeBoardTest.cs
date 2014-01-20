@@ -16,11 +16,22 @@ namespace NabfTest
 	{
         NoticeBoard nb;
         int ID = 0;
+        int evtTriggered;
+        int maxDesirabilityForFirstNotice = -1, maxDesirabilityForSecondNotice = -1, maxDesirabilityForThirdNotice = -1;
+        int agentsAppliedToFirstNotice = -1, agentsAppliedToSecondNotice = -1, agentsAppliedToThirdNotice = -1;
+        NabfAgent agentAppliedToFirstNotice1 = null, agentAppliedToFirstNotice2 = null, agentAppliedToSecondNotice1 = null, agentAppliedToSecondNotice2 = null, agentAppliedToThirdNotice = null;
+        NabfAgent agentOnFirstNotice1 = null, agentOnFirstNotice2 = null, agentOnSecondNotice = null, agentOnThirdNotice = null;
+        int i = 0;
+        Notice firstNotice = null, secondNotice = null, thirdNotice = null;
+        List<Notice> notices = new List<Notice>();
+        List<List<NabfAgent>> listOfListOfAgents = new List<List<NabfAgent>>();
+        List<int> averageDesires = new List<int>();
 
         [SetUp]
         public void Initialization()
         {
             nb = new NoticeBoard();
+            evtTriggered = 0;
         }
 
 		[Test]
@@ -240,44 +251,11 @@ namespace NabfTest
             nb.ApplyToNotice(no3, 50, a3);
             nb.ApplyToNotice(no3, 100, a4);
 
-            int maxDesirabilityForFirstNotice = -1, maxDesirabilityForSecondNotice = -1, maxDesirabilityForThirdNotice = -1;
-            int agentsAppliedToFirstNotice = -1, agentsAppliedToSecondNotice = -1, agentsAppliedToThirdNotice = -1;
-            NabfAgent agentAppliedToFirstNotice1 = null, agentAppliedToFirstNotice2 = null, agentAppliedToSecondNotice1 = null, agentAppliedToSecondNotice2 = null, agentAppliedToThirdNotice = null;
-            NabfAgent agentOnFirstNotice1 = null, agentOnFirstNotice2 = null, agentOnSecondNotice = null, agentOnThirdNotice = null;
-            int i = 0;
-            Notice firstNotice = null, secondNotice = null, thirdNotice = null;
-            nb.NoticeIsReadyToBeExecutedEvent += (sender, evt) =>
-            {
-                evtTriggered++;
-                i++;
-                if (i == 1)
-                {
-                    firstNotice = evt.Notice;
-                    agentsAppliedToFirstNotice = evt.Notice.GetAgentsApplied().Count;
-                    maxDesirabilityForFirstNotice = evt.Notice.HighestAverageDesirabilityForNotice;
-                    agentOnFirstNotice1 = evt.Agents[0];
-                    agentOnFirstNotice2 = evt.Agents[1];
-                    agentAppliedToFirstNotice1 = evt.Notice.GetAgentsApplied()[0];
-                    agentAppliedToFirstNotice2 = evt.Notice.GetAgentsApplied()[1];
-                }
-                if (i == 2)
-                {
-                    secondNotice = evt.Notice;
-                    agentsAppliedToSecondNotice = evt.Notice.GetAgentsApplied().Count;
-                    maxDesirabilityForSecondNotice = evt.Notice.HighestAverageDesirabilityForNotice;
-                    agentOnSecondNotice = evt.Agents[0];
-                    agentAppliedToSecondNotice1 = evt.Notice.GetAgentsApplied()[0];
-                    agentAppliedToSecondNotice2 = evt.Notice.GetAgentsApplied()[1];
-                }
-                if (i == 3)
-                {
-                    thirdNotice = evt.Notice;
-                    agentsAppliedToThirdNotice = evt.Notice.GetAgentsApplied().Count;
-                    maxDesirabilityForThirdNotice = evt.Notice.HighestAverageDesirabilityForNotice;
-                    agentOnThirdNotice = evt.Agents[0];
-                    agentAppliedToThirdNotice = evt.Notice.GetAgentsApplied()[0];
-                }
-            };
+            a1.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventFirst));
+            a2.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventFirst));
+            a3.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventFirst));
+            a4.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventFirst));
+
             nb.FindJobsForAgents();
 
             Assert.AreEqual(3, evtTriggered);
@@ -348,18 +326,13 @@ namespace NabfTest
             nb.ApplyToNotice(notice3, 99999999, agent6);
             #endregion
 
-            int evtTriggered = 0;
-            List<Notice> notices = new List<Notice>();
-            List<List<NabfAgent>> listOfListOfAgents = new List<List<NabfAgent>>();
-            List<int> averageDesires = new List<int>();
-            nb.NoticeIsReadyToBeExecutedEvent += (sender, evt) =>
-            {
-                notices.Add(evt.Notice);
-                listOfListOfAgents.Add(evt.Agents);
-                averageDesires.Add(evt.Notice.HighestAverageDesirabilityForNotice);
-
-                evtTriggered++;
-            };
+            agent1.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventSecond));
+            agent2.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventSecond));
+            agent3.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventSecond));
+            agent4.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventSecond));
+            agent5.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventSecond));
+            agent6.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(CatchEventSecond));
+            
             nb.FindJobsForAgents();
 
             Assert.AreEqual(3, evtTriggered);
@@ -380,8 +353,46 @@ namespace NabfTest
 
         }
 
+        private void CatchEventFirst(NoticeIsReadyToBeExecutedEvent evt)
+        {
+            evtTriggered++;
+            if (evtTriggered == 1)
+            {
+                firstNotice = evt.Notice;
+                agentsAppliedToFirstNotice = evt.Notice.GetAgentsApplied().Count;
+                maxDesirabilityForFirstNotice = evt.Notice.HighestAverageDesirabilityForNotice;
+                agentOnFirstNotice1 = evt.Agents[0];
+                agentOnFirstNotice2 = evt.Agents[1];
+                agentAppliedToFirstNotice1 = evt.Notice.GetAgentsApplied()[0];
+                agentAppliedToFirstNotice2 = evt.Notice.GetAgentsApplied()[1];
+            }
+            if (evtTriggered == 2)
+            {
+                secondNotice = evt.Notice;
+                agentsAppliedToSecondNotice = evt.Notice.GetAgentsApplied().Count;
+                maxDesirabilityForSecondNotice = evt.Notice.HighestAverageDesirabilityForNotice;
+                agentOnSecondNotice = evt.Agents[0];
+                agentAppliedToSecondNotice1 = evt.Notice.GetAgentsApplied()[0];
+                agentAppliedToSecondNotice2 = evt.Notice.GetAgentsApplied()[1];
+            }
+            if (evtTriggered == 3)
+            {
+                thirdNotice = evt.Notice;
+                agentsAppliedToThirdNotice = evt.Notice.GetAgentsApplied().Count;
+                maxDesirabilityForThirdNotice = evt.Notice.HighestAverageDesirabilityForNotice;
+                agentOnThirdNotice = evt.Agents[0];
+                agentAppliedToThirdNotice = evt.Notice.GetAgentsApplied()[0];
+            }
+        }
 
+        private void CatchEventSecond(NoticeIsReadyToBeExecutedEvent evt)
+        {
+            notices.Add(evt.Notice);
+            listOfListOfAgents.Add(evt.Agents);
+            averageDesires.Add(evt.Notice.HighestAverageDesirabilityForNotice);
 
+            evtTriggered++;
+        }
 
         private object getField(object instance, bool useBase, String name)
         {

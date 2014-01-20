@@ -14,12 +14,25 @@ namespace NabfProject.NoticeBoardModel
         private SortedList<int, Notice[]> _jobs = new SortedList<int, Notice[]>(new InvertedComparer<int>());
         private Dictionary<Int64, Notice> _idToNotice = new Dictionary<Int64, Notice>();
         private DictionaryList<NabfAgent, Notice> _agentToNotice = new DictionaryList<NabfAgent, Notice>();
-        private Int64 _freeID = 0; 
+        private Int64 _freeID = 0;
+        private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
         public enum JobType { Disrupt, Occupy, Attack, Repair }
         
         public NoticeBoard()
         {
+        }
+
+        public bool Subscribe(NabfAgent agent)
+        {
+            if (_sharingList.Contains(agent))
+                return false;
+            _sharingList.Add(agent);
+            return true;
+        }
+        public bool Unsubscribe(NabfAgent agent)
+        {
+            return _sharingList.Remove(agent);
         }
 
         public SortedList<int, Notice[]> GetJobs()
@@ -66,7 +79,7 @@ namespace NabfProject.NoticeBoardModel
                 return false;
         }
 
-        public void ResetNoticeBoard()
+        private void ResetNoticeBoard()
         {
             _availableJobs.Clear();
             _jobs.Clear();
@@ -100,6 +113,9 @@ namespace NabfProject.NoticeBoardModel
 
             bool b = AddNotice(n);
             notice = n;
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NewNoticeEvent(n));
 
             return b;
         }
@@ -137,6 +153,10 @@ namespace NabfProject.NoticeBoardModel
                 UnApplyToNotice(no, a);
             _idToNotice.Remove(no.Id);
             _availableJobs.Remove(NoticeToJobType(no), no);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new RemovedNoticeEvent(no));
+
             return true;
         }
 
@@ -149,6 +169,9 @@ namespace NabfProject.NoticeBoardModel
                 return false;
 
             no.UpdateNotice(whichNodes, agentsNeeded);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NewNoticeEvent(no));
 
             return true;
         }
