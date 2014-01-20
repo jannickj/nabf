@@ -205,7 +205,7 @@
                 ()
             member this.CurrentDecision = 
                 let (_,bestAction) = lock decisionLock (fun () -> decidedAction)
-                buildIilAction bestAction
+                new IilAction ""
 
             member this.HandlePercepts(iilpercepts) = 
                 if simEnded then
@@ -248,7 +248,7 @@
                                         let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
                                         if (expired+int64(400)) > int64(totaltime) || runningCalcs = 0 then
-                                            SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>((this:>IAgentLogic).CurrentDecision))
+                                            SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
                                             awaitingDecision:=false
                                 }
                         Async.Start (forceDecision System.DateTime.Now.Ticks totalTime)

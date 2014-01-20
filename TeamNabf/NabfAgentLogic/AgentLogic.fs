@@ -69,8 +69,8 @@
         let updateStateWhenGivenJob (state:State) (job:Job) =
             state
 
-        let buildIilAction (action:Action) =
-            new IilAction "some action"
+        let buildIilAction id (action:Action) =
+            IiLang.IiLangDefinitions.buildIilAction (IiLang.IilTranslator.buildIilAction action id)
 
         let buildJobAccept (desire:Desirability,job:Job) =
             new IilAction "some action"

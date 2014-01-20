@@ -50,3 +50,10 @@ namespace NabfAgentLogic.IiLang
 
         let parsePerceptCollection (iilPerceptCollection : IilPerceptCollection) =
             (List.ofSeq iilPerceptCollection.Percepts |> List.map parsePercept)
+
+        let buildIilAction (action : DataContainer) : IilAction =
+            match action with
+            | Action (name, elements) -> 
+                let parameters = (List.toSeq <| List.map buildIil elements)
+                new IilAction (name, new System.Collections.Generic.LinkedList<IilParameter>(parameters))
+            | _ -> failwith "wrong data type"
