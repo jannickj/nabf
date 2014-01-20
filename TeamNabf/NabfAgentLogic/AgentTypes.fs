@@ -150,6 +150,14 @@ module AgentTypes =
     type Score = int
     type ActionID = int
     
+    type SimStartData =
+        {
+            SimId          :   int;
+            SimEdges       :   int;
+            SimVertices    :   int;
+            SimRole        :   AgentRole;
+            SimTotalSteps  :   int
+        }
 
     type AgentServerMessage =
         | NewJobs of Job List
@@ -158,7 +166,7 @@ module AgentTypes =
 
     type MarsServerMessage =  
         | ActionRequest of  Deadline*CurrentTime*ActionID*(Percept list)
-        | SimulationStart
+        | SimulationStart of SimStartData
         | SimulationEnd of Rank*Score
         | ServerClosed
 

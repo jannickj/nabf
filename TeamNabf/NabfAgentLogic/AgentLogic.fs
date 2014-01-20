@@ -26,6 +26,35 @@
 //                           }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
+        
+        let buildInitState (name ,simData:SimStartData) =
+            {   World = Map.empty
+            ;   Self =  {   Energy = Some 0
+                        ;   MaxEnergy = Some 0
+                        ;   Health = Some 0
+                        ;   MaxHealth = Some 0
+                        ;   Name = name
+                        ;   Node = ""
+                        ;   Role = Some (simData.SimRole)
+                        ;   Strength = Some 0
+                        ;   Team = ""
+                        ;   Status = Normal
+                        ;   VisionRange = Some 0
+                        }
+            ;   EnemyData = List.Empty
+            ;   SimulationStep = 0
+            ;   NearbyAgents = List.Empty
+            ;   OwnedVertices = Map.empty
+            ;   NewVertices = []
+            ;   NewEdges = []
+            ;   LastStepScore = 0
+            ;   LastAction = Skip
+            ;   LastActionResult = Successful
+            ;   Money = 0
+            ;   Score = 0
+            ;   ZoneScore = 0
+            ;   Achievements = []
+            } : State
 
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
