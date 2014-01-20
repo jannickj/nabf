@@ -19,13 +19,12 @@
                         World = Map.add id { Identifier = id; Value = None; Edges = Set.empty } state.World;
                         NewVertices = (id, team) :: state.NewVertices
                     } 
-//                | EdgeSeen (cost, node1, node2) 
-//                    when (not <| Map.containsKey node1 state.World) 
-//                    ||   (not <| Set.contains (cost, node2) state.World.[node1].Edges)
-//                        -> { state with 
-//                             World = addEdge state.World edge;
-//                             NewEdges = (cost, node1, node2) :: NewEdges
-//                           }
+                | VertexProbed (name, value) ->
+                    { state with World = addVertexValue state.World {state.World.[name] with Value = Some value} }
+                | EdgeSeen edge -> //when (not <| Map.containsKey node1 state.World) -> 
+                    let (cost, node1, node2) = edge
+//                    if Set.contains state.World.[node1].Edges (cost, node2) then
+                    { state with World = addEdge state.World edge }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
         
