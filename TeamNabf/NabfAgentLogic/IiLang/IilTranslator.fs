@@ -251,5 +251,24 @@ namespace NabfAgentLogic.IiLang
                 | "visibleVertices"   -> List.map (parseIilVisibleVertex >> VertexSeen) data
                 | _ ->  raise <| InvalidIilException ("iilPercept", data)
             | _ -> failwith "no"            
-
-
+        
+        let buildIilAction action id =
+            match action with
+            | Skip -> Action ("skip", [Numeral id])
+            | Goto vn -> Action ("goto", [Numeral id; Identifier vn])
+            | Attack a -> Action ("goto", [Numeral id; Identifier a])
+            | Recharge -> Action ("recharge", [Numeral id])
+            | Buy a -> Action ("buy", [Numeral id; Identifier (a.ToString().ToLower())])
+            | Inspect a ->
+                    if a.IsNone then
+                        Action ("inspect", [Numeral id; Identifier a.Value])
+                    else
+                        Action ("inspect", [Numeral id])
+            | Parry -> Action ("parry", [Numeral id])
+            | Probe a ->
+                if a.IsNone then
+                        Action ("probe", [Numeral id; Identifier a.Value])
+                    else
+                        Action ("probe", [Numeral id])
+            | Repair a -> Action ("repair", [Numeral id; Identifier a])
+            | Survey -> Action ("survey", [Numeral id])
