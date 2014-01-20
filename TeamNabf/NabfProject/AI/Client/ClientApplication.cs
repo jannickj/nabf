@@ -13,6 +13,8 @@ using JSLibrary.IiLang.Parameters;
 using NabfAgentLogic.AgentInterfaces;
 using System.Collections.Concurrent;
 using Microsoft.FSharp.Collections;
+using NabfAgentLogic;
+using JSLibrary.Data.GenericEvents;
 
 namespace NabfProject.AI.Client
 {
@@ -23,41 +25,37 @@ namespace NabfProject.AI.Client
 		private HashSet<Thread> activeThreads = new HashSet<Thread>();
 		private ConcurrentQueue<IilAction> packets = new ConcurrentQueue<IilAction>();
 		private AutoResetEvent packetadded = new AutoResetEvent(false);
+		private ServerCommunication servCom;
 
-		public ClientApplication(XmlPacketTransmitter<IilPerceptCollection, IilAction> transmitter, IAgentLogic logic)
+		public ClientApplication(XmlPacketTransmitter<IilPerceptCollection, IilAction> transmitter, ServerCommunication servCom, IAgentLogic logic)
 		{
+			this.servCom = servCom;
 			this.logic = logic;
 			this.transmitter = transmitter;
 
-			logic.EvaluationCompleted += logic_EvaluationCompleted;
-			logic.JobCreated += logic_JobCreated;
-			logic.PerceptsLoaded += logic_PerceptsLoaded;
-			logic.JobLoaded += logic_JobLoaded;
+            logic.EvaluationCompleted += logic_needMessageSent;
+            //logic.SendAgentServerAction += logic_SendAgentServerAction;
+            logic.SendMarsServerAction += logic_SendMarsServerAction;
+            logic.EvaluationStarted += logic_needMessageSent;
+			//logic.PerceptsLoaded += logic_PerceptsLoaded;
+			//logic.JobLoaded += logic_JobLoaded;
+			
 		}
 
-		void logic_JobLoaded(object sender, JSLibrary.Data.GenericEvents.UnaryValueEvent<int> evt)
-		{
-			EvaluateJob(evt.Value);
-		}
+        void logic_SendMarsServerAction(object sender, UnaryValueEvent<IilAction> evt)
+        {
+            
+        }
 
-		void logic_PerceptsLoaded(object sender, EventArgs e)
-		{
-			var jobsToEval = logic.GetJobs;
-			foreach (var job in jobsToEval)
-			{
-				EvaluateJob(job.Item1);
-			}
-		}
+        void logic_SendAgentServerAction(object sender, UnaryValueEvent<IilAction> evt)
+        {
+            throw new NotImplementedException();
+        }
 
-		void logic_JobCreated(object sender, JSLibrary.Data.GenericEvents.UnaryValueEvent<IilAction> evt)
+       
+		void logic_needMessageSent(object sender, JSLibrary.Data.GenericEvents.UnaryValueEvent<IilAction> evt)
 		{
 			this.AddPacket(evt.Value);
-		}
-
-		void logic_EvaluationCompleted(object sender, EventArgs e)
-		{
-			var decision = logic.CurrentDecision;
-			this.AddPacket(decision);
 		}
 
 		public void UpdateSender()
@@ -78,7 +76,7 @@ namespace NabfProject.AI.Client
 
 		public void UpdateReceiver()
 		{
-			var data = transmitter.DeserializePacket();
+            var data = transmitter.DeserializeMessage();
 			if(data.Percepts.Count != 0)
 			{
 				logic.HandlePercepts(data);
@@ -95,20 +93,6 @@ namespace NabfProject.AI.Client
 			thread.Start();
 		}
 
-		
-		public void EvaluateJob(int jobid)
-		{
-			StartThread(() =>
-				{
-					var info = this.logic.EvaluateJob(jobid);
-					if (info.Item2)
-					{
-						
-						this.AddPacket(info.Item1);
-					}
-
-				});
-		}
 
 		private void AddPacket(IilAction packet)
 		{

@@ -42,9 +42,9 @@ namespace NabfProject.ServerMessages
 
         private InternalReceiveMessage achievements;
 
-        public InternalReceiveMessage Achievements
+        public AchievementsMessage Achievements
         {
-            get { return achievements; }
+            get { return (AchievementsMessage) achievements; }
         }
 
         public override void ReadXml(System.Xml.XmlReader reader)
@@ -60,6 +60,7 @@ namespace NabfProject.ServerMessages
             reader.Read();
             if ("achievements" == reader.LocalName)
             {
+                reader.MoveToContent();
                 var message = ServerMessageFactory.Instance.ConstructMessage(reader.LocalName);
                 message.ReadXml(reader);
                 achievements = message;

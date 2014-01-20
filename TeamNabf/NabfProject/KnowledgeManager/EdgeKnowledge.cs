@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace NabfProject.KnowledgeManager
+namespace NabfProject.KnowledgeManagerModel
 {
     public class EdgeKnowledge : Knowledge
     {
@@ -23,7 +23,7 @@ namespace NabfProject.KnowledgeManager
             if (other == null)
                 throw new ArgumentException("Input of Equals of " + this.GetType().Name + " is null");
             else if (!(other is Knowledge))
-                throw new ArgumentException("Object : " + other.GetType().Name + " of Equals is not of type Knowledge");
+                throw new ArgumentException("Object : " + other.GetType().Name + " of Equals is not implementing interface Knowledge");
 
             if (other.GetType() != this.GetType())
                 return false;

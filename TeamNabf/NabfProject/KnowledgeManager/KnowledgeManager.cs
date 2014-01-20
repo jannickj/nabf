@@ -8,7 +8,7 @@ using JSLibrary.IiLang.Parameters;
 using NabfProject;
 using NabfProject.AI;
 
-namespace NabfProject.KnowledgeManager
+namespace NabfProject.KnowledgeManagerModel
 {
     public class KnowledgeManager
     {
