@@ -43,7 +43,7 @@ namespace NabfProject.NoticeBoardModel
 
         public int GetNoticeCount()
         {
-            return 0;// AvailableJobs.TotalCount;
+            return AvailableJobs.TotalCount;
         }
 
         public int GetNoticeCount(Notice ofType)
