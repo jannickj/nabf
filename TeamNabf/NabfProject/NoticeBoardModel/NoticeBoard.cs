@@ -14,12 +14,25 @@ namespace NabfProject.NoticeBoardModel
         private SortedList<int, Notice[]> _jobs = new SortedList<int, Notice[]>(new InvertedComparer<int>());
         private Dictionary<Int64, Notice> _idToNotice = new Dictionary<Int64, Notice>();
         private DictionaryList<NabfAgent, Notice> _agentToNotice = new DictionaryList<NabfAgent, Notice>();
-        private Int64 _freeID = 0; 
+        private Int64 _freeID = 0;
+        private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
         public enum JobType { Disrupt, Occupy, Attack, Repair }
         
         public NoticeBoard()
         {
+        }
+
+        public bool Subscribe(NabfAgent agent)
+        {
+            if (_sharingList.Contains(agent))
+                return false;
+            _sharingList.Add(agent);
+            return true;
+        }
+        public bool Unsubscribe(NabfAgent agent)
+        {
+            return _sharingList.Remove(agent);
         }
 
         public SortedList<int, Notice[]> GetJobs()
@@ -66,7 +79,7 @@ namespace NabfProject.NoticeBoardModel
                 return false;
         }
 
-        public void ResetNoticeBoard()
+        private void ResetNoticeBoard()
         {
             _availableJobs.Clear();
             _jobs.Clear();
@@ -75,7 +88,7 @@ namespace NabfProject.NoticeBoardModel
             _freeID = 0;
         }
 
-        public Int64 CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, out Notice notice)
+        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, out Notice notice)
         {
             Notice n = null;
             Int64 id = _freeID;
@@ -101,10 +114,10 @@ namespace NabfProject.NoticeBoardModel
             bool b = AddNotice(n);
             notice = n;
 
-            if (b)
-                return id;
-            else
-                return -1;
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NewNoticeEvent(n));
+
+            return b;
         }
 
         private bool AddNotice(Notice no)
@@ -140,6 +153,10 @@ namespace NabfProject.NoticeBoardModel
                 UnApplyToNotice(no, a);
             _idToNotice.Remove(no.Id);
             _availableJobs.Remove(NoticeToJobType(no), no);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new RemovedNoticeEvent(no));
+
             return true;
         }
 
@@ -152,6 +169,9 @@ namespace NabfProject.NoticeBoardModel
                 return false;
 
             no.UpdateNotice(whichNodes, agentsNeeded);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NewNoticeEvent(no));
 
             return true;
         }
