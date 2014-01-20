@@ -9,11 +9,11 @@ using XmasEngineModel.Management;
 
 namespace NabfProject.Actions
 {
-	public class AddStandbyAgentAction : EnvironmentAction
+	public class AddAgentToSimulation : EnvironmentAction
 	{
 		private Agent agent;
 
-		public AddStandbyAgentAction(Agent agent)
+		public AddAgentToSimulation(Agent agent)
 		{
 			this.agent = agent;
 		}

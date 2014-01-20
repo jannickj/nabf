@@ -12,6 +12,7 @@ using XmasEngineController.AI;
 using XmasEngineModel;
 using XmasEngineModel.EntityLib;
 using System.IO;
+using JSLibrary.IiLang.Parameters;
 
 namespace NabfProject.AI
 {
@@ -19,6 +20,7 @@ namespace NabfProject.AI
 	{
 		private TcpListener listener;
 		private int agentid = 0;
+        private Dictionary<string, Agent> agents = new Dictionary<string, Agent>();
 
 		public AgentMaster(TcpListener listener)
 		{
@@ -28,19 +30,34 @@ namespace NabfProject.AI
 		protected override Func<KeyValuePair<string, AgentController>> AquireAgentControllerContructor()
 		{
 			TcpClient client = listener.AcceptTcpClient();
-			string agentName = agentid + "";
-			agentid++;
 			Func<KeyValuePair<string, AgentController>> func = () => 
 			{ 
-			
-				Agent agent = new Agent(agentName);
+                
+				
                 //XmlReader reader = XmlReader.Create(client.GetStream(), new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment });
 				//XmlWriter writer = XmlWriter.Create(client.GetStream(),new XmlWriterSettings(){ConformanceLevel = System.Xml.ConformanceLevel.Fragment});
                 StreamReader sreader = new StreamReader(client.GetStream(), Encoding.UTF8);
                 StreamWriter swriter = new StreamWriter(client.GetStream(), Encoding.UTF8);
 				XmlPacketTransmitter<IilAction, IilPerceptCollection> transmitter = new XmlPacketTransmitter<IilAction, IilPerceptCollection>(sreader, swriter);
-				AgentConnection connection = new AgentConnection(agent,transmitter);
-				this.ActionManager.Queue(new AddStandbyAgentAction(agent));
+
+                IilAction action = transmitter.DeserializeMessage();
+
+                string agentName = ((IilIdentifier)action.Parameters[0]).Value;
+
+                Agent agent;
+                lock (agents)
+                {
+                    if (!agents.TryGetValue(agentName, out agent))
+                    {
+                        agent = new Agent(agentName);
+                        agents.Add(agentName, agent);
+                    }
+
+                }
+
+
+				AgentConnection connection = new AgentConnection(agent,transmitter);               
+
 				return new KeyValuePair<string,AgentController>(agentName, connection);
 			};
 			return func;
