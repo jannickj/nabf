@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace NabfProject.KnowledgeManager
+namespace NabfProject.KnowledgeManagerModel
 {
     public class NodeKnowledge : Knowledge
     {

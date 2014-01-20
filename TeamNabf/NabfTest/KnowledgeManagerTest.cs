@@ -7,7 +7,7 @@ using NUnit.Framework;
 using NabfProject.AI;
 using System.Reflection;
 using JSLibrary.Data;
-using NabfProject.KnowledgeManager;
+using NabfProject.KnowledgeManagerModel;
 
 namespace NabfTest
 {
