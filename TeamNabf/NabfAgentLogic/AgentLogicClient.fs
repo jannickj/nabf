@@ -10,7 +10,7 @@
     open System.Linq;
     open AgentTypes
 
-    type public AgentLogicClient(decisionTreeGenerator) = class 
+    type public AgentLogicClient(name,decisionTreeGenerator) = class 
         
         
         [<DefaultValue>] val mutable private BeliefData : State
@@ -20,6 +20,7 @@
         //[<DefaultValue>] val mutable private undecidedDecisions : (DecisionRank*Decision<(State -> (bool*Option<Action>))>) list
         [<DefaultValue>] val mutable private awaitingPercepts : List<Percept>
 
+        let agentname = name
         let decisionTree = decisionTreeGenerator()
         let mutable simEnded = false
         let mutable runningCalc = 0
@@ -29,7 +30,7 @@
         //let mutable lastHighestDesire:Desirability = 0
         
 
-        new() = AgentLogicClient(fun () -> generateDecisionTree)
+        new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
 
         //Parallel helpers
         let stopDeciders = new CancellationTokenSource()
@@ -225,8 +226,8 @@
                         SimulationEndedEvent.Trigger(this, new EventArgs())
                         stopLogic()
                         ()
-                    | SimulationStart ->
-                        ()
+                    | SimulationStart sData ->
+                        this.BeliefData <- buildInitState (agentname,sData)
                     | ActionRequest (deadline,actionTime,id, percepts) ->
                         let action = buildSharePerceptsAction (sharedPercepts percepts)
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))

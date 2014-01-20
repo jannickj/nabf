@@ -12,16 +12,17 @@ module DijkstraTest =
     type GraphTest() = 
 
             let testAgent =
-                { Energy      = 10
-                ; Health      = 0
-                ; MaxEnergy   = 20
-                ; MaxHealth   = 0
+                { Energy      = Some 10
+                ; Health      = None
+                ; MaxEnergy   = Some 20
+                ; MaxHealth   = None
                 ; Name        = "testAgent"
                 ; Node        = "a"
                 ; Role        = None
-                ; Strength    = 0
-                ; Team        = ""
-                ; VisionRange = 0
+                ; Strength    = None
+                ; Team        = "testTeam"
+                ; VisionRange = None
+                ; Status      = Normal
                 }
             
             [<Test>]
