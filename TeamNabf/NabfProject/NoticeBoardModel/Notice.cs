@@ -12,7 +12,7 @@ namespace NabfProject.NoticeBoardModel
         public List<Node> WhichNodes { get; protected set; }
         public int AgentsNeeded { get; protected set; }
         public Int64 Id { get; private set; }
-        public int Value { get; private set; }
+        public int Value { get; protected set; }
 
         private int _highestAverageDesirabilityForNotice = -1;
         public int HighestAverageDesirabilityForNotice { get { return _highestAverageDesirabilityForNotice; } set { _highestAverageDesirabilityForNotice = value; } }
@@ -100,10 +100,11 @@ namespace NabfProject.NoticeBoardModel
             }
         }
 
-        public void UpdateNotice(List<Node> whichNodes, int agentsNeeded)
+        public void UpdateNotice(List<Node> whichNodes, int agentsNeeded, int value)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = agentsNeeded;
+            Value = value;
         }
 
         bool IEquatable<Notice>.Equals(Notice other)
@@ -134,49 +135,54 @@ namespace NabfProject.NoticeBoardModel
     public class DisruptJob : Notice
     {
 
-        public DisruptJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
+        public DisruptJob(int agentsNeeded, List<Node> whichNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
+            Value = value;
         }
     }
 
     public class AttackJob : Notice
     {
 
-        public AttackJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
+        public AttackJob(int agentsNeeded, List<Node> whichNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
+            Value = value;
         }
     }
 
     public class OccupyJob : Notice
     {
 
-        public OccupyJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
+        public OccupyJob(int agentsNeeded, List<Node> whichNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
+            Value = value;
         }
     }
 
     public class RepairJob : Notice
     {
 
-        public RepairJob(List<Node> whichNodes, Int64 id)
+        public RepairJob(List<Node> whichNodes, int value, Int64 id)
             : base(id)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = 1;
+            Value = value;
         }
     }
 
     public class Node
     {
+        public string Name;
     }
 
 }

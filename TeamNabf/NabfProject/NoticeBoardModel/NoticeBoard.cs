@@ -88,7 +88,7 @@ namespace NabfProject.NoticeBoardModel
             _freeID = 0;
         }
 
-        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, out Notice notice)
+        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, int value, out Notice notice)
         {
             Notice n = null;
             Int64 id = _freeID;
@@ -96,16 +96,16 @@ namespace NabfProject.NoticeBoardModel
             switch (type)
             {
                 case JobType.Attack:
-                    n = new AttackJob(agentsNeeded, whichNodes, id);
+                    n = new AttackJob(agentsNeeded, whichNodes, value, id);
                     break;
                 case JobType.Disrupt:
-                    n = new DisruptJob(agentsNeeded, whichNodes, id);
+                    n = new DisruptJob(agentsNeeded, whichNodes, value, id);
                     break;
                 case JobType.Occupy:
-                    n = new OccupyJob(agentsNeeded, whichNodes, id);
+                    n = new OccupyJob(agentsNeeded, whichNodes, value, id);
                     break;
                 case JobType.Repair:
-                    n = new RepairJob(whichNodes, id);
+                    n = new RepairJob(whichNodes, value, id);
                     break;
             }
             if (n == null)
@@ -160,7 +160,7 @@ namespace NabfProject.NoticeBoardModel
             return true;
         }
 
-        public bool UpdateNotice(Int64 id, List<Node> whichNodes, int agentsNeeded)
+        public bool UpdateNotice(Int64 id, List<Node> whichNodes, int agentsNeeded, int value)
         {
             Notice no;
             bool b = _idToNotice.TryGetValue(id, out no);
@@ -168,7 +168,7 @@ namespace NabfProject.NoticeBoardModel
             if (b == false)
                 return false;
 
-            no.UpdateNotice(whichNodes, agentsNeeded);
+            no.UpdateNotice(whichNodes, agentsNeeded, value);
 
             foreach (NabfAgent a in _sharingList)
                 a.Raise(new NewNoticeEvent(no));
@@ -243,6 +243,12 @@ namespace NabfProject.NoticeBoardModel
                     break;
                 }
             }
+        }
+
+        public void UnApplyFromAll(NabfAgent a)
+        {
+            foreach (Notice n in _agentToNotice[a])
+                UnApplyToNotice(n, a);
         }
 
         public int FindTopDesiresForNotice(Notice n, out SortedList<int, NabfAgent> topDesires, out List<NabfAgent> agents)
