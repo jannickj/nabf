@@ -13,16 +13,17 @@ module AgentLogicLib =
     let RepairCostDisabled = 3
     let BuyCost = 2
 
-
+    let recharge = (true,Some(Recharge))
+     
     let tryDo (action : Action) (s:State) =
         match action with
-        | Probe(o)  -> if s.Self.Energy.Value >= ProbeCost then (true,Some(Probe(o))) else (true,Some(Recharge))
-        | Survey    -> if s.Self.Energy.Value >= SurveyCost then (true,Some(Survey)) else (true,Some(Recharge))
-        | Inspect(a)-> if s.Self.Energy.Value >= InspectCost then (true,Some(Inspect(a))) else (true,Some(Recharge))
-        | Attack(a) -> if s.Self.Energy.Value >= AttackCost then (true,Some(Attack(a))) else (true,Some(Recharge))
-        | Parry     -> if s.Self.Energy.Value >= ParryCost then (true,Some(Parry)) else (true,Some(Recharge))
-        | Repair(a) -> if ((s.Self.Energy.Value >= RepairCost) && (s.Self.Health.Value > 0)) || (s.Self.Energy.Value >= RepairCostDisabled) then (true,Some(Repair(a))) else (true,Some(Recharge))
-        | Buy(u)    -> if s.Self.Energy.Value > BuyCost then (true,Some(Buy(u))) else (true,Some(Recharge))
+        | Probe(o)  -> if s.Self.Energy.Value >= ProbeCost then (true,Some(Probe(o))) else recharge
+        | Survey    -> if s.Self.Energy.Value >= SurveyCost then (true,Some(Survey)) else recharge
+        | Inspect(a)-> if s.Self.Energy.Value >= InspectCost then (true,Some(Inspect(a))) else recharge
+        | Attack(a) -> if s.Self.Energy.Value >= AttackCost then (true,Some(Attack(a))) else recharge
+        | Parry     -> if s.Self.Energy.Value >= ParryCost then (true,Some(Parry)) else recharge
+        | Repair(a) -> if ((s.Self.Energy.Value >= RepairCost) && (s.Self.Health.Value > 0)) || (s.Self.Energy.Value >= RepairCostDisabled) then (true,Some(Repair(a))) else recharge
+        | Buy(u)    -> if s.Self.Energy.Value > BuyCost then (true,Some(Buy(u))) else recharge
         | _         -> (false,None)
 
     let tryGo (v:Vertex) (s:State) =
@@ -30,10 +31,10 @@ module AgentLogicLib =
         let edge = List.find (fun (_,id) -> id = v.Identifier) edges
         if (fst edge) = None 
         then 
-            if s.Self.Energy < (Some 10) then (true,Some(Recharge)) else (true,Some(Goto(v.Identifier)))
+            if s.Self.Energy < (Some 10) then recharge else (true,Some(Goto(v.Identifier)))
         else
             let value = (fst edge).Value
-            if value > s.Self.Energy.Value then (true,Some(Recharge)) else (true,Some(Goto(v.Identifier)))
+            if value > s.Self.Energy.Value then recharge else (true,Some(Goto(v.Identifier)))
 
     let rec getSafeVertex (s:State) (l:Vertex list) (enemySabs:Agent list)=
         match l with
