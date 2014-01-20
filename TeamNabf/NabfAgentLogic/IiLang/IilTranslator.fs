@@ -55,7 +55,7 @@ namespace NabfAgentLogic.IiLang
             | [ Function ("id", [Numeral id])
               ; Function ("deadline", [Numeral deadline])
               ; Function ("timestamp", [Numeral timestamp])
-              ] -> (int id, int deadline, int timestamp) : ActionRequestData
+              ] -> (uint32 deadline, uint32 timestamp, int id) : ActionRequestData
             | _ -> raise <| InvalidIilException ("ActionRequest", iilData)
 
         let parseIilProbedVertex iilData =
@@ -280,6 +280,6 @@ namespace NabfAgentLogic.IiLang
                 | "simStart" -> 
                     MarsServerMessage <| (SimulationStart <| parseIilSimStart data)
                 | "simEnd" ->
-                    MarsServerMessage <| 
+                    MarsServerMessage <| (SimulationEnd <| parseIilSimEnd data)
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"

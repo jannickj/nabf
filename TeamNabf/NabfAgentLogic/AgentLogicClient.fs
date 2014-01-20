@@ -242,13 +242,13 @@
                             async
                                 {
                                     let awaitingDecision = ref true
-                                    do! Async.Sleep(800)
+                                    Thread.Sleep(800)
                                     while awaitingDecision.Value do 
-                                        do! Async.Sleep(200)
+                                        Thread.Sleep(800)
                                         let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
                                         if (expired+int64(400)) > int64(totaltime) || runningCalcs = 0 then
-                                            SendAgentServerEvent.Trigger(this,new UnaryValueEvent<IilAction>((this:>IAgentLogic).CurrentDecision))
+                                            SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>((this:>IAgentLogic).CurrentDecision))
                                             awaitingDecision:=false
                                 }
                         Async.Start (forceDecision System.DateTime.Now.Ticks totalTime)

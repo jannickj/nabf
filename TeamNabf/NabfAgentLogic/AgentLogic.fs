@@ -27,6 +27,7 @@
                     { state with World = addEdge state.World edge }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
+                | Percept.Self self -> { state with Self = self }
                 | _ -> state
         
         let buildInitState (name ,simData:SimStartData) =

@@ -142,8 +142,8 @@ module AgentTypes =
         | VisionRange       of int
         | Self              of Agent
 
-    type Deadline = int
-    type CurrentTime = int
+    type Deadline = uint32
+    type CurrentTime = uint32
     type Rank = int
     type Score = int
     type ActionID = int
