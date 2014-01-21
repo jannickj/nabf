@@ -11,8 +11,6 @@ namespace NabfProject.Actions
 {
     public class NewRoundAction : EntityXmasAction<NabfAgent>
     {
-        private static int TimeBeforeApplyCloses = 1000;
-
         private int RoundNumber;
         private int SimId;
 
@@ -35,7 +33,7 @@ namespace NabfProject.Actions
                         simMan.FindJobs(SimId);
                     }
                     );
-                ta.SetSingle(TimeBeforeApplyCloses);
+                ta.SetSingle(simMan.TimeBeforeApplyCloses);
                 this.RunAction(ta);
             }
         }

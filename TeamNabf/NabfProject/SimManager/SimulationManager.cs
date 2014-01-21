@@ -11,6 +11,9 @@ namespace NabfProject.SimManager
 {
     public class SimulationManager
     {
+        public int TimeBeforeApplyCloses { get; private set; }
+        private const int _standardTimeBeforeApplyCloses = 1000;
+
         private Dictionary<int, SimulationData> _simDataStorage = new Dictionary<int, SimulationData>();
         private SimulationFactory _factory;
         private int _currentID;
@@ -19,8 +22,9 @@ namespace NabfProject.SimManager
         private bool _jobsFoundForThisRound = false;
         private int _numberOfAgentsFinishedApplying = 0;
 
-        public SimulationManager(SimulationFactory sf)
+        public SimulationManager(SimulationFactory sf, int timeBeforeApplyCloses = _standardTimeBeforeApplyCloses)
         {
+            TimeBeforeApplyCloses = timeBeforeApplyCloses;
             _factory = sf;
         }
 
