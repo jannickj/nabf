@@ -17,7 +17,7 @@ module CommonLogic =
             match s.Self.Role.Value with
             | Saboteur -> saboteurReact s agents
             | Repairer -> repairerReact s agents
-            | Sentinel -> tryDo Parry s
+            | Sentinel -> sentinelReact s agents
             | Explorer -> explorerReact s agents
             | Inspector -> inspectorReact s agents
         else
