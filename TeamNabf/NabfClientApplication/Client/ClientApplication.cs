@@ -35,8 +35,9 @@ namespace NabfClientApplication.Client
 		private ServerCommunication marsServCom;
         private MarsToAgentParser marsToAgentParser;
         private AgentToMarsParser agentToMarsParser;
+        private DateTime actionTimeStart;
 
-        public event UnaryValueHandler<ActionMessage> ActionSent;
+        public event UnaryValueHandler<Tuple<ActionMessage,TimeSpan>> ActionSent;
 
         public ClientApplication(ServerCommunication marsServCom, MarsToAgentParser marsParser, AgentToMarsParser agentToMarsParser, AgentLogicFactory factory)
 		{
@@ -46,7 +47,7 @@ namespace NabfClientApplication.Client
             //this.agentServCom = agentServCom;
             this.logicFactory = factory;
             //logic.EvaluationStarted += logic_needMessageSent;
-			
+            actionTimeStart = DateTime.Now;
 		}
 
 		public void UpdateMarsSender()
@@ -66,13 +67,20 @@ namespace NabfClientApplication.Client
                             packetAccepted = true;
                     }
                     if (ActionSent != null)
-                        ActionSent(this, new UnaryValueEvent<ActionMessage>((ActionMessage)packet.Item2));
+                    {
+                        var evtArgs = Tuple.Create((ActionMessage)packet.Item2, DateTime.Now - actionTimeStart);
+                            
+                        ActionSent(this, new UnaryValueEvent<Tuple<ActionMessage, TimeSpan>>(evtArgs));
+                    }
+
                     if (packetAccepted)
                         this.marsServCom.SeralizePacket(packet.Item2);
 				}
 			} while (hasPacket);
 
 		}
+
+       
 
 		public void UpdateMarsReceiver()
 		{
@@ -87,6 +95,10 @@ namespace NabfClientApplication.Client
                 {
                     StartSim((SimStartMessage)data.Message);
                     logic = this.currentLogic;
+                }
+                else if (data.Message is RequestActionMessage)
+                {
+                    actionTimeStart = DateTime.Now;
                 }
             }
 
@@ -177,9 +189,10 @@ namespace NabfClientApplication.Client
             {
                 action();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Environment.Exit(1); 
+                Console.WriteLine("Client failure: " + e.Message);
+                //Environment.Exit(1); 
             }
         }
 
