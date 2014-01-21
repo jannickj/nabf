@@ -102,6 +102,12 @@
                         }
 
             let newState = List.fold handlePercept state percepts
+            let newSelf = { newState.Self with 
+                              Team = state.Self.Team
+                              Name = state.Self.Name
+                              Role = state.Self.Role
+                          }
+            let newState = { newState with  Self = newSelf }
             updateTraversedEdgeCost state newState
 
         let sharedPercepts (percepts:Percept list) =
@@ -133,6 +139,7 @@
 
         let buildJob (job:Job) = 
             new IilAction "some action"
+
         let decideJob (state:State) (job:Job) =
             let d:Desirability = 1
             (d,true)
