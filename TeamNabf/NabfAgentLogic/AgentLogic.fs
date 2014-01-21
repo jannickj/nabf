@@ -13,7 +13,10 @@
         let handlePercept state percept =
             match percept with
                 | EnemySeen enemy   
-                    -> { state with EnemyData = enemy :: state.EnemyData }
+                    -> { state with 
+                           EnemyData = enemy :: state.EnemyData
+                           NearbyAgents = enemy :: state.NearbyAgents 
+                       }
                 | VertexSeen (id, team) ->
                     let ownedVertices = 
                         match team with
