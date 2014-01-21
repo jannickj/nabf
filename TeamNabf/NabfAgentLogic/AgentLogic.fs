@@ -92,11 +92,14 @@
            
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            let state = { state with NewEdges = []; NewVertices = [] }
+            let state = { state with 
+                            NewEdges = []
+                            NewVertices = []
+                            NearbyAgents = [] 
+                        }
+
             let newState = List.fold handlePercept state percepts
             updateTraversedEdgeCost state newState
-        
-            
 
         let sharedPercepts (percepts:Percept list) =
             []:(Percept list)
