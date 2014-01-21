@@ -8,7 +8,7 @@ module Explorer =
     let getExplorerTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                
+                Choice(ProbeVertex)
             ]
 
     let explorerReact (s:State) (agents:Agent list * Agent list) =

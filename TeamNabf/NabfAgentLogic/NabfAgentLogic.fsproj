@@ -46,6 +46,7 @@
     <Compile Include="IiLang\IiLang.fs" />
     <Compile Include="IiLang\IilTranslator.fs" />
     <Compile Include="AgentLogicLib.fs" />
+    <Compile Include="Logic\ExplorerLogic.fs" />
     <Compile Include="Saboteur.fs" />
     <Compile Include="Explorer.fs" />
     <Compile Include="Inspector.fs" />
