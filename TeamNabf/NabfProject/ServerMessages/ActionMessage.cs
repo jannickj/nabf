@@ -42,5 +42,13 @@ namespace NabfProject.ServerMessages
                 writer.WriteAttributeString("param", actionParam);
             writer.WriteEndElement();
         }
+
+        public override string ToString()
+        {
+            var param = "";
+            if (!String.IsNullOrEmpty(actionParam))
+                param = ", " + actionParam;
+            return actionType+"("+id+param+")";
+        }
     }
 }

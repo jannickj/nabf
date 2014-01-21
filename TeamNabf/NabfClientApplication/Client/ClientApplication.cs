@@ -36,6 +36,8 @@ namespace NabfClientApplication.Client
         private MarsToAgentParser marsToAgentParser;
         private AgentToMarsParser agentToMarsParser;
 
+        public event UnaryValueHandler<ActionMessage> ActionSent;
+
         public ClientApplication(ServerCommunication marsServCom, MarsToAgentParser marsParser, AgentToMarsParser agentToMarsParser, AgentLogicFactory factory)
 		{
             this.marsServCom = marsServCom;
@@ -60,9 +62,11 @@ namespace NabfClientApplication.Client
                     bool packetAccepted = false;
                     lock (simLock)
                     {
-                        if (packet.Item1 != this.currentSimId)
+                        if (packet.Item1 == this.currentSimId)
                             packetAccepted = true;
                     }
+                    if (ActionSent != null)
+                        ActionSent(this, new UnaryValueEvent<ActionMessage>((ActionMessage)packet.Item2));
                     if (packetAccepted)
                         this.marsServCom.SeralizePacket(packet.Item2);
 				}
@@ -161,10 +165,22 @@ namespace NabfClientApplication.Client
             StartSim(sMsg);
             currentLogic.HandlePercepts(sMsgPercepts);
 
-            Thread marsSenderThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMarsSender(); }));
-            Thread marsReceiverThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMarsReceiver(); }));
+            Thread marsSenderThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsSender(); })));
+            Thread marsReceiverThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsReceiver(); })));
             marsSenderThread.Start();
             marsReceiverThread.Start();
+        }
+
+        private void ExecuteThread(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception)
+            {
+                Environment.Exit(1); 
+            }
         }
 
         
