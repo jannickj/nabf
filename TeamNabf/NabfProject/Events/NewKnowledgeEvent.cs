@@ -11,7 +11,6 @@ namespace NabfProject.Events
     {
         public Knowledge NewKnowledge;
 
-
         public NewKnowledgeEvent(Knowledge k)
         {
             NewKnowledge = k;

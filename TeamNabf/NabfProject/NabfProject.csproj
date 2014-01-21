@@ -48,10 +48,10 @@
     <Compile Include="Actions\DeleteNoticeAction.cs" />
     <Compile Include="Actions\CreateNoticeAction.cs" />
     <Compile Include="Actions\SubscribeSimulationAction.cs" />
-    <Compile Include="Events\ReceivedAssignmentEvent.cs" />
+    <Compile Include="Events\ReceivedJobEvent.cs" />
     <Compile Include="Events\NoticeUpdatedEvent.cs" />
     <Compile Include="Events\NoticeRemovedEvent.cs" />
-    <Compile Include="Events\SimulationSubscribed.cs" />
+    <Compile Include="Events\SimulationSubscribedEvent.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterNewNotice.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterNewKnowledge.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterNoticeRemoved.cs" />
@@ -95,9 +95,7 @@
     <Compile Include="KnowledgeManager\KnowledgeManager.cs" />
     <Compile Include="AI\XmlTransmitterMessage.cs" />
     <Compile Include="NabfModel.cs" />
-    <Compile Include="NoticeBoardModel\RemovedNoticeEvent.cs" />
     <Compile Include="Events\NewNoticeEvent.cs" />
-    <Compile Include="NoticeBoardModel\NoticeIsReadyToBeExecutedEvent.cs" />
     <Compile Include="NoticeBoardModel\Notice.cs" />
     <Compile Include="NoticeBoardModel\NoticeBoard.cs" />
     <Compile Include="Parsers\AgentToMarsParser.cs" />

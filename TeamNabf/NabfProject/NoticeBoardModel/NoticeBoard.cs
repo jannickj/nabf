@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JSLibrary.Data;
 using NabfProject.AI;
 using NabfProject.Events;
+using NabfProject.KnowledgeManagerModel;
 
 namespace NabfProject.NoticeBoardModel
 {
@@ -89,7 +90,7 @@ namespace NabfProject.NoticeBoardModel
             _freeID = 0;
         }
 
-        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, int value, out Notice notice)
+        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<NodeKnowledge> whichNodes, int value, out Notice notice)
         {
             Notice n = null;
             Int64 id = _freeID;
@@ -156,12 +157,12 @@ namespace NabfProject.NoticeBoardModel
             _availableJobs.Remove(NoticeToJobType(no), no);
 
             foreach (NabfAgent a in _sharingList)
-                a.Raise(new RemovedNoticeEvent(no));
+                a.Raise(new NoticeRemovedEvent(no));
 
             return true;
         }
 
-        public bool UpdateNotice(Int64 id, List<Node> whichNodes, int agentsNeeded, int value)
+        public bool UpdateNotice(Int64 id, List<NodeKnowledge> whichNodes, int agentsNeeded, int value)
         {
             Notice no;
             bool b = _idToNotice.TryGetValue(id, out no);
@@ -172,7 +173,7 @@ namespace NabfProject.NoticeBoardModel
             no.UpdateNotice(whichNodes, agentsNeeded, value);
 
             foreach (NabfAgent a in _sharingList)
-                a.Raise(new NewNoticeEvent(no));
+                a.Raise(new NoticeUpdatedEvent(id, no));
 
             return true;
         }
@@ -362,7 +363,7 @@ namespace NabfProject.NoticeBoardModel
             //    NoticeIsReadyToBeExecutedEvent(this, args);
             foreach (NabfAgent a in n.GetTopDesireAgents())
             {
-                a.Raise(new NoticeIsReadyToBeExecutedEvent(n, n.GetTopDesireAgents()));
+                a.Raise(new ReceivedJobEvent(n));
                 foreach (Notice no in _agentToNotice[a])
                 {
                     if (no.ContentIsEqualTo(n))

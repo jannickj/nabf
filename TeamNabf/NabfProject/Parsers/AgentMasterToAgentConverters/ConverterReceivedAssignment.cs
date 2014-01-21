@@ -8,9 +8,9 @@ using System.Text;
 
 namespace NabfProject.Parsers.AgentMasterToAgentConverters
 {
-    public class ConverterReceivedAssignment : JSConverterToForeign<ReceivedAssignmentEvent, IilPerceptCollection>
+    public class ConverterReceivedAssignment : JSConverterToForeign<ReceivedJobEvent, IilPerceptCollection>
     {
-        public override IilPerceptCollection BeginConversionToForeign(ReceivedAssignmentEvent gobj)
+        public override IilPerceptCollection BeginConversionToForeign(ReceivedJobEvent gobj)
         {
             throw new NotImplementedException();
         }

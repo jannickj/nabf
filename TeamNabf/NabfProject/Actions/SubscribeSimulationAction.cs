@@ -11,20 +11,18 @@ namespace NabfProject.Actions
 {
     public class SubscribeSimulationAction : EntityXmasAction<NabfAgent>
     {
-        private int simID;
+        private int SimId;
 
         public SubscribeSimulationAction(int simID)
         {
-            this.simID = simID;
+            SimId = simID;
         }
 
         protected override void Execute()
         {
             SimulationManager simMan = ((NabfModel)this.Engine).SimulationManager;
-            NabfAgent agent = this.Source;
 
-            //DO FILTHY STUFF TO SIMULATION MANAGER!
-            throw new NotImplementedException();
+            simMan.SubscribeToSimulation(SimId, this.Source);
         }
     }
 }

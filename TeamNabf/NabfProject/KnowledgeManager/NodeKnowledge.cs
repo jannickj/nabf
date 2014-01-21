@@ -10,6 +10,12 @@ namespace NabfProject.KnowledgeManagerModel
         public string Name { get; private set; }
         public int Value { get; private set;}
 
+        public NodeKnowledge(string name)
+        {
+            Name = name;
+            Value = 0;
+        }
+
         public NodeKnowledge(string name, int value)
         {
             Name = name;

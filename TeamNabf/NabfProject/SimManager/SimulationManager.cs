@@ -5,6 +5,7 @@ using System.Text;
 using NabfProject.KnowledgeManagerModel;
 using NabfProject.NoticeBoardModel;
 using NabfProject.AI;
+using NabfProject.Events;
 
 namespace NabfProject.SimManager
 {
@@ -19,19 +20,19 @@ namespace NabfProject.SimManager
             _factory = sf;
         }
 
-        public bool TryGetNoticeBoard(int simID, out NoticeBoard nb)
+        private bool TryGetNoticeBoard(int simID, out NoticeBoard nb)
         {
             KnowledgeManager km;
             TryGetSimData(simID, out km, out nb);
             return true;
         }
-        public bool TryGetKnowledgeManager(int simID, out KnowledgeManager km)
+        private bool TryGetKnowledgeManager(int simID, out KnowledgeManager km)
         {
             NoticeBoard nb;
             TryGetSimData(simID, out km, out nb);
             return true;
         }
-        public bool TryGetSimData(int simID, out KnowledgeManager km, out NoticeBoard nb)
+        private bool TryGetSimData(int simID, out KnowledgeManager km, out NoticeBoard nb)
         {
             bool b = false;
             SimulationData sd;
@@ -65,26 +66,27 @@ namespace NabfProject.SimManager
             return b;
         }
 
-        public void SubscribeToSimulation(int id, NabfAgent agent)
+        public void SubscribeToSimulation(int simID, NabfAgent agent)
         {
             KnowledgeManager km;
             NoticeBoard nb;
-            if (_currentID != id)
+            if (_currentID != simID)
             {
                 TryGetSimData(_currentID, out km, out nb);
                 km.Unsubscribe(agent);
                 nb.Unsubscribe(agent);
 
-                TryInsertSimData(id);
-                _currentID = id;
+                TryInsertSimData(simID);
+                _currentID = simID;
             }
 
-            TryGetSimData(id, out km, out nb);
+            TryGetSimData(simID, out km, out nb);
             km.Subscribe(agent);
             nb.Subscribe(agent);
+            agent.Raise(new SimulationSubscribedEvent(simID));
         }
 
-        public void SendKnowledgeToKnowledgeManager(int id, List<Knowledge> sentKnowledge, NabfAgent sender)
+        public void SendKnowledge(int id, List<Knowledge> sentKnowledge, NabfAgent sender)
         {
             if (id != _currentID)
                 return;
@@ -95,7 +97,7 @@ namespace NabfProject.SimManager
             km.SendKnowledgeToManager(sentKnowledge, sender);
         }
 
-        public bool CreateAndAddNotice(int simID, NoticeBoard.JobType type, int agentsNeeded, List<Node> whichNodes, int value, out Notice notice)
+        public bool CreateAndAddNotice(int simID, NoticeBoard.JobType type, int agentsNeeded, List<NodeKnowledge> whichNodes, int value, out Notice notice)
         {
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
@@ -115,7 +117,7 @@ namespace NabfProject.SimManager
             return nb.RemoveNotice(no);
         }
 
-        public bool UpdateNotice(int simID, Int64 noticeID, int agentsNeeded, List<Node> whichNodes, int value)
+        public bool UpdateNotice(int simID, Int64 noticeID, int agentsNeeded, List<NodeKnowledge> whichNodes, int value)
         {
             if (_currentID != simID)
                 return false;
