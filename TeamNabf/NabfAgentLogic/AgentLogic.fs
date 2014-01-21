@@ -6,6 +6,7 @@
         open JSLibrary.IiLang.DataContainers
         open AgentTypes
         open DecisionTree
+        open Explorer
         
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
@@ -16,14 +17,7 @@
                     { state with
                         World = Map.add id { Identifier = id; Value = None; Edges = Set.empty } state.World;
                         NewVertices = (id, team) :: state.NewVertices
-                    } 
-//                | EdgeSeen (cost, node1, node2) 
-//                    when (not <| Map.containsKey node1 state.World) 
-//                    ||   (not <| Set.contains (cost, node2) state.World.[node1].Edges)
-//                        -> { state with 
-//                             World = addEdge state.World edge;
-//                             NewEdges = (cost, node1, node2) :: NewEdges
-//                           }
+                    }
                 | SimulationStep step
                     -> { state with SimulationStep = step }
         
@@ -54,6 +48,7 @@
             ;   Score = 0
             ;   ZoneScore = 0
             ;   Achievements = []
+            ;   NewZone = None
             } : State
 
         (* let updateState : State -> Percept list -> State *)
@@ -81,13 +76,43 @@
         let generateActions (state:State) = []
         
 
-        let generateDecisionTree : Decision<(State -> (bool*Option<Action>))> = DecisionTree.getTree        
+        let generateDecisionTree : Decision<(State -> (bool*Option<Action>))> = DecisionTree.getTree
 
-        let generateJob (jt:JobType) (s:State) (knownJobs:Job list)  =
-            option<Job>.None
+        let generateOccupyJob (s:State) (knownJobs:Job list) =
+            match s.Self.Role with
+            | Some Explorer -> generateOccupyJobExplorer s knownJobs
+            | _ -> None
+
+        let rec findRepairJob (s:State) (knownJobs:Job list) =
+            match knownJobs with
+            | (_ , rdata) :: tail -> if rdata = RepairJob(s.Self.Node,s.Self.Name) then Some knownJobs.Head else findRepairJob s tail
+            | [] -> None
+
+        let generateRepairJob (s:State) (knownJobs:Job list) =
+            if s.Self.Health.Value = 0 
+            then
+                let j = findRepairJob s knownJobs
+                match j with
+                | None -> Some ((-1,5,RepairJob),(s.Self.Node,s.Self.Name))
+                | Some ((id,_,_),_) -> Some ((id,5,RepairJob),(s.Self.Node,s.Self.Name))
+            else
+                None
+
+        let generateDisruptJob (s:State) (knownJobs:Job list) = None
+
+        let generateAttackJob (s:State) (knownJobs:Job list) = None        
+
+        let generateJob (jt:JobType) (s:State) (knownJobs:Job list) =
+            match jt with
+            | JobType.OccupyJob     -> generateOccupyJob s knownJobs
+            | JobType.RepairJob     -> generateRepairJob s knownJobs
+            | JobType.DisruptJob    -> generateDisruptJob s knownJobs
+            | JobType.AttackJob     -> generateAttackJob s knownJobs
+            | _                     -> failwithf "Wrong JobType parameter passed to generateJob"
 
         let buildJob (job:Job) = 
             new IilAction "some action"
+
         let decideJob (state:State) (job:Job) =
             let d:Desirability = 1
             (d,true)

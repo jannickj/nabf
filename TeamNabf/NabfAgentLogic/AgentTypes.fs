@@ -93,10 +93,10 @@ module AgentTypes =
     type Desirability = int
 
     type JobType = 
-        | OccupyJob = 1
-        | RepairJob = 2
-        | DisruptJob = 3
-        | AttackJob = 4
+        | OccupyJob = 0
+        | RepairJob = 1
+        | DisruptJob = 2
+        | AttackJob = 3
 
     type JobData =
         | OccupyJob of VertexName list
@@ -191,7 +191,7 @@ module AgentTypes =
             Achievements     : Achievement list
             LastActionResult : ActionResult
             LastAction       : Action
-
+            NewZone          : Option<Graph * bool>
         }
 
     type OptionFunc = State -> (bool*Option<Action>)
