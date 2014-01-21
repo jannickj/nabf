@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using JSLibrary.Data;
 using NabfProject.AI;
+using NabfProject.Events;
 
 namespace NabfProject.NoticeBoardModel
 {

@@ -13,6 +13,7 @@ using XmasEngineModel;
 using XmasEngineModel.EntityLib;
 using System.IO;
 using JSLibrary.IiLang.Parameters;
+using NabfProject.Parsers;
 
 namespace NabfProject.AI
 {
@@ -49,14 +50,14 @@ namespace NabfProject.AI
                 {
                     if (!agents.TryGetValue(agentName, out agent))
                     {
-                        agent = new Agent(agentName);
+                        agent = new NabfAgent(agentName);
                         agents.Add(agentName, agent);
                     }
 
                 }
 
 
-				AgentConnection connection = new AgentConnection(agent,transmitter);               
+				AgentConnection connection = new AgentConnection(agent,transmitter,new AgentMasterToAgentParser(), new AgentToAgentMasterParser());               
 
 				return new KeyValuePair<string,AgentController>(agentName, connection);
 			};

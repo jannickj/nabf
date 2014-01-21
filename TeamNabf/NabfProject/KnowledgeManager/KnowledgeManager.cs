@@ -7,6 +7,7 @@ using JSLibrary.IiLang;
 using JSLibrary.IiLang.Parameters;
 using NabfProject;
 using NabfProject.AI;
+using NabfProject.Events;
 
 namespace NabfProject.KnowledgeManagerModel
 {
