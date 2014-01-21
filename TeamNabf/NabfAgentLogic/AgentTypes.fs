@@ -121,7 +121,7 @@ module AgentTypes =
             | Attacked l          -> (l, 5)
             | Parried  l          -> (l, 5)
 
-    type SeenVertex = VertexName * TeamName
+    type SeenVertex = VertexName * TeamName option
 
     type Percept =
         | EnemySeen         of Agent
@@ -129,17 +129,11 @@ module AgentTypes =
         | VertexProbed      of VertexName * int
         | EdgeSeen          of Edge
         | SimulationStep    of int
-        | Health            of int
-        | MaxHealth         of int
-        | Energy            of int
-        | MaxEnergy         of int
         | MaxEnergyDisabled of int
+        | LastAction        of Action
         | LastActionResult  of ActionResult
         | ZoneScore         of int
         | Team              of TeamState
-        | Position          of VertexName
-        | Strength          of int
-        | VisionRange       of int
         | Self              of Agent
 
     type Deadline = uint32
@@ -185,10 +179,11 @@ module AgentTypes =
             LastStepScore    : int
             Money            : int
             Score            : int
-            ZoneScore        : int
+            ThisZoneScore    : int
             Achievements     : Achievement list
             LastActionResult : ActionResult
             LastAction       : Action
+            TeamZoneScore    : int
 
         }
 

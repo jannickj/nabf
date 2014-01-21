@@ -127,6 +127,7 @@ namespace NabfAgentLogic.IiLang
               ; Function ("zoneScore", [Numeral zoneScore])
               ] -> [ ZoneScore <| int zoneScore 
                    ; MaxEnergyDisabled <| int maxEnergyDisabled
+                   ; LastAction <| parseIilAction action actionParam
                    ; LastActionResult <| parseIilActionResult actionResult
                    ; Self { Energy = Some (int energy)
                           ; Health = Some (int health)
@@ -224,13 +225,18 @@ namespace NabfAgentLogic.IiLang
                       ; Status = parseIilStatus status
                       }
             | _ -> raise <| InvalidIilException ("visibleEntity", [visibleEntity])
+        
+        let parseIilTeamName teamName =
+            match teamName with
+            | Identifier team when team.Length > 0 -> Some team
+            | _ -> None
 
         let parseIilVisibleVertex visibleVertex =
             match visibleVertex with
             | Function ("visibleVertex", 
                 [ Function ("name", [Identifier name])
-                ; Function ("team", [Identifier team])
-                ]) -> (name, team)
+                ; Function ("team", [team])
+                ]) -> (name, parseIilTeamName team)
             | _ -> raise <| InvalidIilException ("visibleVertex", [visibleVertex])
 
         let parseIilSimStart iilSimStart = 

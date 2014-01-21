@@ -14,20 +14,40 @@
             match percept with
                 | EnemySeen enemy   
                     -> { state with EnemyData = enemy :: state.EnemyData }
-                | VertexSeen (id, team) when not <| Map.containsKey id state.World ->
-                    { state with
-                        World = Map.add id { Identifier = id; Value = None; Edges = Set.empty } state.World;
-                        NewVertices = (id, team) :: state.NewVertices
-                    } 
+                | VertexSeen (id, team) ->
+                    let ownedVertices = 
+                        match team with
+                        | Some t -> Map.add id t state.OwnedVertices
+                        | None -> state.OwnedVertices
+
+                    if not <| Map.containsKey id state.World then
+                        { state with
+                            World = Map.add id { Identifier = id; Value = None; Edges = Set.empty } state.World
+                            NewVertices = (id, team) :: state.NewVertices
+                            OwnedVertices = ownedVertices
+                        }
+                    else 
+                        { state with OwnedVertices = ownedVertices }
                 | VertexProbed (name, value) ->
                     { state with World = addVertexValue state.World {state.World.[name] with Value = Some value} }
-                | EdgeSeen edge -> //when (not <| Map.containsKey node1 state.World) -> 
-                    let (cost, node1, node2) = edge
-//                    if Set.contains state.World.[node1].Edges (cost, node2) then
-                    { state with World = addEdge state.World edge }
-                | SimulationStep step
-                    -> { state with SimulationStep = step }
-                | Percept.Self self -> { state with Self = self }
+                | EdgeSeen (cost, node1, node2) when (not <| Set.contains (cost, node2) state.World.[node1].Edges) ->
+                    { state with 
+                        World = addEdge state.World (cost, node1, node2) 
+                        NewEdges = (cost, node1, node2) :: state.NewEdges
+                    }
+                | Team team ->
+                    { state with 
+                        TeamZoneScore = team.ZoneScore
+                        Achievements = team.Achievements @ state.Achievements
+                        Money = team.Money
+                        LastStepScore = team.LastStepScore
+                        Score = team.Score
+                    }
+                | SimulationStep step  -> { state with SimulationStep = step }
+                | ZoneScore score      -> { state with ThisZoneScore = score }
+                | Self self            -> { state with Self = self }
+                | LastAction action    -> { state with LastAction = action }
+                | LastActionResult res -> { state with LastActionResult = res }
                 | _ -> state
         
         let buildInitState (name ,simData:SimStartData) =
@@ -55,7 +75,8 @@
             ;   LastActionResult = Successful
             ;   Money = 0
             ;   Score = 0
-            ;   ZoneScore = 0
+            ;   TeamZoneScore = 0
+            ;   ThisZoneScore = 0
             ;   Achievements = []
             } : State
 
