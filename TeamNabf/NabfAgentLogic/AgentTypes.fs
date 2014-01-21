@@ -122,6 +122,7 @@ module AgentTypes =
             | Parried  l          -> (l, 5)
 
     type SeenVertex = VertexName * TeamName option
+    type AgentRolePercept = AgentName * AgentRole * int
 
     type Percept =
         | EnemySeen         of Agent
@@ -135,6 +136,7 @@ module AgentTypes =
         | ZoneScore         of int
         | Team              of TeamState
         | Self              of Agent
+        | AgentRolePercept  of AgentRolePercept
 
     type Deadline = uint32
     type CurrentTime = uint32
