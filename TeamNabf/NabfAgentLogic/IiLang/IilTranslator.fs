@@ -84,6 +84,7 @@ namespace NabfAgentLogic.IiLang
 
         let parseIilAction iilAction iilActionParam =
             match (iilAction, iilActionParam) with
+            | (Identifier "noAction", _)                   
             | (Identifier "skip", _)                       -> Skip
             | (Identifier "recharge", _)                   -> Recharge
             | (Identifier "goto", Identifier vertexName)   -> Goto vertexName
