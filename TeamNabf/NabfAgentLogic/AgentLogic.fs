@@ -83,6 +83,14 @@
             ;   Achievements = []
             } : State
 
+
+        let clearTempBeliefs state =
+            { state with 
+                NewEdges = []
+                NewVertices = []
+                NearbyAgents = [] 
+            }
+
         let updateTraversedEdgeCost (oldState : State) (newState : State) =
             match (oldState.Self.Node, newState.LastAction, newState.LastActionResult) with
             | (fromVertex, Goto toVertex, Successful) -> 
@@ -92,23 +100,22 @@
                     NewEdges = edge :: newState.NewEdges 
                 }
             | _ -> newState
+
+        let updateSelf (oldState : State) (newState : State) =
+            { newState with
+                Self = { newState.Self with
+                           Team = oldState.Self.Team
+                           Name = oldState.Self.Name
+                           Role = oldState.Self.Role
+                       }
+            }
            
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            let state = { state with 
-                            NewEdges = []
-                            NewVertices = []
-                            NearbyAgents = [] 
-                        }
-
-            let newState = List.fold handlePercept state percepts
-            let newSelf = { newState.Self with 
-                              Team = state.Self.Team
-                              Name = state.Self.Name
-                              Role = state.Self.Role
-                          }
-            let newState = { newState with  Self = newSelf }
-            updateTraversedEdgeCost state newState
+            let newState = clearTempBeliefs state
+            List.fold handlePercept newState percepts
+            |> updateTraversedEdgeCost state
+            |> updateSelf state
 
         let sharedPercepts (percepts:Percept list) =
             []:(Percept list)
