@@ -24,7 +24,6 @@ module CommonLogic =
             (false,None)
 
     let exploreLocalGraph (s:State) =
-        let neighbours = getNeighbours s.Self.Node s.World
         let unexplored = (pathToNearestUnExplored s.Self s.World)
         if unexplored = None 
         then 

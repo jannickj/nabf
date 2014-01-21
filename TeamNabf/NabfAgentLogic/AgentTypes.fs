@@ -104,6 +104,12 @@ module AgentTypes =
         | DisruptJob of VertexName
         | AttackJob of VertexName list
 
+    type Goal =
+        | OccupyGoal of VertexName
+        | RepairGoal of VertexName * AgentName
+        | DisruptGoal of VertexName
+        | AttackGoal of VertexName
+
     type JobHeader = JobID * JobValue * JobType
 
     type Job = JobHeader * JobData
@@ -143,6 +149,7 @@ module AgentTypes =
         | VisionRange       of int
         | Self              of Agent
 
+    
 
     type Deadline = int
     type CurrentTime = int
@@ -187,11 +194,13 @@ module AgentTypes =
             LastStepScore    : int
             Money            : int
             Score            : int
-            ZoneScore        : int
+            ThisZoneScore    : int
             Achievements     : Achievement list
             LastActionResult : ActionResult
             LastAction       : Action
+            TeamZoneScore    : int
             NewZone          : Option<Graph * bool>
+            Goals            : Goal list
         }
 
     type OptionFunc = State -> (bool*Option<Action>)
