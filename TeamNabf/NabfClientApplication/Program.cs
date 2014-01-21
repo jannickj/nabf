@@ -65,7 +65,7 @@ namespace NabfClientApplication
             AgentToMarsParser agentToMarsParser = new AgentToMarsParser();
 
             ClientApplication client = new ClientApplication(marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
-            client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + evt.Value);
+            client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalSeconds+")");
 
             Console.WriteLine("Authenticating: username=" + username + ", password=" + password);
 
