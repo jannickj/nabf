@@ -40,8 +40,8 @@ namespace NabfProject.AI
             this.Agent.Register(new Trigger<NewNoticeEvent>(evt => receivedEvent(evt)));
             this.Agent.Register(new Trigger<NoticeRemovedEvent>(evt => receivedEvent(evt)));
             this.Agent.Register(new Trigger<NoticeUpdatedEvent>(evt => receivedEvent(evt)));
-            this.Agent.Register(new Trigger<ReceivedAssignmentEvent>(evt => receivedEvent(evt)));
-            this.Agent.Register(new Trigger<SimulationSubscribed>(simSubscribedEvent));
+            this.Agent.Register(new Trigger<ReceivedJobEvent>(evt => receivedEvent(evt)));
+            this.Agent.Register(new Trigger<SimulationSubscribedEvent>(simSubscribedEvent));
 			this.masterToAgentParser = masterToAgentParser;
             this.agentToMasterParser = agentToMasterParser;
 		}
@@ -82,7 +82,7 @@ namespace NabfProject.AI
             } while (hasPacket);
         }
 
-        private void simSubscribedEvent(SimulationSubscribed evt)
+        private void simSubscribedEvent(SimulationSubscribedEvent evt)
         {
             lock (simLock)
                 this.simulationSubscribed = true;

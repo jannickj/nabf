@@ -5,33 +5,42 @@ using System.Text;
 using NabfProject.KnowledgeManagerModel;
 using NabfProject.NoticeBoardModel;
 using NabfProject.AI;
+using NabfProject.Events;
 
 namespace NabfProject.SimManager
 {
     public class SimulationManager
     {
+        public int TimeBeforeApplyCloses { get; private set; }
+        private const int _standardTimeBeforeApplyCloses = 1000;
+
         private Dictionary<int, SimulationData> _simDataStorage = new Dictionary<int, SimulationData>();
         private SimulationFactory _factory;
         private int _currentID;
+        private int _currentRoundNumber;
+        private bool _applicationClosed = false;
+        private bool _jobsFoundForThisRound = false;
+        private int _numberOfAgentsFinishedApplying = 0;
 
-        public SimulationManager(SimulationFactory sf)
+        public SimulationManager(SimulationFactory sf, int timeBeforeApplyCloses = _standardTimeBeforeApplyCloses)
         {
+            TimeBeforeApplyCloses = timeBeforeApplyCloses;
             _factory = sf;
         }
 
-        public bool TryGetNoticeBoard(int simID, out NoticeBoard nb)
+        private bool TryGetNoticeBoard(int simID, out NoticeBoard nb)
         {
             KnowledgeManager km;
             TryGetSimData(simID, out km, out nb);
             return true;
         }
-        public bool TryGetKnowledgeManager(int simID, out KnowledgeManager km)
+        private bool TryGetKnowledgeManager(int simID, out KnowledgeManager km)
         {
             NoticeBoard nb;
             TryGetSimData(simID, out km, out nb);
             return true;
         }
-        public bool TryGetSimData(int simID, out KnowledgeManager km, out NoticeBoard nb)
+        private bool TryGetSimData(int simID, out KnowledgeManager km, out NoticeBoard nb)
         {
             bool b = false;
             SimulationData sd;
@@ -40,7 +49,7 @@ namespace NabfProject.SimManager
 
             b = _simDataStorage.TryGetValue(simID, out sd);
             if (b == false)
-                throw new ArgumentException("id " + _currentID + " not found.");
+                throw new ArgumentException("id " + simID + " not found.");
                 //return false;
 
             km = sd.KnowledgeManager;
@@ -65,26 +74,36 @@ namespace NabfProject.SimManager
             return b;
         }
 
-        public void SubscribeToSimulation(int id, NabfAgent agent)
+        public void SubscribeToSimulation(int simID, NabfAgent agent)
         {
             KnowledgeManager km;
             NoticeBoard nb;
-            if (_currentID != id)
+            if (_currentID != simID)
             {
                 TryGetSimData(_currentID, out km, out nb);
                 km.Unsubscribe(agent);
                 nb.Unsubscribe(agent);
 
-                TryInsertSimData(id);
-                _currentID = id;
+                TryInsertSimData(simID);
+                _currentID = simID;
             }
 
-            TryGetSimData(id, out km, out nb);
-            km.Subscribe(agent);
-            nb.Subscribe(agent);
+            TryGetSimData(simID, out km, out nb);
+            if (nb.AgentIsSubscribed(agent))
+            {
+                agent.Raise(new SimulationSubscribedEvent(simID));
+                km.SendOutAllKnowledgeToAgent(agent);
+                nb.SendOutAllNoticesToAgent(agent);
+            }
+            else
+            {
+                km.Subscribe(agent);
+                nb.Subscribe(agent);
+                agent.Raise(new SimulationSubscribedEvent(simID));
+            }
         }
 
-        public void SendKnowledgeToKnowledgeManager(int id, List<Knowledge> sentKnowledge, NabfAgent sender)
+        public void SendKnowledge(int id, List<Knowledge> sentKnowledge, NabfAgent sender)
         {
             if (id != _currentID)
                 return;
@@ -95,7 +114,7 @@ namespace NabfProject.SimManager
             km.SendKnowledgeToManager(sentKnowledge, sender);
         }
 
-        public bool CreateAndAddNotice(int simID, NoticeBoard.JobType type, int agentsNeeded, List<Node> whichNodes, int value, out Notice notice)
+        public bool CreateAndAddNotice(int simID, NoticeBoard.JobType type, int agentsNeeded, List<NodeKnowledge> whichNodes, int value, out Notice notice)
         {
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
@@ -115,7 +134,7 @@ namespace NabfProject.SimManager
             return nb.RemoveNotice(no);
         }
 
-        public bool UpdateNotice(int simID, Int64 noticeID, int agentsNeeded, List<Node> whichNodes, int value)
+        public bool UpdateNotice(int simID, Int64 noticeID, int agentsNeeded, List<NodeKnowledge> whichNodes, int value)
         {
             if (_currentID != simID)
                 return false;
@@ -135,16 +154,24 @@ namespace NabfProject.SimManager
 
         public void ApplyToNotice(int simID, Notice notice, int desirability, NabfAgent a)
         {
-            if (_currentID != simID)
+            if (_currentID != simID || _applicationClosed)
                 return;
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
 
-            nb.ApplyToNotice(notice, desirability, a);
+            if (notice.IsEmpty())
+                _numberOfAgentsFinishedApplying++;
+            else
+                nb.ApplyToNotice(notice, desirability, a);
+
+            int numberOfAgents = nb.GetSubscribedAgents();            
+
+            if (numberOfAgents <= _numberOfAgentsFinishedApplying)
+                FindJobs(simID);
         }
         public void UnApplyToNotice(int simID, Notice notice, NabfAgent a)
         {
-            if (_currentID != simID)
+            if (_currentID != simID || _applicationClosed)
                 return;
 
             NoticeBoard nb;
@@ -153,7 +180,7 @@ namespace NabfProject.SimManager
             nb.UnApplyToNotice(notice, a);
         }
 
-        public void FindJobsForAgents(int simID)
+        private void FindJobsForAgents(int simID)
         {
             if (_currentID != simID)
                 return;
@@ -161,6 +188,28 @@ namespace NabfProject.SimManager
             TryGetNoticeBoard(simID, out nb);
 
             nb.FindJobsForAgents();
+        }
+
+        public bool TryGoNextRound(int simID, int roundNumber)
+        {
+            if (_currentID != simID || roundNumber <= _currentRoundNumber)
+                return false;
+
+            _currentRoundNumber++;
+            _applicationClosed = false;
+            _jobsFoundForThisRound = false;
+            _numberOfAgentsFinishedApplying = 0;
+            return true;
+        }
+
+        public void FindJobs(int simID)
+        {
+            if (_jobsFoundForThisRound == false) 
+            {
+                _jobsFoundForThisRound = true;
+                _applicationClosed = true;
+                FindJobsForAgents(simID);
+            }
         }
     }
 

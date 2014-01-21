@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NabfProject.NoticeBoardModel;
+using XmasEngineModel.Management;
 
-namespace NabfProject.NoticeBoardModel
+namespace NabfProject.Events
 {
-    public class RemovedNoticeEvent : XmasEngineModel.Management.XmasEvent
+    public class ReceivedJobEvent : XmasEvent
     {
         public Notice Notice { get; private set; }
 
-        public RemovedNoticeEvent(Notice n)
+        public ReceivedJobEvent(Notice n)
         {
             Notice = n;
         }

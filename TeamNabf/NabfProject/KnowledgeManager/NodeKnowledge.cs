@@ -10,6 +10,12 @@ namespace NabfProject.KnowledgeManagerModel
         public string Name { get; private set; }
         public int Value { get; private set;}
 
+        public NodeKnowledge(string name)
+        {
+            Name = name;
+            Value = 0;
+        }
+
         public NodeKnowledge(string name, int value)
         {
             Name = name;
@@ -44,6 +50,11 @@ namespace NabfProject.KnowledgeManagerModel
                     return 0;
             else
                 throw new ArgumentException("Object : " + other.GetType().Name + " of CompareTo is not of type NodeKnowledge");
+        }
+
+        public string ToId()
+        {
+            return "nodeKnowledge";
         }
     }
 }

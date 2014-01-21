@@ -8,6 +8,8 @@ using NabfProject.NoticeBoardModel;
 using NabfProject.AI;
 using System.Reflection;
 using JSLibrary.Data;
+using NabfProject.KnowledgeManagerModel;
+using NabfProject.Events;
 
 namespace NabfTest
 {
@@ -47,7 +49,7 @@ namespace NabfTest
         [Test]
         public void AddNotice_DuplicateExists_Failure()
         {
-            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+            List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
 
             Notice no = new DisruptJob(2, testNodes, 0, ID++);
             Notice no2 = new DisruptJob(2, testNodes, 0, ID++);
@@ -79,8 +81,8 @@ namespace NabfTest
         [Test]
         public void AddNotices_NoDuplicateListNoneEmpty_Success()
         {
-            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
-            List<Node> testNodes2 = new List<Node>() { new Node(), new Node() };
+            List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
+            List<NodeKnowledge> testNodes2 = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
 
             Notice no = new DisruptJob(2, testNodes, 0, ID++);
             Notice no2 = new DisruptJob(2, testNodes2, 0, ID++);
@@ -118,8 +120,8 @@ namespace NabfTest
         [Test]
         public void RemoveNotice_MultipleNotices_Success()
         {
-            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
-            List<Node> testNodes2 = new List<Node>() { new Node(), new Node() };
+            List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
+            List<NodeKnowledge> testNodes2 = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
 
             Notice no = new DisruptJob(2, testNodes, 0, ID++);
             Notice no2 = new DisruptJob(2, testNodes2, 0, ID++);
@@ -133,7 +135,7 @@ namespace NabfTest
         [Test]
         public void RemoveNotice_NoSuchNotice_Failure()
         {
-            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+            List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
 
             Notice no = new DisruptJob(1, testNodes, 0, ID++);
             Notice no2 = new DisruptJob(3, testNodes, 0, ID++);
@@ -146,7 +148,7 @@ namespace NabfTest
         [Test]
         public void GetNoticeOfType_NoJobsOfSuchType_Failure()
         {
-            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+            List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
 
             Notice no = new DisruptJob(1, testNodes, 0, ID++);
             Notice no2 = new AttackJob(1, testNodes, 0, ID++);
@@ -164,7 +166,7 @@ namespace NabfTest
         [Test]
         public void GetNoticeOfType_MultipleJobsOfTypeAndOtherType_Success()
         {
-            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+            List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
 
             Notice no = new DisruptJob(1, testNodes, 0, ID++);
             Notice no2 = new AttackJob(1, testNodes, 0, ID++);
@@ -182,7 +184,7 @@ namespace NabfTest
         [Test]
         public void TwoAgentsApplyToSameNoticeThenUnApply_NoticeExists_Success()
         {
-            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+            List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
 
             Notice no = new DisruptJob(1, testNodes, 0, ID++);
             nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, 0, out no);
@@ -214,7 +216,7 @@ namespace NabfTest
             Notice no = new DisruptJob(1, null, 0, 0);
             nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, null, 0, out no);
             Assert.AreEqual(1, nb.GetNotices(new List<NoticeBoard.JobType>(){ NoticeBoard.JobType.Disrupt}).First<Notice>().AgentsNeeded);
-            bool updateSuccess = nb.UpdateNotice(no.Id, new List<Node>(), 10, 0);
+            bool updateSuccess = nb.UpdateNotice(no.Id, new List<NodeKnowledge>(), 10, 0);
             Assert.IsTrue(updateSuccess);
             Assert.AreEqual(10, nb.GetNotices(new List<NoticeBoard.JobType>() { NoticeBoard.JobType.Disrupt }).First<Notice>().AgentsNeeded);
         }
@@ -222,14 +224,14 @@ namespace NabfTest
         [Test]
         public void UpdateNotice_NoticeDontExists_Failure()
         {
-            bool updateSuccess = nb.UpdateNotice(0, new List<Node>(), 1, 0);
+            bool updateSuccess = nb.UpdateNotice(0, new List<NodeKnowledge>(), 1, 0);
             Assert.IsFalse(updateSuccess);
         }
 
         [Test]
         public void FindJobsForAgents_AllJobsFilledAllTheTime_Success()
         {
-            List<Node> testNodes = new List<Node>() { new Node(), new Node() };
+            List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
 
             Notice no = new DisruptJob(1, testNodes, 0, ID++), no2 = new AttackJob(1, testNodes, 0, ID++), no3 = new OccupyJob(2, testNodes, 0, ID++);
             nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 1, testNodes, 0, out no);
@@ -253,10 +255,10 @@ namespace NabfTest
             bool failed = false;
             Action<int, Notice> checkOrder = (oId, n) => { if ((order == oId)) { IsNoticeCorrect1(oId, n); order++; } else failed = true; };
 
-            a1.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(3, evt.Notice)));
-            a2.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(2, evt.Notice)));
-            a3.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(1, evt.Notice)));
-            a4.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(0, evt.Notice)));
+            a1.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(3, evt.Notice)));
+            a2.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(2, evt.Notice)));
+            a3.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(1, evt.Notice)));
+            a4.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(0, evt.Notice)));
 
             nb.FindJobsForAgents();
 
@@ -288,7 +290,7 @@ namespace NabfTest
         public void FindJobsForAgentsSomeAgentsIsPreferedForMultipleMultiJobs_AllJobsFilledAtStart_Success()
         {
             #region setup
-            List<Node> nodes = new List<Node>() { new Node(), new Node(), new Node() };
+            List<NodeKnowledge> nodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2"), new NodeKnowledge("n3") };
 
             NabfAgent agent1 = new NabfAgent("a1"), agent2 = new NabfAgent("a2"), agent3 = new NabfAgent("a3"), 
                 agent4 = new NabfAgent("a4"), agent5 = new NabfAgent("a5"), agent6 = new NabfAgent("a6");
@@ -335,12 +337,12 @@ namespace NabfTest
             bool failed = false;
             Action<int, Notice> checkOrder = (oId, n) => { if ((order == oId)) { IsNoticeCorrect2(oId, n); order++; } else failed = true; };
 
-            agent1.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(4, evt.Notice)));
-            agent2.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(1, evt.Notice)));
-            agent3.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(2, evt.Notice)));
-            agent4.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(2, evt.Notice)));
-            agent5.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(0, evt.Notice)));
-            agent6.Register(new XmasEngineModel.Management.Trigger<NoticeIsReadyToBeExecutedEvent>(evt => checkOrder(0, evt.Notice)));
+            agent1.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(4, evt.Notice)));
+            agent2.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(1, evt.Notice)));
+            agent3.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(2, evt.Notice)));
+            agent4.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(2, evt.Notice)));
+            agent5.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(0, evt.Notice)));
+            agent6.Register(new XmasEngineModel.Management.Trigger<ReceivedJobEvent>(evt => checkOrder(0, evt.Notice)));
             
             nb.FindJobsForAgents();
 

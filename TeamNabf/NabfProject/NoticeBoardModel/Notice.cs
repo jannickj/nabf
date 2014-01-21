@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NabfProject.AI;
+using NabfProject.KnowledgeManagerModel;
 
 namespace NabfProject.NoticeBoardModel
 {
     public abstract class Notice : IEquatable<Notice>, IComparable
     {
-        public List<Node> WhichNodes { get; protected set; }
+        public List<NodeKnowledge> WhichNodes { get; protected set; }
         public int AgentsNeeded { get; protected set; }
         public Int64 Id { get; private set; }
         public int Value { get; protected set; }
@@ -60,7 +61,7 @@ namespace NabfProject.NoticeBoardModel
             if (no.GetType() != this.GetType())
                 return false;
             else
-                if (no.WhichNodes.Except<Node>(this.WhichNodes).Count() != 0)
+                if (no.WhichNodes.Except<NodeKnowledge>(this.WhichNodes).Count() != 0)
                     return false;
 
             return no.AgentsNeeded == this.AgentsNeeded && no.Value == this.Value;
@@ -100,7 +101,7 @@ namespace NabfProject.NoticeBoardModel
             }
         }
 
-        public void UpdateNotice(List<Node> whichNodes, int agentsNeeded, int value)
+        public void UpdateNotice(List<NodeKnowledge> whichNodes, int agentsNeeded, int value)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = agentsNeeded;
@@ -130,12 +131,17 @@ namespace NabfProject.NoticeBoardModel
             else
                 throw new ArgumentException("Object : " + obj.GetType().Name + " of CompareTo is not of type Notice");
         }
+
+        public bool IsEmpty()
+        {
+            return this is EmptyJob;
+        }
     }
     
     public class DisruptJob : Notice
     {
 
-        public DisruptJob(int agentsNeeded, List<Node> whichNodes, int value, Int64 id)
+        public DisruptJob(int agentsNeeded, List<NodeKnowledge> whichNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
@@ -147,7 +153,7 @@ namespace NabfProject.NoticeBoardModel
     public class AttackJob : Notice
     {
 
-        public AttackJob(int agentsNeeded, List<Node> whichNodes, int value, Int64 id)
+        public AttackJob(int agentsNeeded, List<NodeKnowledge> whichNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
@@ -159,7 +165,7 @@ namespace NabfProject.NoticeBoardModel
     public class OccupyJob : Notice
     {
 
-        public OccupyJob(int agentsNeeded, List<Node> whichNodes, int value, Int64 id)
+        public OccupyJob(int agentsNeeded, List<NodeKnowledge> whichNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
@@ -171,7 +177,7 @@ namespace NabfProject.NoticeBoardModel
     public class RepairJob : Notice
     {
 
-        public RepairJob(List<Node> whichNodes, int value, Int64 id)
+        public RepairJob(List<NodeKnowledge> whichNodes, int value, Int64 id)
             : base(id)
         {
             WhichNodes = whichNodes;
@@ -180,9 +186,16 @@ namespace NabfProject.NoticeBoardModel
         }
     }
 
-    public class Node
+    public class EmptyJob : Notice
     {
-        public string Name;
+        public EmptyJob()
+            : base(-404)
+        {
+            WhichNodes = new List<NodeKnowledge>();
+            AgentsNeeded = 0;
+            Value = 0;
+        }
     }
+
 
 }
