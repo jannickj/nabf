@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <Compile Include="Actions\ChangeNoticeAction.cs" />
     <Compile Include="Actions\AddKnowledgeAction.cs" />
     <Compile Include="Actions\ApplyNoticeAction.cs" />
@@ -68,6 +69,10 @@
     <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterUnapplyNotice.cs" />
     <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterAddKnowledge.cs" />
     <Compile Include="Parsers\AgentToAgentMasterParser.cs" />
+=======
+    <Compile Include="Actions\AddStandbyAgentAction.cs" />
+    <Compile Include="AI\AgentLogicFactory.cs" />
+>>>>>>> d8f1ee7e5c3616476ec8028aa7cfdcf231e9788d
     <Compile Include="Parsers\AgentToMarsConverters\ConvertIilActionToMarsAction.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertActionRequestMessageToPerceptCollection.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertPerceptionMessageToIilPerceptCollection.cs" />
@@ -83,7 +88,6 @@
     <Compile Include="Parsers\MarsToAgentConverters\ConvertInspectedEntitiesToPercept.cs" />
     <Compile Include="AgentStandbyManager.cs" />
     <Compile Include="AI\AgentConnection.cs" />
-    <Compile Include="AI\Client\ClientApplication.cs" />
     <Compile Include="AI\XmlPacketTransmitter.cs" />
     <Compile Include="AI\NabfAgent.cs" />
     <Compile Include="AI\AgentMaster.cs" />
@@ -176,9 +180,7 @@
       <Name>NabfAgentLogic</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="AgentMessages\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
