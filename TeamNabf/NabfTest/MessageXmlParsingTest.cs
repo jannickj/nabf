@@ -122,14 +122,14 @@ namespace NabfTest
 
             InternalReceiveMessage message = servCom.DeserializeMessage();
 
-            Dictionary<string, string> simStartData = ((SimStartMessage)message).Response;
+			var simStart = (SimStartMessage)message;
 
             Assert.IsInstanceOf<SimStartMessage>(message);
-            Assert.IsTrue(simStartData["edges"] == edges);
-            Assert.IsTrue(simStartData["id"] == id);
-            Assert.IsTrue(simStartData["steps"] == steps);
-            Assert.IsTrue(simStartData["vertices"] == vertices);
-            Assert.IsTrue(simStartData["role"] == role);
+            Assert.IsTrue(simStart.Edges == Convert.ToInt32(edges));
+            Assert.IsTrue(simStart.Id == Convert.ToInt32(id));
+            Assert.IsTrue(simStart.Steps == Convert.ToInt32(steps));
+            Assert.IsTrue(simStart.Vertices == Convert.ToInt32(vertices));
+            Assert.IsTrue(simStart.Role == role);
 
         }
 
@@ -154,11 +154,14 @@ namespace NabfTest
 
             InternalReceiveMessage message = servCom.DeserializeMessage();
 
-            Dictionary<string, string> simEndData = ((SimEndMessage)message).Response;
+             
 
             Assert.IsInstanceOf<SimEndMessage>(message);
-            Assert.IsTrue(simEndData["ranking"] == ranking);
-            Assert.IsTrue(simEndData["score"] == score);
+
+			var simEnd = (SimEndMessage)message;
+
+            Assert.IsTrue(simEnd.Ranking == Convert.ToInt32(ranking));
+            Assert.IsTrue(simEnd.Score == Convert.ToInt32(score));
         }
 
         [Test]

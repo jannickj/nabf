@@ -4,71 +4,180 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using JSLibrary.Data;
-using System.Linq;
 using NabfProject.AI;
+using NabfProject.Events;
 
 namespace NabfProject.NoticeBoardModel
 {
     public class NoticeBoard
     {
-        private DictionaryList<JobType, Notice> AvailableJobs = new DictionaryList<JobType, Notice>();
-        private Dictionary<int, Notice> IdToNotice = new Dictionary<int, Notice>();
+        private DictionaryList<JobType, Notice> _availableJobs = new DictionaryList<JobType, Notice>();
+        private SortedList<int, Notice[]> _jobs = new SortedList<int, Notice[]>(new InvertedComparer<int>());
+        private Dictionary<Int64, Notice> _idToNotice = new Dictionary<Int64, Notice>();
+        private DictionaryList<NabfAgent, Notice> _agentToNotice = new DictionaryList<NabfAgent, Notice>();
+        private Int64 _freeID = 0;
+        private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
         public enum JobType { Disrupt, Occupy, Attack, Repair }
-
-        public event EventHandler<NoticeIsReadyToBeExecutedEventArgs> NoticeIsReadyToBeExecutedEvent;
-
+        
         public NoticeBoard()
-        {        
+        {
         }
 
-        public bool AddNotice(Notice no)
+        public bool Subscribe(NabfAgent agent)
         {
-            if (AvailableJobsContainsChildType(no))
+            if (_sharingList.Contains(agent))
                 return false;
-            IdToNotice.Add(no.Id, no);
-            AvailableJobs.Add(NoticeToJobType(no), no);
+            _sharingList.Add(agent);
             return true;
         }
-
-        private bool AvailableJobsContainsChildType(Notice no)
+        public bool Unsubscribe(NabfAgent agent)
         {
-            foreach (Notice n in AvailableJobs.Get(NoticeToJobType(no)))
+            return _sharingList.Remove(agent);
+        }
+
+        public SortedList<int, Notice[]> GetJobs()
+        {
+            SortedList<int, Notice[]> newjobs = new SortedList<int, Notice[]>(new InvertedComparer<int>());
+            foreach (KeyValuePair<int, Notice[]> kvp in _jobs)
+                newjobs.Add(kvp.Key, kvp.Value);
+            return newjobs;
+        }
+        public bool AddJob(Notice n)
+        {
+            if (n.HighestAverageDesirabilityForNotice == -1)
+                return false;
+            if (_jobs.ContainsKey(n.HighestAverageDesirabilityForNotice))
             {
-                if (n.ChildTypeIsEqualTo(no))
-                    return true;
+                List<Notice> l = _jobs[n.HighestAverageDesirabilityForNotice].ToList();
+                l.Add(n);
+                _jobs.Remove(n.HighestAverageDesirabilityForNotice);
+                _jobs.Add(n.HighestAverageDesirabilityForNotice, l.ToArray());
             }
-            return false;
+            else
+                _jobs.Add(n.HighestAverageDesirabilityForNotice, new Notice[] { n });
+
+            return true;
+        }
+        public bool RemoveJob(Notice n)
+        {
+            if (_jobs.ContainsKey(n.HighestAverageDesirabilityForNotice))
+            {
+                List<Notice> l = _jobs[n.HighestAverageDesirabilityForNotice].ToList();
+                l.Remove(n);
+                bool b = _jobs.Remove(n.HighestAverageDesirabilityForNotice);
+                if (l.Count == 0)
+                    return b;
+                if (b)
+                {
+                    _jobs.Add(n.HighestAverageDesirabilityForNotice, l.ToArray());
+                    return true;
+                }
+                else
+                    return false;
+            }
+            else
+                return false;
+        }
+
+        private void ResetNoticeBoard()
+        {
+            _availableJobs.Clear();
+            _jobs.Clear();
+            _idToNotice.Clear();
+            _agentToNotice.Clear();
+            _freeID = 0;
+        }
+
+        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<Node> whichNodes, int value, out Notice notice)
+        {
+            Notice n = null;
+            Int64 id = _freeID;
+            _freeID++;
+            switch (type)
+            {
+                case JobType.Attack:
+                    n = new AttackJob(agentsNeeded, whichNodes, value, id);
+                    break;
+                case JobType.Disrupt:
+                    n = new DisruptJob(agentsNeeded, whichNodes, value, id);
+                    break;
+                case JobType.Occupy:
+                    n = new OccupyJob(agentsNeeded, whichNodes, value, id);
+                    break;
+                case JobType.Repair:
+                    n = new RepairJob(whichNodes, value, id);
+                    break;
+            }
+            if (n == null)
+                throw new ArgumentException("Input to CreateNotice, JoType : " + type.GetType().Name + " was not of appropriate type. It's type was: " + type.GetType());
+
+            bool b = AddNotice(n);
+            notice = n;
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NewNoticeEvent(n));
+
+            return b;
+        }
+
+        private bool AddNotice(Notice no)
+        {
+            if (AvailableJobsContainsContentEqual(no))
+                return false;
+            _idToNotice.Add(no.Id, no);
+            _availableJobs.Add(NoticeToJobType(no), no);
+            return true;
         }
 
         public int GetNoticeCount()
         {
-            return 0;// AvailableJobs.TotalCount;
+            return _availableJobs.TotalCount;
         }
 
         public int GetNoticeCount(Notice ofType)
         {
-            return AvailableJobs.Get(NoticeToJobType(ofType)).Count;
+            return _availableJobs.Get(NoticeToJobType(ofType)).Count;
         }
 
         public int GetNoticeCount(JobType ofType)
         {
-            return AvailableJobs.Get(ofType).Count;
+            return _availableJobs.Get(ofType).Count;
         }
 
         public bool RemoveNotice(Notice no)
         {
-            if (!AvailableJobsContainsChildType(no))
+            if (!AvailableJobsContainsContentEqual(no))
                 return false;
 
-            foreach (NabfProject.AI.NabfAgent a in no.AgentsApplied)
+            foreach (NabfProject.AI.NabfAgent a in no.GetAgentsApplied())
                 UnApplyToNotice(no, a);
-            IdToNotice.Remove(no.Id);
-            AvailableJobs.Remove(NoticeToJobType(no), no);
+            _idToNotice.Remove(no.Id);
+            _availableJobs.Remove(NoticeToJobType(no), no);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new RemovedNoticeEvent(no));
+
             return true;
         }
 
-        private JobType NoticeToJobType(Notice no)
+        public bool UpdateNotice(Int64 id, List<Node> whichNodes, int agentsNeeded, int value)
+        {
+            Notice no;
+            bool b = _idToNotice.TryGetValue(id, out no);
+
+            if (b == false)
+                return false;
+
+            no.UpdateNotice(whichNodes, agentsNeeded, value);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NewNoticeEvent(no));
+
+            return true;
+        }
+
+        public JobType NoticeToJobType(Notice no)
         {
             if (no == null)
                 throw new ArgumentNullException("Input to method NoticeToType was null.");
@@ -91,73 +200,74 @@ namespace NabfProject.NoticeBoardModel
             List<Notice> result = new List<Notice>();
             foreach(JobType jb in jobs)
             {
-                result.AddRange(AvailableJobs.Get(jb));
+                result.AddRange(_availableJobs.Get(jb));
             }
             return result;
         }
 
+        public ICollection<Notice> GetNotices()
+        {
+            List<JobType> jobs = new List<JobType>() { JobType.Attack, JobType.Disrupt, JobType.Occupy, JobType.Repair };
+            List<Notice> result = new List<Notice>();
+            foreach (JobType jb in jobs)
+            {
+                result.AddRange(_availableJobs.Get(jb));
+            }
+            return result;
+        }
+
+        public ICollection<Notice> GetNotices(NabfAgent agent)
+        {
+            throw new NotImplementedException();
+        }
+
         public void ApplyToNotice(Notice notice, int desirability, NabfAgent a)
         {
-            foreach (Notice n in AvailableJobs.Get(NoticeToJobType(notice)))
+            foreach (Notice n in _availableJobs.Get(NoticeToJobType(notice)))
             {
-                if (n.ChildTypeIsEqualTo(notice))
+                if (n.ContentIsEqualTo(notice))
                 {
                     n.Apply(desirability, a);
+                    _agentToNotice.Add(a, n);
                     break;
                 }
             }
         }
         public void UnApplyToNotice(Notice notice, NabfAgent a)
         {
-            foreach (Notice n in AvailableJobs.Get(NoticeToJobType(notice)))
+            foreach (Notice n in _availableJobs.Get(NoticeToJobType(notice)))
             {
-                if (n.ChildTypeIsEqualTo(notice))
+                if (n.ContentIsEqualTo(notice))
                 {
-                    n.UnApply(a);
+                    n.UnApply(a, this);
+                    _agentToNotice.Remove(a, n);
                     break;
                 }
             }
         }
 
-        //public Notice PopFromJobsList(SortedList<int, Notice> jobs)
-        //{
-        //    Notice n = jobs.First<KeyValuePair<int, Notice>>().Value;
-        //    jobs.RemoveAt(0);
-        //    return n;
-        //}
-
-        public SortedList<int, Notice[]> PrepareSortedQueue()
+        public void UnApplyFromAll(NabfAgent a)
         {
-            //calculate highest desirability based on the average desirability of the top X agents, where X is AgentsNeeded
-            DictionaryList<int, Notice> dl = new DictionaryList<int, Notice>();
-            foreach (Notice no in AvailableJobs.SelectMany(kvp => kvp.Value))
-                dl.Add(no.HighestDesirabilityForNotice, no);
-
-            SortedList<int, Notice[]> jobs = new SortedList<int, Notice[]>();
-
-            foreach (KeyValuePair<int, Notice[]> kvp in dl)
-                jobs.Add(kvp.Key, kvp.Value);
-
-            return jobs;
+            foreach (Notice n in _agentToNotice[a])
+                UnApplyToNotice(n, a);
         }
 
-        private bool RaiseEventForNotice(Notice n) 
+        public int FindTopDesiresForNotice(Notice n, out SortedList<int, NabfAgent> topDesires, out List<NabfAgent> agents)
         {
-            //handle if not enough have applied (or have been removed first)
-            List<NabfAgent> agents = new List<NabfAgent>();
-            NoticeIsReadyToBeExecutedEventArgs args = new NoticeIsReadyToBeExecutedEventArgs();
-            SortedList<int, NabfAgent> topDesires = new SortedList<int, NabfAgent>(new InvertedComparer<int>());
-            //topDesires.OrderByDescending((kvp) => { return kvp.Key; });
-            for(int i = 0; i < n.AgentsNeeded; i++)
+            int desire = 0, lowestDesire = -(n.GetAgentsApplied().Count + 1);
+
+            agents = new List<NabfAgent>();
+            topDesires = new SortedList<int, NabfAgent>(new InvertedComparer<int>());
+            for (int i = 0; i < n.AgentsNeeded; i++)
             {
-                topDesires.Add(-1, null);
+                topDesires.Add(lowestDesire--, null);
             }
-            int desire = 0, lowestDesire = -1;
-            bool b;
-            
-            foreach(NabfAgent a in n.AgentsApplied)
+            desire = 0;
+            lowestDesire = -1;
+
+            foreach (NabfAgent a in n.GetAgentsApplied())
             {
-                b = n.AgentsToDesirability.TryGetValue(a, out desire);
+                n.TryGetValueAgentToDesirabilityMap(a, out desire);
                 if (desire > lowestDesire)
                 {
                     topDesires.Add(desire, a);
@@ -167,46 +277,102 @@ namespace NabfProject.NoticeBoardModel
                     lowestDesire = topDesires.Keys[n.AgentsNeeded - 1];
                 }
             }
-            if (lowestDesire == -1)
-                return false;
-            args.Agents = agents;
-            args.Notice = n;
-            
-            if(NoticeIsReadyToBeExecutedEvent != null)
-                NoticeIsReadyToBeExecutedEvent(this, args);
 
-            return true;
+            return lowestDesire;
         }
 
         public void FindJobsForAgents()
         {
             SortedList<int, Notice[]> jobs = PrepareSortedQueue();
+            _jobs = new SortedList<int, Notice[]>(new InvertedComparer<int>());
+            for (int i = jobs.Count - 1; i > -1; i--)
+            {
+                _jobs.Add(jobs.Keys[i], jobs.Values[i]);
+            }
 
-            foreach (KeyValuePair<int, Notice[]> kvp in jobs)
-            {                
-                foreach(Notice n in kvp.Value)
-                    RaiseEventForNotice(n);
+            Notice notice;
+            bool QueueNotEmpty = true;
+            while (QueueNotEmpty)
+            {
+                notice = PopFromJobsList();
+                QueueNotEmpty = (notice != null);
+                if (notice != null && notice.AgentsNeeded <= notice.GetTopDesireAgents().Count)
+                    RaiseEventForNotice(notice);
             }
         }
 
-        public bool UpdateNotice(int id, List<Node> whichNodes, int agentsNeeded)
+        private Notice PopFromJobsList()
         {
-            Notice no;
-            bool b = IdToNotice.TryGetValue(id, out no);
+            if (_jobs.Count == 0)
+                return null;
+            Notice n = _jobs.First().Value.First();
+            if (_jobs.First().Value.Count() == 1)
+                _jobs.RemoveAt(0);
+            else
+            {
+                KeyValuePair<int, Notice[]> kv = _jobs.First();
+                _jobs.Remove(kv.Key);
+                _jobs.Add(kv.Key, kv.Value.Skip(1).ToArray());
+            }
+            return n;
+        }
+        
+        private bool AvailableJobsContainsContentEqual(Notice no)
+        {
+            foreach (Notice n in _availableJobs.Get(NoticeToJobType(no)))
+            {
+                if (n.ContentIsEqualTo(no))
+                    return true;
+            }
+            return false;
+        }
 
-            if (b == false)
-                return false;
+        private SortedList<int, Notice[]> PrepareSortedQueue()
+        {
+            DictionaryList<int, Notice> dl = new DictionaryList<int, Notice>();
+            List<NabfAgent> agents;
+            SortedList<int, NabfAgent> topDesires;
+            int lowestDesire;
 
-            no.WhichNodes = whichNodes;
-            no.AgentsNeeded = agentsNeeded;
+            foreach (Notice n in _availableJobs.SelectMany(kvp => kvp.Value))
+            {
+                lowestDesire = FindTopDesiresForNotice(n, out topDesires, out agents);
+                if (lowestDesire != -1)
+                {
+                    n.HighestAverageDesirabilityForNotice = topDesires.Keys.Sum() / topDesires.Keys.Count;
+                    dl.Add(n.HighestAverageDesirabilityForNotice, n);
+                    n.AddRangeToTopDesireAgents(agents);
+                }
+            }
+            SortedList<int, Notice[]> jobs = new SortedList<int, Notice[]>(new InvertedComparer<int>());
 
+            foreach (KeyValuePair<int, Notice[]> kvp in dl)
+                jobs.Add(kvp.Key, kvp.Value);
+
+            return jobs;
+        }
+
+        private bool RaiseEventForNotice(Notice n) 
+        {
+            //NoticeIsReadyToBeExecutedEventArgs args = new NoticeIsReadyToBeExecutedEventArgs();
+            //args.Agents = n.GetTopDesireAgents();
+            //args.Notice = n;
+
+            //if (NoticeIsReadyToBeExecutedEvent != null)
+            //    NoticeIsReadyToBeExecutedEvent(this, args);
+            foreach (NabfAgent a in n.GetTopDesireAgents())
+            {
+                a.Raise(new NoticeIsReadyToBeExecutedEvent(n, n.GetTopDesireAgents()));
+                foreach (Notice no in _agentToNotice[a])
+                {
+                    if (no.ContentIsEqualTo(n))
+                        continue;
+                    UnApplyToNotice(no, a);
+                }
+            }
             return true;
         }
     }
 
-    public class NoticeIsReadyToBeExecutedEventArgs : EventArgs
-    {
-        public Notice Notice { get; set; }
-        public List<NabfAgent> Agents = new List<NabfAgent>();
-    }
+    
 }

@@ -25,21 +25,32 @@ namespace NabfProject.AI.Client
 		private HashSet<Thread> activeThreads = new HashSet<Thread>();
 		private ConcurrentQueue<IilAction> packets = new ConcurrentQueue<IilAction>();
 		private AutoResetEvent packetadded = new AutoResetEvent(false);
+		private ServerCommunication servCom;
 
-		public ClientApplication(XmlPacketTransmitter<IilPerceptCollection, IilAction> transmitter, IAgentLogic logic)
+		public ClientApplication(XmlPacketTransmitter<IilPerceptCollection, IilAction> transmitter, ServerCommunication servCom, IAgentLogic logic)
 		{
+			this.servCom = servCom;
 			this.logic = logic;
 			this.transmitter = transmitter;
 
             logic.EvaluationCompleted += logic_needMessageSent;
-            logic.JobCreated += logic_needMessageSent;
+            //logic.SendAgentServerAction += logic_SendAgentServerAction;
+            logic.SendMarsServerAction += logic_SendMarsServerAction;
             logic.EvaluationStarted += logic_needMessageSent;
-            logic.JobDesired += logic_needMessageSent;
-            logic.ActionRequested += logic_needMessageSent;
 			//logic.PerceptsLoaded += logic_PerceptsLoaded;
 			//logic.JobLoaded += logic_JobLoaded;
 			
 		}
+
+        void logic_SendMarsServerAction(object sender, UnaryValueEvent<IilAction> evt)
+        {
+            
+        }
+
+        void logic_SendAgentServerAction(object sender, UnaryValueEvent<IilAction> evt)
+        {
+            throw new NotImplementedException();
+        }
 
        
 		void logic_needMessageSent(object sender, JSLibrary.Data.GenericEvents.UnaryValueEvent<IilAction> evt)
