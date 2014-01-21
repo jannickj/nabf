@@ -38,10 +38,20 @@ namespace NabfProject.Parsers.KnowledgeConverters
 
         public override IilElement BeginConversionToForeign(NodeKnowledge gobj)
         {
-            return new IilPerceptCollection(new IilPercept("nodeKnowledge"
-                , new IilFunction("nodeVal", new IilNumeral(gobj.Value))
-                , new IilFunction("nodeName", new IilIdentifier(gobj.Name))
-                ));
+            if (gobj.Value == 0)
+            {
+                return new IilPerceptCollection(new IilPercept("visibleVertex"
+                    , new IilFunction("name", new IilIdentifier(gobj.Name))
+                    , new IilFunction("team", new IilIdentifier(""))
+                    ));
+            }
+            else
+            {
+                return new IilPerceptCollection(new IilPercept("probedVertex"
+                    , new IilFunction("name", new IilIdentifier(gobj.Name))
+                    , new IilFunction("value", new IilNumeral(gobj.Value))
+                    ));
+            }
         }
     }
 }

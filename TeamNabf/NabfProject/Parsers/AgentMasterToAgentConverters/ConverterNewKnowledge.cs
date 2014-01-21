@@ -22,7 +22,7 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
 
             IilPerceptCollection ipc = new IilPerceptCollection
                 (
-                new IilPercept("newKnowledge", new IilIdentifier(gobj.NewKnowledge.ToString())),
+                new IilPercept("newKnowledge", new IilIdentifier(gobj.NewKnowledge.GetTypeToString())),
                 knowledgePercept
                 );            
 

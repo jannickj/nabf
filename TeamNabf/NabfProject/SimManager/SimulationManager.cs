@@ -164,7 +164,7 @@ namespace NabfProject.SimManager
             else
                 nb.ApplyToNotice(notice, desirability, a);
 
-            int numberOfAgents = nb.GetSubscribedAgents();            
+            int numberOfAgents = nb.GetSubscribedAgentsCount();            
 
             if (numberOfAgents <= _numberOfAgentsFinishedApplying)
                 FindJobs(simID);

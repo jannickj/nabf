@@ -52,7 +52,6 @@
     <Compile Include="Events\ReceivedJobEvent.cs" />
     <Compile Include="EmptyWorld.cs" />
     <Compile Include="EmptyWorldBuilder.cs" />
-    <Compile Include="Events\ReceivedAssignmentEvent.cs" />
     <Compile Include="Events\NoticeUpdatedEvent.cs" />
     <Compile Include="Events\NoticeRemovedEvent.cs" />
     <Compile Include="Events\SimulationSubscribedEvent.cs" />

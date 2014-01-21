@@ -293,6 +293,8 @@ namespace NabfProject.NoticeBoardModel
                 _jobs.Add(jobs.Keys[i], jobs.Values[i]);
             }
 
+            List<NabfAgent> agentsWhoReceivedJob = new List<NabfAgent>();
+
             Notice notice;
             bool QueueNotEmpty = true;
             while (QueueNotEmpty)
@@ -300,7 +302,17 @@ namespace NabfProject.NoticeBoardModel
                 notice = PopFromJobsList();
                 QueueNotEmpty = (notice != null);
                 if (notice != null && notice.AgentsNeeded <= notice.GetTopDesireAgents().Count)
+                {
+                    agentsWhoReceivedJob.AddRange(notice.GetTopDesireAgents());
                     RaiseEventForNotice(notice);
+                }
+            }
+            Notice n;
+            foreach (NabfAgent agent in _sharingList.Except(agentsWhoReceivedJob))
+            {
+                n = new EmptyJob();
+                n.AddToTopDesireAgents(agent);
+                RaiseEventForNotice(n);
             }
         }
 
@@ -376,7 +388,7 @@ namespace NabfProject.NoticeBoardModel
             return true;
         }
 
-        public int GetSubscribedAgents()
+        public int GetSubscribedAgentsCount()
         {
             return _sharingList.Count;
         }
