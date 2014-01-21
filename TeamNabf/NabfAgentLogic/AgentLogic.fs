@@ -6,7 +6,7 @@
         open JSLibrary.IiLang.DataContainers
         open AgentTypes
         open DecisionTree
-        open Explorer
+        open ExplorerLogic
         
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
@@ -136,9 +136,17 @@
         let buildJob (job:Job) = 
             new IilAction "some action"
 
-        let decideJob (state:State) (job:Job) =
-            let d:Desirability = 1
-            (d,true)
+        let decideJob (state:State) (job:Job) : Desirability * bool =
+            if state.Goals.IsEmpty 
+            then
+                match job with
+                | ((_,_,JobType.RepairJob),_) -> if state.Self.Role.Value = Repairer then (10,true) else (0,false)
+                | ((_,_,JobType.AttackJob),_) -> if state.Self.Role.Value = Saboteur then (10,true) else (0,false)
+                | ((_,_,JobType.DisruptJob),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
+                | ((_,_,JobType.OccupyJob),_) -> (8,true)
+                | _                           -> (0,false)
+            else
+                (0,false)
 
         let buildEvaluationStarted =
             new IilAction "evaluation_started"

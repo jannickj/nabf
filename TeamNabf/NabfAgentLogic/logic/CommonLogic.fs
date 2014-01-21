@@ -4,11 +4,11 @@ module CommonLogic =
     open AgentTypes
     open Graphing.Graph
     open PathFinding
-    open Saboteur
-    open Repairer
-    open Sentinel
-    open Explorer
-    open Inspector
+    open SaboteurLogic
+    open RepairerLogic
+    open SentinelLogic
+    open ExplorerLogic
+    open InspectorLogic
     open AgentLogicLib
 
     let reactToEnemyAgent (s:State) =
