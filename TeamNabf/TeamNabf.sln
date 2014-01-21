@@ -84,7 +84,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = NabfProject\NabfProject.csproj
+		StartupItem = AgentLogicTest\AgentLogicTest.fsproj
 		Policies = $0
 		$0.DotNetNamingPolicy = $1
 		$1.DirectoryNamespaceAssociation = None

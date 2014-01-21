@@ -41,7 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
     <Compile Include="Actions\ChangeNoticeAction.cs" />
     <Compile Include="Actions\AddKnowledgeAction.cs" />
     <Compile Include="Actions\ApplyNoticeAction.cs" />
@@ -69,10 +68,7 @@
     <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterUnapplyNotice.cs" />
     <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterAddKnowledge.cs" />
     <Compile Include="Parsers\AgentToAgentMasterParser.cs" />
-=======
-    <Compile Include="Actions\AddStandbyAgentAction.cs" />
     <Compile Include="AI\AgentLogicFactory.cs" />
->>>>>>> d8f1ee7e5c3616476ec8028aa7cfdcf231e9788d
     <Compile Include="Parsers\AgentToMarsConverters\ConvertIilActionToMarsAction.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertActionRequestMessageToPerceptCollection.cs" />
     <Compile Include="Parsers\MarsToAgentConverters\ConvertPerceptionMessageToIilPerceptCollection.cs" />
