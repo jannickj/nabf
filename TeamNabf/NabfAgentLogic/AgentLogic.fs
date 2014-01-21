@@ -46,9 +46,11 @@
             ;   LastActionResult = Successful
             ;   Money = 0
             ;   Score = 0
-            ;   ZoneScore = 0
+            ;   ThisZoneScore = 0
+            ;   TeamZoneScore = 0
             ;   Achievements = []
             ;   NewZone = None
+            ;   Goals = []
             } : State
 
         (* let updateState : State -> Percept list -> State *)
@@ -83,26 +85,47 @@
             | Some Explorer -> generateOccupyJobExplorer s knownJobs
             | _ -> None
 
-        let rec findRepairJob (s:State) (knownJobs:Job list) =
+        let rec tryFindRepairJob (s:State) (knownJobs:Job list) =
             match knownJobs with
-            | (_ , rdata) :: tail -> if rdata = RepairJob(s.Self.Node,s.Self.Name) then Some knownJobs.Head else findRepairJob s tail
+            | (_ , rdata) :: tail -> if rdata = RepairJob(s.Self.Node,s.Self.Name) then Some knownJobs.Head else tryFindRepairJob s tail
             | [] -> None
 
         let generateRepairJob (s:State) (knownJobs:Job list) =
             if s.Self.Health.Value = 0 
             then
-                let j = findRepairJob s knownJobs
+                let j = tryFindRepairJob s knownJobs
                 match j with
-                | None -> Some ((-1,5,RepairJob),(s.Self.Node,s.Self.Name))
-                | Some ((id,_,_),_) -> Some ((id,5,RepairJob),(s.Self.Node,s.Self.Name))
+                | None -> Some ((-1,5,JobType.RepairJob),RepairJob(s.Self.Node,s.Self.Name))
+                | Some ((id,d,_),_) -> Some ((id,d,JobType.RepairJob),RepairJob(s.Self.Node,s.Self.Name))
             else
                 None
 
         let generateDisruptJob (s:State) (knownJobs:Job list) = None
 
-        let generateAttackJob (s:State) (knownJobs:Job list) = None        
+        let rec tryFindOccupyGoal (l:Goal list) =
+            match l with
+            | AttackGoal(v) :: tail -> Some(AttackGoal(v))
+            | head :: tail -> tryFindOccupyGoal tail
+            | [] -> None
 
-        let generateJob (jt:JobType) (s:State) (knownJobs:Job list) =
+        let isOccupyingPosition (s:State) =
+            let g = tryFindOccupyGoal s.Goals
+            match g with
+            | Some(AttackGoal(v)) -> if s.Self.Node = v then true else false 
+            | _ -> false
+
+        let generateAttackJob (s:State) (knownJobs:Job list) = 
+            let attackJobFound = List.exists (fun (_, jobdata) -> 
+                    match jobdata with 
+                    | AttackJob verts -> List.exists ((=) s.Self.Node) verts
+                    | _ -> false ) knownJobs
+            if (isOccupyingPosition s) && not attackJobFound 
+            then 
+                Some ((-1,-1,JobType.AttackJob),AttackJob [s.Self.Node])
+            else 
+                None
+
+        let generateJob (jt:JobType) (s:State) (knownJobs:Job list) : option<Job> =
             match jt with
             | JobType.OccupyJob     -> generateOccupyJob s knownJobs
             | JobType.RepairJob     -> generateRepairJob s knownJobs
