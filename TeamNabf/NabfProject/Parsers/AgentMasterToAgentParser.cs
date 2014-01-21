@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using XmasEngineModel.Management;
+using NabfProject.Parsers.KnowledgeConverters;
 
 namespace NabfProject.Parsers
 {
@@ -15,11 +16,25 @@ namespace NabfProject.Parsers
         public AgentMasterToAgentParser()
         {
 
-            this.AddConverter(new ConverterReceivedAssignment());
-            this.AddConverter(new ConverterNewKnowledge());
-            this.AddConverter(new ConverterNewNotice());
-            this.AddConverter(new ConverterNoticeRemoved());
-            this.AddConverter(new ConverterNoticeUpdated());
+            this.AddConverter(new ConverterReceivedJob()
+            {
+                Parsers = new AgentMasterDataParsers()
+            });
+            this.AddConverter(new ConverterNewKnowledge() { 
+                Parsers = new AgentMasterDataParsers()
+            });
+            this.AddConverter(new ConverterNewNotice()
+            {
+                Parsers = new AgentMasterDataParsers()
+            });
+            this.AddConverter(new ConverterNoticeRemoved()
+            {
+                Parsers = new AgentMasterDataParsers()
+            });
+            this.AddConverter(new ConverterNoticeUpdated()
+            {
+                Parsers = new AgentMasterDataParsers()
+            });
 
         }
 

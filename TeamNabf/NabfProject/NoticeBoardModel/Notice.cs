@@ -131,6 +131,11 @@ namespace NabfProject.NoticeBoardModel
             else
                 throw new ArgumentException("Object : " + obj.GetType().Name + " of CompareTo is not of type Notice");
         }
+
+        public bool IsEmpty()
+        {
+            return this is EmptyJob;
+        }
     }
     
     public class DisruptJob : Notice
@@ -178,6 +183,17 @@ namespace NabfProject.NoticeBoardModel
             WhichNodes = whichNodes;
             AgentsNeeded = 1;
             Value = value;
+        }
+    }
+
+    public class EmptyJob : Notice
+    {
+        public EmptyJob()
+            : base(-404)
+        {
+            WhichNodes = new List<NodeKnowledge>();
+            AgentsNeeded = 0;
+            Value = 0;
         }
     }
 

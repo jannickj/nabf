@@ -51,5 +51,10 @@ namespace NabfProject.KnowledgeManagerModel
             else
                 throw new ArgumentException("Object : " + other.GetType().Name + " of CompareTo is not of type NodeKnowledge");
         }
+
+        public string ToId()
+        {
+            return "nodeKnowledge";
+        }
     }
 }

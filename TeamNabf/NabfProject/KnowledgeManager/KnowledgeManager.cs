@@ -59,7 +59,14 @@ namespace NabfProject.KnowledgeManagerModel
             }
             //SendKnowledgeToSubscribedAgents();            
         }
-
+        
+        public void SendOutAllKnowledgeToAgent(NabfAgent agent)
+        {
+            foreach (Knowledge k in _knowledgeBase)
+            {
+                agent.Raise(new NewKnowledgeEvent(k));
+            }
+        }
 
 
         //private void SendKnowledgeToSubscribedAgents()
@@ -72,5 +79,7 @@ namespace NabfProject.KnowledgeManagerModel
 
         //    }
         //}
+
+        
     }
 }

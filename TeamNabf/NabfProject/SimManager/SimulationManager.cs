@@ -14,6 +14,10 @@ namespace NabfProject.SimManager
         private Dictionary<int, SimulationData> _simDataStorage = new Dictionary<int, SimulationData>();
         private SimulationFactory _factory;
         private int _currentID;
+        private int _currentRoundNumber;
+        private bool _applicationClosed = false;
+        private bool _jobsFoundForThisRound = false;
+        private int _numberOfAgentsFinishedApplying = 0;
 
         public SimulationManager(SimulationFactory sf)
         {
@@ -41,7 +45,7 @@ namespace NabfProject.SimManager
 
             b = _simDataStorage.TryGetValue(simID, out sd);
             if (b == false)
-                throw new ArgumentException("id " + _currentID + " not found.");
+                throw new ArgumentException("id " + simID + " not found.");
                 //return false;
 
             km = sd.KnowledgeManager;
@@ -81,9 +85,18 @@ namespace NabfProject.SimManager
             }
 
             TryGetSimData(simID, out km, out nb);
-            km.Subscribe(agent);
-            nb.Subscribe(agent);
-            agent.Raise(new SimulationSubscribedEvent(simID));
+            if (nb.AgentIsSubscribed(agent))
+            {
+                agent.Raise(new SimulationSubscribedEvent(simID));
+                km.SendOutAllKnowledgeToAgent(agent);
+                nb.SendOutAllNoticesToAgent(agent);
+            }
+            else
+            {
+                km.Subscribe(agent);
+                nb.Subscribe(agent);
+                agent.Raise(new SimulationSubscribedEvent(simID));
+            }
         }
 
         public void SendKnowledge(int id, List<Knowledge> sentKnowledge, NabfAgent sender)
@@ -137,16 +150,24 @@ namespace NabfProject.SimManager
 
         public void ApplyToNotice(int simID, Notice notice, int desirability, NabfAgent a)
         {
-            if (_currentID != simID)
+            if (_currentID != simID || _applicationClosed)
                 return;
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
 
-            nb.ApplyToNotice(notice, desirability, a);
+            if (notice.IsEmpty())
+                _numberOfAgentsFinishedApplying++;
+            else
+                nb.ApplyToNotice(notice, desirability, a);
+
+            int numberOfAgents = nb.GetSubscribedAgents();            
+
+            if (numberOfAgents <= _numberOfAgentsFinishedApplying)
+                FindJobs(simID);
         }
         public void UnApplyToNotice(int simID, Notice notice, NabfAgent a)
         {
-            if (_currentID != simID)
+            if (_currentID != simID || _applicationClosed)
                 return;
 
             NoticeBoard nb;
@@ -155,7 +176,7 @@ namespace NabfProject.SimManager
             nb.UnApplyToNotice(notice, a);
         }
 
-        public void FindJobsForAgents(int simID)
+        private void FindJobsForAgents(int simID)
         {
             if (_currentID != simID)
                 return;
@@ -163,6 +184,28 @@ namespace NabfProject.SimManager
             TryGetNoticeBoard(simID, out nb);
 
             nb.FindJobsForAgents();
+        }
+
+        public bool TryGoNextRound(int simID, int roundNumber)
+        {
+            if (_currentID != simID || roundNumber <= _currentRoundNumber)
+                return false;
+
+            _currentRoundNumber++;
+            _applicationClosed = false;
+            _jobsFoundForThisRound = false;
+            _numberOfAgentsFinishedApplying = 0;
+            return true;
+        }
+
+        public void FindJobs(int simID)
+        {
+            if (_jobsFoundForThisRound == false) 
+            {
+                _jobsFoundForThisRound = true;
+                _applicationClosed = true;
+                FindJobsForAgents(simID);
+            }
         }
     }
 

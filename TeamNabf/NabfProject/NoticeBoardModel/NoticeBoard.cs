@@ -19,7 +19,7 @@ namespace NabfProject.NoticeBoardModel
         private Int64 _freeID = 0;
         private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
-        public enum JobType { Disrupt, Occupy, Attack, Repair }
+        public enum JobType { Disrupt, Occupy, Attack, Repair, EmptyJob }
         
         public NoticeBoard()
         {
@@ -192,6 +192,8 @@ namespace NabfProject.NoticeBoardModel
                 return JobType.Occupy;
             else if (no is RepairJob)
                 return JobType.Repair;
+            else if (no is EmptyJob)
+                return JobType.EmptyJob;
             else
                 throw new ArgumentException("Input to NoticeToJobtype, object : " + no.GetType().Name + " was not of appropriate type. It's type was: " + no.GetType());
         }
@@ -372,6 +374,25 @@ namespace NabfProject.NoticeBoardModel
                 }
             }
             return true;
+        }
+
+        public int GetSubscribedAgents()
+        {
+            return _sharingList.Count;
+        }
+
+        public bool AgentIsSubscribed(NabfAgent agent)
+        {
+            return _sharingList.Contains(agent);
+        }
+
+        public void SendOutAllNoticesToAgent(NabfAgent agent)
+        {
+            foreach (KeyValuePair<JobType, Notice[]> kvp in _availableJobs)
+            {
+                foreach (Notice n in kvp.Value)
+                    agent.Raise(new NewNoticeEvent(n));                    
+            }
         }
     }
 
