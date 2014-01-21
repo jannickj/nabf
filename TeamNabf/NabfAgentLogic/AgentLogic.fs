@@ -13,7 +13,10 @@
         let handlePercept state percept =
             match percept with
                 | EnemySeen enemy   
-                    -> { state with EnemyData = enemy :: state.EnemyData }
+                    -> { state with 
+                           EnemyData = enemy :: state.EnemyData
+                           NearbyAgents = enemy :: state.NearbyAgents 
+                       }
                 | VertexSeen (id, team) ->
                     let ownedVertices = 
                         match team with
@@ -80,9 +83,26 @@
             ;   Achievements = []
             } : State
 
+        let updateTraversedEdgeCost (oldState : State) (newState : State) =
+            match (oldState.Self.Node, newState.LastAction, newState.LastActionResult) with
+            | (fromVertex, Goto toVertex, Successful) -> 
+                let edge = (Some (oldState.Self.Energy.Value - newState.Self.Energy.Value), fromVertex, toVertex)
+                { newState with 
+                    World = addEdgeCost newState.World edge
+                    NewEdges = edge :: newState.NewEdges 
+                }
+            | _ -> newState
+           
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            List.fold handlePercept state percepts
+            let state = { state with 
+                            NewEdges = []
+                            NewVertices = []
+                            NearbyAgents = [] 
+                        }
+
+            let newState = List.fold handlePercept state percepts
+            updateTraversedEdgeCost state newState
 
         let sharedPercepts (percepts:Percept list) =
             []:(Percept list)
