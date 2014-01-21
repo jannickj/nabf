@@ -12,6 +12,8 @@ namespace NabfAgentLogic.IiLang
             else 
                 Normal
 
+
+
         let parseIilRole iilRole = 
             match iilRole with
             | Identifier "Saboteur"  -> Some Saboteur
@@ -21,6 +23,14 @@ namespace NabfAgentLogic.IiLang
             | Identifier "Sentinel"  -> Some Sentinel
             | Identifier ""          -> None
             | _ -> raise <| InvalidIilException ("Role", [iilRole])
+
+        let parseIilAgentRole iilAgent =
+            match iilAgent with
+            | [ Function ("role", [role])
+              ; Function ("agentId", [Identifier id])
+              ; Function ("sureness", [Numeral sureness])
+              ] -> AgentRolePercept (id, (parseIilRole role).Value, int <| sureness)
+            | _ -> raise <| InvalidIilException ("AgentRole", iilAgent)
         
         let parseIilAgent iilData =
             match iilData with
@@ -268,14 +278,18 @@ namespace NabfAgentLogic.IiLang
                 | "inspectedEntities" -> List.map (parseIilAgent >> Percept.EnemySeen) data
                 | "probedVertices"    -> List.map (parseIilProbedVertex >> Percept.VertexProbed) data
                 | "self"              -> parseIilSelf data
-                | "simulation"              -> [SimulationStep <| parseIilStep data]
+                | "simulation"        -> [SimulationStep <| parseIilStep data]
                 | "surveyedEdges"     -> List.map (parseIilSurveyedEdge >> Percept.EdgeSeen) data
                 | "team"              -> [Team <| parseIilTeam data]
                 | "visibleEdges"      -> List.map (parseIilVisibleEdge >> Percept.EdgeSeen) data
                 | "visibleEntities"   -> List.map (parseIilVisibleEntity >> EnemySeen) data
                 | "visibleVertices"   -> List.map (parseIilVisibleVertex >> VertexSeen) data
+                | "roleKnowledge"     -> [parseIilAgentRole data]
                 | _ -> raise <| InvalidIilException ("iilPercept", data)
             | _ -> failwith "no"    
+        
+        
+                
 
         let parseIilServerMessage iilServerMessage =
             match iilServerMessage with
@@ -288,6 +302,9 @@ namespace NabfAgentLogic.IiLang
                     MarsServerMessage <| (SimulationStart <| parseIilSimStart data)
                 | "simEnd" ->
                     MarsServerMessage <| (SimulationEnd <| parseIilSimEnd data)
+                | "newKnowledge" ->
+                    let percepts = List.concat <| List.map parseIilPercept tail
+                    AgentServerMessage <| SharedPercepts percepts
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"
         
