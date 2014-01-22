@@ -195,11 +195,10 @@ namespace NabfProject.NoticeBoardModel
             return true;
         }
 
-        public JobType NoticeToJobType(Notice no)
+        public static JobType NoticeToJobType(Notice no)
         {
             if (no == null)
                 throw new ArgumentNullException("Input to method NoticeToType was null.");
-
 
             if (no is DisruptJob)
                 return JobType.Disrupt;
@@ -394,7 +393,7 @@ namespace NabfProject.NoticeBoardModel
             //    NoticeIsReadyToBeExecutedEvent(this, args);
             foreach (NabfAgent a in n.GetTopDesireAgents())
             {
-                a.Raise(new ReceivedJobEvent(n));
+                a.Raise(new ReceivedJobEvent(n, a));
                 foreach (Notice no in _agentToNotice[a])
                 {
                     if (no.ContentIsEqualTo(n))

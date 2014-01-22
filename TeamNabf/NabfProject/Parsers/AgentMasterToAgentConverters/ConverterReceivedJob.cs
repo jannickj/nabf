@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using JSLibrary.IiLang.DataContainers;
+using JSLibrary.IiLang.Parameters;
 
 namespace NabfProject.Parsers.AgentMasterToAgentConverters
 {
@@ -21,6 +22,7 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
             ipc = new IilPerceptCollection
             (
                 new IilPercept("receivedJob"),
+                new IilPercept("whichNodeIndexToGoTo", new IilNumeral(gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver))),
                 percept
             );
 

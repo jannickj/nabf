@@ -149,7 +149,7 @@ namespace NabfProject.SimManager
             NoticeBoard nb;
             TryGetNoticeBoard(_currentID, out nb);
 
-            return nb.NoticeToJobType(no);
+            return NoticeBoard.NoticeToJobType(no);
         }
 
         public void ApplyToNotice(int simID, Int64 id, int desirability, NabfAgent a)
