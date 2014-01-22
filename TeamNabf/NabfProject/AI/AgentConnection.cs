@@ -61,10 +61,11 @@ namespace NabfProject.AI
 
             var action = transmitter.DeserializeMessage();
             var agent = (NabfAgent)this.Agent;
-            var xaction = agentToMasterParser.ConvertToKnown(action);
+            var xaction = agentToMasterParser.ConvertToForeign(action);
             if (xaction is SubscribeSimulationAction)
                 lock (simLock)
                     this.simulationSubscribed = false;
+            agent.QueueAction(xaction);
         }
 
         private void updateSend()

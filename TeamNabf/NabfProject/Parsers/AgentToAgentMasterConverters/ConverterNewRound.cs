@@ -9,27 +9,25 @@ using JSLibrary.IiLang.Parameters;
 
 namespace NabfProject.Parsers.AgentToAgentMasterConverters
 {
-    public class ConverterApplyNotice : JSConverterToForeign<IilAction, ApplyNoticeAction>
+    public class ConverterNewRound : JSConverterToForeign<IilAction, NewRoundAction>
     {
         public override object KnownID
         {
             get
             {
-                return "applyNoticeAction";
+                return "newRoundAction";
             }
         }
 
-        public override ApplyNoticeAction BeginConversionToForeign(IilAction gobj)
+        public override NewRoundAction BeginConversionToForeign(IilAction gobj)
         {
             int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
 
-            int noticeId = (int)((IilNumeral)gobj.Parameters[1]).Value;
+            int roundNumber = (int)((IilNumeral)gobj.Parameters[1]).Value;
 
-            int desire = (int)((IilNumeral)gobj.Parameters[2]).Value;            
+            NewRoundAction nra = new NewRoundAction(simId, roundNumber);
 
-            ApplyNoticeAction ana = new ApplyNoticeAction(simId, noticeId, desire);
-
-            return ana;
+            return nra;
         }
     }
 }

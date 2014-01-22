@@ -124,14 +124,14 @@ namespace NabfProject.SimManager
             return ret;
         }
 
-        public bool RemoveNotice(int simID, Notice no)
+        public bool RemoveNotice(int simID, Int64 id)
         {
             if (_currentID != simID)
                 return false;
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
 
-            return nb.RemoveNotice(no);
+            return nb.RemoveNotice(id);
         }
 
         public bool UpdateNotice(int simID, Int64 noticeID, int agentsNeeded, List<NodeKnowledge> whichNodes, int value)
@@ -152,12 +152,16 @@ namespace NabfProject.SimManager
             return nb.NoticeToJobType(no);
         }
 
-        public void ApplyToNotice(int simID, Notice notice, int desirability, NabfAgent a)
+        public void ApplyToNotice(int simID, Int64 id, int desirability, NabfAgent a)
         {
             if (_currentID != simID || _applicationClosed)
                 return;
             NoticeBoard nb;
+            Notice notice;
             TryGetNoticeBoard(simID, out nb);
+            bool b = nb.TryGetNoticeFromId(id, out notice);
+            if (b == false)
+                return;
 
             if (notice.IsEmpty())
                 _numberOfAgentsFinishedApplying++;
@@ -169,13 +173,17 @@ namespace NabfProject.SimManager
             if (numberOfAgents <= _numberOfAgentsFinishedApplying)
                 FindJobs(simID);
         }
-        public void UnApplyToNotice(int simID, Notice notice, NabfAgent a)
+        public void UnApplyToNotice(int simID, Int64 id, NabfAgent a)
         {
             if (_currentID != simID || _applicationClosed)
                 return;
 
             NoticeBoard nb;
+            Notice notice;
             TryGetNoticeBoard(simID, out nb);
+            bool b = nb.TryGetNoticeFromId(id, out notice);
+            if (b == false)
+                return;
 
             nb.UnApplyToNotice(notice, a);
         }

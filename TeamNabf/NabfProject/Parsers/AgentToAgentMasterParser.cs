@@ -16,12 +16,16 @@ namespace NabfProject.Parsers
         {
             this.IdOfKnown = new JSConversionIDFetcherSimple<IilAction>(GetIdFromIilAction);
 
-            this.AddConverter(new ConverterAddKnowledge());
+            AgentMasterDataParsers amdp = new AgentMasterDataParsers();
+
+            this.AddConverter(new ConverterAddKnowledge() { MasterDataParser = amdp });
             this.AddConverter(new ConverterApplyNotice());
-            this.AddConverter(new ConverterChangeNotice());
-            this.AddConverter(new ConverterCreateNotice());
+            this.AddConverter(new ConverterChangeNotice() { MasterDataParser = amdp });
+            this.AddConverter(new ConverterCreateNotice() { MasterDataParser = amdp });
             this.AddConverter(new ConverterDeleteNotice());
-            this.AddConverter(new ConverterUnapplyNotice());
+            //this.AddConverter(new ConverterUnapplyNotice());
+            this.AddConverter(new ConverterSubscribeSimulation());
+            this.AddConverter(new ConverterNewRound());
         }
 
         private object GetIdFromIilAction(IilAction a)

@@ -73,6 +73,8 @@
     <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterDeleteNotice.cs" />
     <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterUnapplyNotice.cs" />
     <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterAddKnowledge.cs" />
+    <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterNewRound.cs" />
+    <Compile Include="Parsers\AgentToAgentMasterConverters\ConverterSubscribeSimulation.cs" />
     <Compile Include="Parsers\AgentToAgentMasterParser.cs" />
     <Compile Include="AI\AgentLogicFactory.cs" />
     <Compile Include="Parsers\AgentToMarsConverters\ConvertIilActionToMarsAction.cs" />

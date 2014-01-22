@@ -13,19 +13,19 @@ namespace NabfProject.Actions
     public class UnapplyNoticeAction : EntityXmasAction<NabfAgent>
     {
         private int SimId;
-        private Notice Notice;
+        private Int64 Noticeid;
 
-        public UnapplyNoticeAction(int simID, Notice notice)
+        public UnapplyNoticeAction(int simID, Int64 id)
         {
             SimId = simID;
-            Notice = notice;
+            Noticeid = id;
         }
     
         protected override void Execute()
         {
             SimulationManager simMan = ((NabfModel)this.Engine).SimulationManager;
 
-            simMan.UnApplyToNotice(SimId, Notice, this.Source);
+            simMan.UnApplyToNotice(SimId, Noticeid, this.Source);
         }
     }
 }

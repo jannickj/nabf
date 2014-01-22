@@ -13,19 +13,19 @@ namespace NabfProject.Actions
     public class DeleteNoticeAction : EntityXmasAction<NabfAgent>
     {
         private int SimId;
-        private Notice Notice;
+        private Int64 NoticeId;
 
-        public DeleteNoticeAction(int simID, Notice notice)
+        public DeleteNoticeAction(int simID, Int64 noticeId)
         {
             SimId = simID;
-            Notice = notice;
+            NoticeId = noticeId;
         }
 
         protected override void Execute()
         {
             SimulationManager simMan = ((NabfModel)this.Engine).SimulationManager;
 
-            simMan.RemoveNotice(SimId, Notice);
+            simMan.RemoveNotice(SimId, NoticeId);
         }
     }
 }

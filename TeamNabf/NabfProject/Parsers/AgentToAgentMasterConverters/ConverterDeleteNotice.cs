@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using JSLibrary.IiLang.Parameters;
 
 namespace NabfProject.Parsers.AgentToAgentMasterConverters
 {
@@ -14,13 +15,19 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
         {
             get
             {
-                return base.KnownID;
+                return "deleteNoticeAction";
             }
         }
 
         public override DeleteNoticeAction BeginConversionToForeign(IilAction gobj)
         {
-            throw new NotImplementedException();
+            int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
+
+            Int64 noticeId = (Int64)((IilNumeral)gobj.Parameters[1]).Value;
+
+            DeleteNoticeAction dna = new DeleteNoticeAction(simId, noticeId);
+
+            return dna;
         }
     }
 }

@@ -19,10 +19,19 @@ namespace NabfProject.NoticeBoardModel
         private Int64 _freeID = 0;
         private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
-        public enum JobType { Disrupt, Occupy, Attack, Repair, EmptyJob }
+        public enum JobType { Empty = 0, Occupy = 1, Repair = 2, Disrupt = 3, Attack = 4 }
         
         public NoticeBoard()
         {
+        }
+
+        public bool TryGetNoticeFromId(Int64 noticeId, out Notice notice)
+        {
+            bool b = _idToNotice.TryGetValue(noticeId, out notice);
+            if (b == false)
+                return false;
+
+            return true;
         }
 
         public bool Subscribe(NabfAgent agent)
@@ -59,14 +68,6 @@ namespace NabfProject.NoticeBoardModel
                 _jobs.Add(n.HighestAverageDesirabilityForNotice, new Notice[] { n });
 
             return true;
-        }
-        public bool RemoveJob(Int64 id)
-        {
-            Notice notice;
-            bool b = _idToNotice.TryGetValue(id, out notice);
-            if (b == false)
-                return false;
-            return RemoveJob(notice);
         }
         public bool RemoveJob(Notice n)
         {
@@ -154,6 +155,14 @@ namespace NabfProject.NoticeBoardModel
             return _availableJobs.Get(ofType).Count;
         }
 
+        public bool RemoveNotice(Int64 id)
+        {
+            Notice notice;
+            bool b = _idToNotice.TryGetValue(id, out notice);
+            if (b == false)
+                return false;
+            return RemoveNotice(notice);
+        }
         public bool RemoveNotice(Notice no)
         {
             if (!AvailableJobsContainsContentEqual(no))
@@ -201,7 +210,7 @@ namespace NabfProject.NoticeBoardModel
             else if (no is RepairJob)
                 return JobType.Repair;
             else if (no is EmptyJob)
-                return JobType.EmptyJob;
+                return JobType.Empty;
             else
                 throw new ArgumentException("Input to NoticeToJobtype, object : " + no.GetType().Name + " was not of appropriate type. It's type was: " + no.GetType());
         }
