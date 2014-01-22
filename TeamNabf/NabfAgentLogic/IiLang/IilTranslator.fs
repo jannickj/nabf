@@ -288,8 +288,27 @@ namespace NabfAgentLogic.IiLang
                 | _ -> raise <| InvalidIilException ("iilPercept", data)
             | _ -> failwith "no"    
         
-        
-                
+        let a = [2]@[5;4]
+  
+        let parseIilJob iilPercept =
+                match iilPercept with
+                | [Percept ("notice", data)] ->
+                    match data with
+                    | Function ("type", [Numeral jobType])
+                      ::Function ("agentsNeeded",[Numeral aNeeded]) 
+                      ::Function ("id", [Numeral id])
+                      ::Function ("value", [Numeral value])
+                      ::Function ("whichNodes", nodelist)::optional ->
+                        let jt = enum<JobType>(int(jobType))
+                        let nodes = List.map (fun (Identifier vertex) -> vertex) nodelist
+                        let jobdata = 
+                            match jt with
+                            | JobType.AttackJob -> AttackJob(nodes)
+                            | JobType.DisruptJob -> DisruptJob(nodes.Head)
+                            | JobType.OccupyJob -> OccupyJob(nodes)
+                            | JobType.RepairJob -> Repair(
+                        ()
+                            
 
         let parseIilServerMessage iilServerMessage =
             match iilServerMessage with
@@ -305,6 +324,8 @@ namespace NabfAgentLogic.IiLang
                 | "newKnowledge" ->
                     let percepts = List.concat <| List.map parseIilPercept tail
                     AgentServerMessage <| SharedPercepts percepts
+                | "newNotice" ->
+                    AgentServerMessage <| 
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"
         

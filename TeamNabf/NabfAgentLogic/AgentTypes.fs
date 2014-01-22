@@ -143,6 +143,7 @@ module AgentTypes =
         | Team              of TeamState
         | Self              of Agent
         | AgentRolePercept  of AgentRolePercept
+        
 
     type SimulationID = int
 
