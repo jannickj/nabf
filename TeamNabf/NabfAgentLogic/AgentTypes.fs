@@ -106,6 +106,7 @@ module AgentTypes =
         | RepairJob of VertexName * AgentName
         | DisruptJob of VertexName
         | AttackJob of VertexName list
+        | EmptyJob
 
     type JobHeader = Option<JobID> * JobValue * JobType
 
@@ -174,8 +175,9 @@ module AgentTypes =
         }
 
     type AgentServerMessage =
-        | NewJobs of Job List
-        | AcceptedJob of JobID
+        | AddedOrChangedJob of Job
+        | RemovedJob of Job
+        | AcceptedJob of JobID*VertexName
         | SharedPercepts of Percept list
 
     type MarsServerMessage =  

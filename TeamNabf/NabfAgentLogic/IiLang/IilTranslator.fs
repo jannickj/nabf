@@ -288,8 +288,6 @@ namespace NabfAgentLogic.IiLang
                 | _ -> raise <| InvalidIilException ("iilPercept", data)
             | _ -> failwith "no"    
         
-        let a = [2]@[5;4]
-  
         let parseIilJob iilPercept =
                 match iilPercept with
                 | [Percept ("notice", data)] ->
@@ -306,9 +304,21 @@ namespace NabfAgentLogic.IiLang
                             | JobType.AttackJob -> AttackJob(nodes)
                             | JobType.DisruptJob -> DisruptJob(nodes.Head)
                             | JobType.OccupyJob -> OccupyJob(nodes)
-                            | JobType.RepairJob -> Repair(
-                        ()
-                            
+                            | JobType.RepairJob -> 
+                                let [Identifier agentName] = optional
+                                RepairJob(nodes.Head,agentName)
+                            | JobType.EmptyJob -> EmptyJob
+                            | _ -> raise <| InvalidIilException("Job type Wrong", data)
+                        (((Some (int id)),int value,jt),jobdata): Job
+                    | _ -> raise <| InvalidIilException("notice percept",data)
+       
+        let getNodesFromJob job = 
+            match job with
+            | AttackJob nodes -> nodes
+            | DisruptJob nh -> [nh]
+            | OccupyJob nodes -> nodes
+            | RepairJob (nh,_) -> [nh]
+            | EmptyJob -> []                  
 
         let parseIilServerMessage iilServerMessage =
             match iilServerMessage with
@@ -325,7 +335,18 @@ namespace NabfAgentLogic.IiLang
                     let percepts = List.concat <| List.map parseIilPercept tail
                     AgentServerMessage <| SharedPercepts percepts
                 | "newNotice" ->
-                    AgentServerMessage <| 
+                    AgentServerMessage <| (AddedOrChangedJob <| parseIilJob tail)
+                | "noticeUpdated" ->
+                    AgentServerMessage <| (AddedOrChangedJob <| parseIilJob tail)
+                | "noticeRemoved" ->
+                    AgentServerMessage <| (RemovedJob <| parseIilJob tail)
+                | "receivedJob" ->
+                    let (Percept ("whichNodeIndexToGoTo", [Numeral nodeindex]))::rest = tail
+                    let rjob = parseIilJob rest
+                    let ((rjobid,_,_),rjobdata) = rjob
+                    let jnodes = getNodesFromJob rjobdata
+                    let usenode = List.nth jnodes (int nodeindex)
+                    AgentServerMessage <| (AcceptedJob <| ((rjobid.Value),usenode))
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"
         
@@ -349,3 +370,17 @@ namespace NabfAgentLogic.IiLang
                         Action ("probe", [Numeral id])
             | Repair a -> Action ("repair", [Numeral id; Identifier a])
             | Survey -> Action ("survey", [Numeral id])
+
+        let vertexToIdentifer vlist = List.map (fun v -> Identifier v) vlist
+
+        let buildIilMetaAction maction simid =
+            match maction with
+            | MetaAction.ApplyJob (jobid,desire) -> Action ("applyNoticeAction", [Numeral (float simid); Numeral (float jobid); Numeral (float desire)])
+            | CreateJob job -> 
+                let ((id,value,jt),jdata) = job
+                let datalist = [Numeral (float simid); Numeral (float jt); Numeral (float value)]@
+                    match jdata with
+                    | AttackJob vl ->  (vertexToIdentifer vl)
+                    | OccupyJob vl -> (vertexToIdentifer vl)@
+                    | Rep
+                Action ("createNoticeAction", datalist)
