@@ -3,6 +3,7 @@
 module Saboteur =
 
     open AgentTypes
+    open AgentLogicLib
 
     let getSaboteurTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
@@ -31,7 +32,9 @@ module Saboteur =
         let sentinels = List.filter (fun a -> a.Role = Some Sentinel) (fst agents)
 
         let target = getTarget [enemySabs;repairers;unknowns;explorers;inspectors;sentinels] myRank
-        if target = None then (false,None) else (true,Some(Attack(target.Value)))
+        match target with
+        | Some t -> tryDo (Attack(t.Name)) s
+        | None -> (false, None)
 
 
 

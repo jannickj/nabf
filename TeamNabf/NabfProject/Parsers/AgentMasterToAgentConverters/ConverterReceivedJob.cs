@@ -20,6 +20,7 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
 
             ipc = new IilPerceptCollection
             (
+                new IilPercept("receivedJob"),
                 percept
             );
 

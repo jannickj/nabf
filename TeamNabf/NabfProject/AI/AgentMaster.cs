@@ -20,7 +20,6 @@ namespace NabfProject.AI
 	public class AgentMaster : AgentManager
 	{
 		private TcpListener listener;
-		private int agentid = 0;
         private Dictionary<string, Agent> agents = new Dictionary<string, Agent>();
 
 		public AgentMaster(TcpListener listener)

@@ -21,7 +21,7 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
 
             ipc = new IilPerceptCollection
             (
-                new IilPercept("UpdatedNoticeId", new IilNumeral(gobj.NoticeId)),
+                new IilPercept("noticeUpdated"),
                 percept
             );
 

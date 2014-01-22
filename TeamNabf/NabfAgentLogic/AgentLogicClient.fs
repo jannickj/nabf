@@ -10,7 +10,7 @@
     open System.Linq;
     open AgentTypes
 
-    type public AgentLogicClient(decisionTreeGenerator) = class 
+    type public AgentLogicClient(name,decisionTreeGenerator) = class 
         
         
         [<DefaultValue>] val mutable private BeliefData : State
@@ -20,6 +20,7 @@
         //[<DefaultValue>] val mutable private undecidedDecisions : (DecisionRank*Decision<(State -> (bool*Option<Action>))>) list
         [<DefaultValue>] val mutable private awaitingPercepts : List<Percept>
 
+        let agentname = name
         let decisionTree = decisionTreeGenerator()
         let mutable simEnded = false
         let mutable runningCalc = 0
@@ -29,7 +30,7 @@
         //let mutable lastHighestDesire:Desirability = 0
         
 
-        new() = AgentLogicClient(fun () -> generateDecisionTree)
+        new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
 
         //Parallel helpers
         let stopDeciders = new CancellationTokenSource()
@@ -204,14 +205,14 @@
                 ()
             member this.CurrentDecision = 
                 let (_,bestAction) = lock decisionLock (fun () -> decidedAction)
-                buildIilAction bestAction
+                new IilAction ""
 
             member this.HandlePercepts(iilpercepts) = 
                 if simEnded then
                     ()
                 let ServerMessage = (parseIilPercepts iilpercepts)
                 match ServerMessage with
-                | AgentServerMsg msg ->
+                | AgentServerMessage msg ->
                     match msg with
                     | NewJobs jobs ->
                         this.evaluateJobs jobs
@@ -219,15 +220,17 @@
                         this.CalculateAcceptedJob id  
                     | SharedPercepts percepts ->
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
-                |  MarsServerMsg msg ->
+                |  MarsServerMessage msg ->
                     match msg with
                     | SimulationEnd _ -> 
                         SimulationEndedEvent.Trigger(this, new EventArgs())
                         stopLogic()
                         ()
-                    | SimulationStart ->
-                        ()
-                    | ActionRequest (deadline,actionTime,id, percepts) ->
+                    | SimulationStart sData ->
+                        this.KnownJobs <- []
+                        this.awaitingPercepts <- []
+                        this.BeliefData <- buildInitState (agentname,sData)
+                    | ActionRequest ((deadline, actionTime, id), percepts) ->
                         let action = buildSharePerceptsAction (sharedPercepts percepts)
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
                         this.ReEvaluate percepts
@@ -239,13 +242,13 @@
                             async
                                 {
                                     let awaitingDecision = ref true
-                                    do! Async.Sleep(800)
+                                    Thread.Sleep(800)
                                     while awaitingDecision.Value do 
-                                        do! Async.Sleep(200)
+                                        Thread.Sleep(800)
                                         let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
                                         if (expired+int64(400)) > int64(totaltime) || runningCalcs = 0 then
-                                            SendAgentServerEvent.Trigger(this,new UnaryValueEvent<IilAction>((this:>IAgentLogic).CurrentDecision))
+                                            SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
                                             awaitingDecision:=false
                                 }
                         Async.Start (forceDecision System.DateTime.Now.Ticks totalTime)
