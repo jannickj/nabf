@@ -5,14 +5,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using JSLibrary.IiLang.Parameters;
+using NabfProject.KnowledgeManagerModel;
 
 namespace NabfProject.Parsers.AgentToAgentMasterConverters
 {
-    public class ConverterAddKnowledge : JSConverterToForeign<AddKnowledgeAction,IilAction>
+    public class ConverterAddKnowledge : JSConverterToForeign<IilAction, AddKnowledgeAction>
     {
-        public override IilAction BeginConversionToForeign(AddKnowledgeAction gobj)
+        public override object KnownID
         {
-            throw new NotImplementedException();
+            get
+            {
+                return "addKnowledgeAction";
+            }
+        }
+
+        public override AddKnowledgeAction BeginConversionToForeign(IilAction gobj)
+        {
+            int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
+            List<Knowledge> knowledge = new List<Knowledge>();
+
+
+            AddKnowledgeAction aka = new AddKnowledgeAction(simId, knowledge);
+
+            return aka;
         }
     }
 }

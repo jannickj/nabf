@@ -60,6 +60,14 @@ namespace NabfProject.NoticeBoardModel
 
             return true;
         }
+        public bool RemoveJob(Int64 id)
+        {
+            Notice notice;
+            bool b = _idToNotice.TryGetValue(id, out notice);
+            if (b == false)
+                return false;
+            return RemoveJob(notice);
+        }
         public bool RemoveJob(Notice n)
         {
             if (_jobs.ContainsKey(n.HighestAverageDesirabilityForNotice))

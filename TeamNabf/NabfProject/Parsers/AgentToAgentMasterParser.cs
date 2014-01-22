@@ -10,10 +10,12 @@ using XmasEngineModel.Management;
 
 namespace NabfProject.Parsers
 {
-    public class AgentToAgentMasterParser : JSConversionTool<EntityXmasAction<NabfAgent>, IilAction>
+    public class AgentToAgentMasterParser : JSConversionTool<IilAction, EntityXmasAction<NabfAgent>>
     {
         public AgentToAgentMasterParser()
         {
+            this.IdOfKnown = new JSConversionIDFetcherSimple<IilAction>(GetIdFromIilAction);
+
             this.AddConverter(new ConverterAddKnowledge());
             this.AddConverter(new ConverterApplyNotice());
             this.AddConverter(new ConverterChangeNotice());
@@ -22,5 +24,9 @@ namespace NabfProject.Parsers
             this.AddConverter(new ConverterUnapplyNotice());
         }
 
+        private object GetIdFromIilAction(IilAction a)
+        {
+            return a.Name;
+        }
     }
 }

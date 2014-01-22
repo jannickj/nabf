@@ -8,9 +8,17 @@ using System.Text;
 
 namespace NabfProject.Parsers.AgentToAgentMasterConverters
 {
-    public class ConverterDeleteNotice : JSConverterToForeign<DeleteNoticeAction, IilAction>
+    public class ConverterDeleteNotice : JSConverterToForeign<IilAction, DeleteNoticeAction>
     {
-        public override IilAction BeginConversionToForeign(DeleteNoticeAction gobj)
+        public override object KnownID
+        {
+            get
+            {
+                return base.KnownID;
+            }
+        }
+
+        public override DeleteNoticeAction BeginConversionToForeign(IilAction gobj)
         {
             throw new NotImplementedException();
         }
