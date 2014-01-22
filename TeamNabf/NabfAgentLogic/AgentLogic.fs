@@ -117,6 +117,24 @@
             |> updateTraversedEdgeCost state
             |> updateSelf state
 
+            let newState = List.fold handlePercept state percepts
+            let newSelf = { newState.Self with 
+                              Team = state.Self.Team
+                              Name = state.Self.Name
+                              Role = state.Self.Role
+                          }
+            let newState = { newState with  Self = newSelf }
+
+            match (state.LastAction, state.LastActionResult) with
+            | (Goto _, Successful) ->
+                printfn "coming from %s" state.Self.Node
+                printfn "edges before: %A" (Set.toList <| newState.World.[newState.Self.Node].Edges)
+                let newNewState = updateTraversedEdgeCost state newState
+                printfn "edges after: %A" (Set.toList <| newNewState.World.[newState.Self.Node].Edges)
+                newNewState
+            | _ -> updateTraversedEdgeCost state newState
+
+
         let sharedPercepts (percepts:Percept list) =
             []:(Percept list)
         

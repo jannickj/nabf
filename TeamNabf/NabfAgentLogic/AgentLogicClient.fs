@@ -33,7 +33,7 @@
         new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
 
         //Parallel helpers
-        let stopDeciders = new CancellationTokenSource()
+        let mutable stopDeciders = new CancellationTokenSource()
 
         let stateLock = new Object()
         let decisionLock = new Object()
@@ -51,31 +51,40 @@
 
         member public this.DecidedAction = decidedAction
 
-        member private this.asyncCalculation stopToken func = this.asyncCalculationAF stopToken (async { func() })
-
-        member private this.asyncCalculationAF stopToken func =
-            let changeCals value = 
-                lock runningCalcLock (fun () -> 
-                if runningCalc = 0 then
-                    EvaluationStartedEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildEvaluationStarted))
-                runningCalc <- runningCalc + value)
-                if runningCalc = 0 then
-                    EvaluationCompletedEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildEvaluationEnded))
-                    ()
-            let asyncF f = 
-                async
-                    {
-                        try
-                            Async.RunSynchronously f
-                        with _ -> ()   
-
-                        changeCals(-1)
-                        ()
-                    }
+        member private this.asyncCalculation name stopToken func = this.asyncCalculationAF name stopToken  
+                                                                        (async 
+                                                                            { 
+                                                                                
+                                                                                func()
+                                                                            })
+                                                                            
+        member private this.asyncCalculationAF name (stopToken:CancellationToken) func =
+            if stopToken.IsCancellationRequested then
+                    lock runningCalcLock (fun () -> 
+                        printf "%s was cancelled before execution\n" name)
+            else
+                let changeCals value = 
+                    lock runningCalcLock (fun () -> 
+                    //Console.WriteLine(name+":"+runningCalc.ToString()+" change: "+value.ToString())
+                    if runningCalc = 0 then
+                        EvaluationStartedEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildEvaluationStarted))
+                    runningCalc <- runningCalc + value
+                    if runningCalc = 0 then
+                        EvaluationCompletedEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildEvaluationEnded))
+                    )
+                let asyncF f = 
+                    async
+                        {
+                            Async.RunSynchronously f  
+                            changeCals(-1)
+                            ()
+                        }
             
-            changeCals(1)
-            Async.Start ((asyncF func), stopToken)
-            () 
+                changeCals(1)
+
+            
+                Async.Start ((asyncF func), stopToken)
+                () 
 
         member private this.EvaluateDecision    (rankCur:DecisionRank) 
                                                 (stopToken:CancellationToken) 
@@ -84,7 +93,7 @@
             match d with
             | Choice f -> 
                 
-                this.asyncCalculationAF stopToken (
+                this.asyncCalculationAF ("Calc Choice") stopToken (
                     async
                         { 
                             
@@ -118,7 +127,7 @@
                                         (r+1,iteStopSource.Token)
                                         ) (rankCur,stopToken) ds
             | Condition (c,d) -> 
-                this.asyncCalculationAF stopToken (
+                this.asyncCalculationAF ("Calc conditon") stopToken (
                             async
                                 {
                                     use! handler = Async.OnCancel(fun () -> stopSource.Cancel())
@@ -138,11 +147,12 @@
             this.EvaluateDecision 0 stopDeciders.Token (new CancellationTokenSource()) (s,decisionTree)
             
 
-        member private this.asyncCalculationMany func values stopToken =
-            List.iter (fun v -> (this.asyncCalculation stopToken (fun () -> func v))) values
+        member private this.asyncCalculationMany name func values stopToken =
+            List.iter (fun v -> ignore <| (this.asyncCalculationAF name stopToken (async { ignore <| func v }))) values
 
         member private this.ReEvaluate percepts =
             stopDeciders.Cancel()
+            stopDeciders <- new CancellationTokenSource()
             let sharedPercepts = lock awaitingPerceptsLock (fun () -> 
                                         let percepts = this.awaitingPercepts
                                         this.awaitingPercepts <- []
@@ -167,7 +177,7 @@
                         {
                             let ajob = foundJob.Value
                             lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob)
-                            this.asyncCalculation stopDeciders.Token (fun () -> this.EvaluteState())
+                            this.asyncCalculation "Calc accept job" stopDeciders.Token (fun () -> this.EvaluteState())
                             ()
                         }
                 Async.Start update
@@ -187,7 +197,10 @@
             let jobTypeList = List.ofSeq (jobTypes.Cast<JobType>())
             let knownjobs jobtype =List.filter (fun ((_, _, jt), _) -> jt = jobtype) this.KnownJobs
             let stateData = lock stateLock (fun () -> this.BeliefData)
-            this.asyncCalculationMany (fun jobType -> jobGenFunc jobType stateData (knownjobs jobType) ) jobTypeList stopDeciders.Token
+            //List.iter (fun jobType -> (this.asyncCalculation "job" stopDeciders.Token )) jobTypeList 
+            this.asyncCalculationMany "calc generate job" 
+                    (fun jobType -> ignore <| jobGenFunc jobType stateData (knownjobs jobType)) 
+                    jobTypeList stopDeciders.Token
 
         member private this.evaluateJobs jobs =
             let update job = 
@@ -196,7 +209,7 @@
                 if wantJob then
                     SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(buildJobAccept (desire,job)))  
             lock knownJobsLock (fun () -> this.KnownJobs <- jobs@this.KnownJobs)
-            this.asyncCalculationMany update jobs stopDeciders.Token
+            this.asyncCalculationMany "evaluate job" update jobs stopDeciders.Token
 
 
         interface IAgentLogic with
@@ -228,6 +241,11 @@
                         this.awaitingPercepts <- []
                         this.BeliefData <- buildInitState (agentname,sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
+                        let left = new DateTime(int64(deadline)*int64(10000))
+                        let timeleft = left-DateTime.Now ;
+                        let a = int64(deadline)
+                        Console.WriteLine("Action request started timeleft "+a.ToString())
+                        let start = DateTime.Now
                         let action = buildSharePerceptsAction (sharedPercepts percepts)
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
                         this.ReEvaluate percepts
@@ -238,17 +256,27 @@
                         let forceDecision start totaltime =
                             async
                                 {
+                                    let! token = Async.CancellationToken
                                     let awaitingDecision = ref true
-                                    Thread.Sleep(800)
+                                    //Thread.Sleep(800)
                                     while awaitingDecision.Value do 
-                                        Thread.Sleep(800)
-                                        let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
-                                        let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
-                                        if (expired+int64(400)) > int64(totaltime) || runningCalcs = 0 then
-                                            SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
+                                        if token.IsCancellationRequested then
                                             awaitingDecision:=false
+                                        else
+                                            do! Async.Sleep(10)
+
+                                            let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
+                                        
+                                            let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
+                                            //Console.WriteLine(runningCalcs)
+
+                                            if (expired+int64(800)) > int64(totaltime) || runningCalcs = 0 then
+                                                SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
+                                                awaitingDecision:=false
                                 }
-                        Async.Start (forceDecision System.DateTime.Now.Ticks totalTime)
+                        Async.Start ((forceDecision System.DateTime.Now.Ticks totalTime),stopDeciders.Token)
+                        let dif = DateTime.Now - start
+                        Console.WriteLine("Action request time: "+dif.TotalMilliseconds.ToString());
                         ()
                     | ServerClosed -> ()
            
