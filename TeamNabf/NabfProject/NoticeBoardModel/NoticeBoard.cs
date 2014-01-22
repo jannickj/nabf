@@ -99,7 +99,7 @@ namespace NabfProject.NoticeBoardModel
             _freeID = 0;
         }
 
-        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<NodeKnowledge> whichNodes, int value, out Notice notice)
+        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, string agentToRepair, int value, out Notice notice)
         {
             Notice n = null;
             Int64 id = _freeID;
@@ -113,10 +113,10 @@ namespace NabfProject.NoticeBoardModel
                     n = new DisruptJob(agentsNeeded, whichNodes, value, id);
                     break;
                 case JobType.Occupy:
-                    n = new OccupyJob(agentsNeeded, whichNodes, value, id);
+                    n = new OccupyJob(agentsNeeded, whichNodes, zoneNodes, value, id);
                     break;
                 case JobType.Repair:
-                    n = new RepairJob(whichNodes, value, id);
+                    n = new RepairJob(whichNodes, agentToRepair, value, id);
                     break;
             }
             if (n == null)
@@ -179,7 +179,7 @@ namespace NabfProject.NoticeBoardModel
             return true;
         }
 
-        public bool UpdateNotice(Int64 id, List<NodeKnowledge> whichNodes, int agentsNeeded, int value)
+        public bool UpdateNotice(Int64 id, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, int agentsNeeded, int value, string agentToRepair)
         {
             Notice no;
             bool b = _idToNotice.TryGetValue(id, out no);
@@ -187,7 +187,7 @@ namespace NabfProject.NoticeBoardModel
             if (b == false)
                 return false;
 
-            no.UpdateNotice(whichNodes, agentsNeeded, value);
+            no.UpdateNotice(whichNodes, zoneNodes, agentsNeeded, value, agentToRepair);
 
             foreach (NabfAgent a in _sharingList)
                 a.Raise(new NoticeUpdatedEvent(id, no));

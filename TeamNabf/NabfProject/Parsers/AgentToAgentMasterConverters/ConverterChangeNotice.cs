@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using JSLibrary.IiLang.Parameters;
 using NabfProject.KnowledgeManagerModel;
+using NabfProject.NoticeBoardModel;
 
 namespace NabfProject.Parsers.AgentToAgentMasterConverters
 {
@@ -26,16 +27,32 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
         {
             int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
 
-            int noticeId = (int)((IilNumeral)gobj.Parameters[1]).Value;
+            Int64 noticeId = (Int64)((IilNumeral)gobj.Parameters[1]).Value;
 
-            int agentsNeeded = (int)((IilNumeral)gobj.Parameters[2]).Value;
-            
-            int value = (int)((IilNumeral)gobj.Parameters[4]).Value;
+            int type = (int)((IilNumeral)gobj.Parameters[2]).Value;
+            NoticeBoard.JobType jobType = (NoticeBoard.JobType)type;
 
-            List<NodeKnowledge> nodes = ((IilFunction)gobj.Parameters[3]).Parameters
+            int agentsNeeded = (int)((IilNumeral)gobj.Parameters[3]).Value;
+
+            List<NodeKnowledge> nodes = ((IilFunction)gobj.Parameters[4]).Parameters
                 .Select(k => (NodeKnowledge)MasterDataParser.ConvertToKnown(k)).ToList();
 
-            ChangeNoticeAction cna = new ChangeNoticeAction(simId, noticeId, agentsNeeded, nodes, value);
+            int value = (int)((IilNumeral)gobj.Parameters[5]).Value;
+
+            List<NodeKnowledge> zone = new List<NodeKnowledge>();
+            string agentToRepair = "";
+            switch (jobType)
+            {
+                case NoticeBoard.JobType.Occupy:
+                    zone = ((IilFunction)gobj.Parameters[6]).Parameters
+                       .Select(k => (NodeKnowledge)MasterDataParser.ConvertToKnown(k)).ToList();
+                    break;
+                case NoticeBoard.JobType.Repair:
+                    agentToRepair = ((IilIdentifier)gobj.Parameters[6]).Value;
+                    break;
+            }
+
+            ChangeNoticeAction cna = new ChangeNoticeAction(simId, noticeId, agentsNeeded, nodes, zone, agentToRepair, value);
 
             return cna;
         }

@@ -60,11 +60,19 @@ namespace NabfProject.NoticeBoardModel
 
             if (no.GetType() != this.GetType())
                 return false;
-            else
-                if (no.WhichNodes.Except<NodeKnowledge>(this.WhichNodes).Count() != 0)
+            else if (this is RepairJob)
+            {
+                if (((RepairJob)this).AgentToRepair != ((RepairJob)no).AgentToRepair)
                     return false;
+            }
+            else if (this is OccupyJob)
+                if (((OccupyJob)no).ZoneNodes.Except<NodeKnowledge>(((OccupyJob)this).ZoneNodes).Count() != 0)
+                    return false;
+            
+            if (no.WhichNodes.Except<NodeKnowledge>(this.WhichNodes).Count() != 0)
+                return false;
 
-            return no.AgentsNeeded == this.AgentsNeeded && no.Value == this.Value;
+            return no.AgentsNeeded == this.AgentsNeeded && no.Value == this.Value ;
         }
 
         public void Apply(int desirability, NabfAgent a)
@@ -101,11 +109,16 @@ namespace NabfProject.NoticeBoardModel
             }
         }
 
-        public void UpdateNotice(List<NodeKnowledge> whichNodes, int agentsNeeded, int value)
+        public void UpdateNotice(List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, int agentsNeeded, int value, string agentToRepair)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = agentsNeeded;
             Value = value;
+
+            if (this is RepairJob)
+                ((RepairJob)this).AgentToRepair = agentToRepair;
+            else if (this is OccupyJob)
+                    ((OccupyJob)this).ZoneNodes = zoneNodes;
         }
 
         bool IEquatable<Notice>.Equals(Notice other)
@@ -164,24 +177,28 @@ namespace NabfProject.NoticeBoardModel
 
     public class OccupyJob : Notice
     {
+        public List<NodeKnowledge> ZoneNodes { get; set; }
 
-        public OccupyJob(int agentsNeeded, List<NodeKnowledge> whichNodes, int value, Int64 id)
+        public OccupyJob(int agentsNeeded, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
+            ZoneNodes = zoneNodes;
             Value = value;
         }
     }
 
     public class RepairJob : Notice
     {
+        public string AgentToRepair { get; set; }
 
-        public RepairJob(List<NodeKnowledge> whichNodes, int value, Int64 id)
+        public RepairJob(List<NodeKnowledge> whichNodes, string agentToRepair, int value, Int64 id)
             : base(id)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = 1;
+            AgentToRepair = agentToRepair;
             Value = value;
         }
     }

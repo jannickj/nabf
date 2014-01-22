@@ -18,7 +18,8 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
             }
         }
 
-        public override IilAction BeginConversionToForeign(UnapplyNoticeAction gobj)
+
+        public override UnapplyNoticeAction BeginConversionToForeign(IilAction gobj)
         {
             throw new NotImplementedException();
         }

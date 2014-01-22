@@ -114,12 +114,12 @@ namespace NabfProject.SimManager
             km.SendKnowledgeToManager(sentKnowledge, sender);
         }
 
-        public bool CreateAndAddNotice(int simID, NoticeBoard.JobType type, int agentsNeeded, List<NodeKnowledge> whichNodes, int value, out Notice notice)
+        public bool CreateAndAddNotice(int simID, NoticeBoard.JobType type, int agentsNeeded, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, string agentToRepair, int value, out Notice notice)
         {
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
 
-            bool ret = nb.CreateAndAddNotice(type, agentsNeeded, whichNodes, value, out notice);
+            bool ret = nb.CreateAndAddNotice(type, agentsNeeded, whichNodes, zoneNodes, agentToRepair, value, out notice);
 
             return ret;
         }
@@ -134,14 +134,14 @@ namespace NabfProject.SimManager
             return nb.RemoveNotice(id);
         }
 
-        public bool UpdateNotice(int simID, Int64 noticeID, int agentsNeeded, List<NodeKnowledge> whichNodes, int value)
+        public bool UpdateNotice(int simID, Int64 noticeID, int agentsNeeded, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, string agentToRepair, int value)
         {
             if (_currentID != simID)
                 return false;
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
 
-            return nb.UpdateNotice(noticeID, whichNodes, agentsNeeded, value);               
+            return nb.UpdateNotice(noticeID, whichNodes, zoneNodes, agentsNeeded, value, agentToRepair);               
         }
 
         public NoticeBoard.JobType NoticeToJobType(Notice no)

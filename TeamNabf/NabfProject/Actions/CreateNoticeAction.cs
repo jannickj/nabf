@@ -18,13 +18,17 @@ namespace NabfProject.Actions
         private int AgentsNeeded;
         private List<NodeKnowledge> WhichNodes;
         private int Value;
+        private string AgentToRepair;
+        private List<NodeKnowledge> ZoneNodes;
 
-        public CreateNoticeAction(int simID, NoticeBoard.JobType jobType, int agentsNeeded, List<NodeKnowledge> whichNodes, int value)
+        public CreateNoticeAction(int simID, NoticeBoard.JobType jobType, int agentsNeeded, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, string agentToRepair, int value)
         {
             SimId = simID;
             JobType = jobType;
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
+            ZoneNodes = zoneNodes;
+            AgentToRepair = agentToRepair;
             Value = value;
         }
         protected override void Execute()
@@ -32,7 +36,7 @@ namespace NabfProject.Actions
             SimulationManager simMan = ((NabfModel)this.Engine).SimulationManager;
 
             Notice n;
-            simMan.CreateAndAddNotice(SimId, JobType, AgentsNeeded, WhichNodes, Value, out n);
+            simMan.CreateAndAddNotice(SimId, JobType, AgentsNeeded, WhichNodes, ZoneNodes, AgentToRepair, Value, out n);
         }
     }
 }
