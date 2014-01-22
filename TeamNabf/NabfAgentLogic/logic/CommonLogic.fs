@@ -4,11 +4,11 @@ module CommonLogic =
     open AgentTypes
     open Graphing.Graph
     open PathFinding
-    open Saboteur
-    open Repairer
-    open Sentinel
-    open Explorer
-    open Inspector
+    open SaboteurLogic
+    open RepairerLogic
+    open SentinelLogic
+    open ExplorerLogic
+    open InspectorLogic
     open AgentLogicLib
 
     let reactToEnemyAgent (s:State) =
@@ -17,14 +17,13 @@ module CommonLogic =
             match s.Self.Role.Value with
             | Saboteur -> saboteurReact s agents
             | Repairer -> repairerReact s agents
-            | Sentinel -> tryDo Parry s
+            | Sentinel -> sentinelReact s agents
             | Explorer -> explorerReact s agents
             | Inspector -> inspectorReact s agents
         else
             (false,None)
 
     let exploreLocalGraph (s:State) =
-        let neighbours = getNeighbours s.Self.Node s.World
         let unexplored = (pathToNearestUnExplored s.Self s.World)
         if unexplored = None 
         then 

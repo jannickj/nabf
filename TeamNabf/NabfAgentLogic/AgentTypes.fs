@@ -102,13 +102,19 @@ module AgentTypes =
         | AttackJob = 4
 
     type JobData =
-        | OccupyJob of VertexName list
+        | OccupyJob of VertexName list * VertexName list
         | RepairJob of VertexName * AgentName
         | DisruptJob of VertexName
         | AttackJob of VertexName list
         | EmptyJob
 
     type JobHeader = Option<JobID> * JobValue * JobType
+    type Goal =
+        | OccupyGoal of VertexName
+        | RepairGoal of VertexName * AgentName
+        | DisruptGoal of VertexName
+        | AttackGoal of VertexName
+
 
     type Job = JobHeader * JobData
 
@@ -208,7 +214,10 @@ module AgentTypes =
             LastActionResult : ActionResult
             LastAction       : Action
             TeamZoneScore    : int
-
+            NewZone          : Option<Graph * bool>
+            NewZoneFrontier  : VertexName list
+            Goals            : Goal list
+            Jobs             : Job list
         }
 
     type OptionFunc = State -> (bool*Option<Action>)
