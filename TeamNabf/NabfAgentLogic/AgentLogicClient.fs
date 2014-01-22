@@ -19,6 +19,7 @@
         //[<DefaultValue>] val mutable private possibleActions : List<Action>
         //[<DefaultValue>] val mutable private undecidedDecisions : (DecisionRank*Decision<(State -> (bool*Option<Action>))>) list
         [<DefaultValue>] val mutable private awaitingPercepts : List<Percept>
+        [<DefaultValue>] val mutable private simulationID : SimulationID
 
         let agentname = name
         let decisionTree = decisionTreeGenerator()
@@ -45,18 +46,13 @@
 
         let SendAgentServerEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
         let SendMarsServerEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
-        let EvaluationCompletedEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
-        let EvaluationStartedEvent = new Event<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>()
+        let EvaluationCompletedEvent = new Event<EventHandler, EventArgs>()
+        let EvaluationStartedEvent = new Event<EventHandler, EventArgs>()
         let SimulationEndedEvent = new Event<EventHandler, EventArgs>()
 
         member public this.DecidedAction = decidedAction
 
-        member private this.asyncCalculation name stopToken func = this.asyncCalculationAF name stopToken  
-                                                                        (async 
-                                                                            { 
-                                                                                
-                                                                                func()
-                                                                            })
+        member private this.asyncCalculation name stopToken func = this.asyncCalculationAF name stopToken  (async {  func() })
                                                                             
         member private this.asyncCalculationAF name (stopToken:CancellationToken) func =
             if stopToken.IsCancellationRequested then
@@ -67,10 +63,10 @@
                     lock runningCalcLock (fun () -> 
                     //Console.WriteLine(name+":"+runningCalc.ToString()+" change: "+value.ToString())
                     if runningCalc = 0 then
-                        EvaluationStartedEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildEvaluationStarted))
+                        EvaluationStartedEvent.Trigger(this, new EventArgs())
                     runningCalc <- runningCalc + value
                     if runningCalc = 0 then
-                        EvaluationCompletedEvent.Trigger(this, new UnaryValueEvent<IilAction>(buildEvaluationEnded))
+                        EvaluationCompletedEvent.Trigger(this, new EventArgs())
                     )
                 let asyncF f = 
                     async
@@ -178,11 +174,20 @@
                             let ajob = foundJob.Value
                             lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob)
                             this.asyncCalculation "Calc accept job" stopDeciders.Token (fun () -> this.EvaluteState())
-                            ()
                         }
                 Async.Start update
 
             
+        member private this.removeUselessJobs() =
+            let knownjobs = lock knownJobsLock (fun () -> this.KnownJobs)
+            let removeJobFunc job =
+                let state = lock stateLock (fun () -> this.BeliefData)
+                let decide = shouldRemoveJob state job
+                let ((jobid,_,_),_) = job
+                if decide then
+                    let removejobAct = buildIilSendMessage(this.simulationID,(RemoveJob jobid.Value))
+                    SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(removejobAct))
+            this.asyncCalculationMany "remove job calc" removeJobFunc knownjobs stopDeciders.Token
 
         member private this.generateNewJobs() = 
             let jobTypes = Enum.GetValues(typeof<JobType>)
@@ -190,12 +195,18 @@
                 let jobopt = generateJob jobtype state knownJobs
                 match jobopt with
                 | Some job ->
-                    SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(buildJob job)) 
+                    let metaAction = 
+                        match job with
+                        | ((Some jobid,_,_),_) -> UpdateJob job
+                        | ((None,_,_),_) -> CreateJob job
+                    let createjobMsg = buildIilSendMessage (this.simulationID,metaAction)
+                    SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(createjobMsg)) 
                     jobGenFunc jobtype state (job::knownJobs)                            
                 | None -> ()
 
             let jobTypeList = List.ofSeq (jobTypes.Cast<JobType>())
-            let knownjobs jobtype =List.filter (fun ((_, _, jt), _) -> jt = jobtype) this.KnownJobs
+            let joblist = lock knownJobsLock (fun () -> this.KnownJobs)
+            let knownjobs jobtype =List.filter (fun ((_, _, jt), _) -> jt = jobtype) joblist
             let stateData = lock stateLock (fun () -> this.BeliefData)
             //List.iter (fun jobType -> (this.asyncCalculation "job" stopDeciders.Token )) jobTypeList 
             this.asyncCalculationMany "calc generate job" 
@@ -207,8 +218,11 @@
                 let stateData = lock stateLock (fun () -> this.BeliefData)
                 let (desire,wantJob) = decideJob stateData job
                 if wantJob then
-                    SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(buildJobAccept (desire,job)))  
+                    let ((jobid,_,_),_) = job
+                    let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((jobid.Value),desire))
+                    SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))  
             lock knownJobsLock (fun () -> this.KnownJobs <- jobs@this.KnownJobs)
+            
             this.asyncCalculationMany "evaluate job" update jobs stopDeciders.Token
 
 
@@ -227,7 +241,7 @@
                     | NewJobs jobs ->
                         this.evaluateJobs jobs
                     | AcceptedJob id ->
-                        this.CalculateAcceptedJob id  
+                        this.CalculateAcceptedJob (Some id)
                     | SharedPercepts percepts ->
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                 |  MarsServerMessage msg ->
@@ -239,14 +253,19 @@
                     | SimulationStart sData ->
                         this.KnownJobs <- []
                         this.awaitingPercepts <- []
+                        this.simulationID <- sData.SimId
+                        let subscribeAction = buildIilSendMessage (this.simulationID, SimulationSubscribe)
+                        SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(subscribeAction))
                         this.BeliefData <- buildInitState (agentname,sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
                         let left = new DateTime(int64(deadline)*int64(10000))
                         let timeleft = left-DateTime.Now ;
                         let a = int64(deadline)
                         Console.WriteLine("Action request started timeleft "+a.ToString())
+                        let newRoundAct = buildIilSendMessage (this.simulationID, NewRound(id))
+                        SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(newRoundAct))
                         let start = DateTime.Now
-                        let action = buildSharePerceptsAction (sharedPercepts percepts)
+                        let action = buildIilSendMessage (this.simulationID,ShareKnowledge percepts)
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
                         this.ReEvaluate percepts
                         let knownJobs = lock knownJobsLock (fun () -> this.KnownJobs)

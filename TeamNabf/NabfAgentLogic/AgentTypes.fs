@@ -95,6 +95,7 @@ module AgentTypes =
     type Desirability = int
 
     type JobType = 
+        | EmptyJob = 0
         | OccupyJob = 1
         | RepairJob = 2
         | DisruptJob = 3
@@ -106,7 +107,7 @@ module AgentTypes =
         | DisruptJob of VertexName
         | AttackJob of VertexName list
 
-    type JobHeader = JobID * JobValue * JobType
+    type JobHeader = Option<JobID> * JobValue * JobType
 
     type Job = JobHeader * JobData
 
@@ -149,10 +150,10 @@ module AgentTypes =
         | CreateJob of Job
         | RemoveJob of JobID
         | UpdateJob of Job
-        | ApplyJob of JobID
+        | ApplyJob of JobID*Desirability
         | SimulationSubscribe
         | ShareKnowledge of Percept list
-    
+        | NewRound of int
     
     type SendMessage = SimulationID * MetaAction
 

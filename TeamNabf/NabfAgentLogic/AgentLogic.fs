@@ -83,6 +83,8 @@
             ;   Achievements = []
             } : State
 
+        let shouldRemoveJob (state:State) (job:Job) =
+            false
 
         let clearTempBeliefs state =
             { state with 
@@ -144,8 +146,7 @@
         let buildIilAction id (action:Action) =
             IiLang.IiLangDefinitions.buildIilAction (IiLang.IilTranslator.buildIilAction action id)
 
-        let buildJobAccept (desire:Desirability,job:Job) =
-            new IilAction "some action"
+
 
         let parseIilPercepts (perceptCollection:IilPerceptCollection) : ServerMessage =
             let percepts = parsePerceptCollection perceptCollection
@@ -162,20 +163,11 @@
         let generateJob (jt:JobType) (s:State) (knownJobs:Job list)  =
             option<Job>.None
 
-        let buildJob (job:Job) = 
-            new IilAction "some action"
-
         let decideJob (state:State) (job:Job) =
             let d:Desirability = 1
             (d,true)
 
-        let buildEvaluationStarted =
-            new IilAction "evaluation_started"
-        let buildEvaluationEnded =
-            new IilAction "evaluation_ended"
 
-        let buildSharePerceptsAction (percepts:Percept list) =
-            new IilAction "percepts"
 
-        let buildSendMessage (sm:SendMessage) =
+        let buildIilSendMessage (sm:SendMessage) =
             new IilAction "data"
