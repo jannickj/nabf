@@ -158,3 +158,6 @@
 
         let buildSharePerceptsAction (percepts:Percept list) =
             new IilAction "percepts"
+
+        let buildSendMessage (sm:SendMessage) =
+            new IilAction "data"

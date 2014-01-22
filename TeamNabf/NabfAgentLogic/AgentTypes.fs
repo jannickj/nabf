@@ -88,6 +88,8 @@ module AgentTypes =
         | Repair    of AgentName
         | Buy       of Upgrade
 
+    
+
     type JobID = int
     type JobValue = int
     type Desirability = int
@@ -107,6 +109,9 @@ module AgentTypes =
     type JobHeader = JobID * JobValue * JobType
 
     type Job = JobHeader * JobData
+
+    
+    
 
     let levelToPoints start level =
         start * (pown 2 level)
@@ -137,6 +142,19 @@ module AgentTypes =
         | Team              of TeamState
         | Self              of Agent
         | AgentRolePercept  of AgentRolePercept
+
+    type SimulationID = int
+
+    type MetaAction =
+        | CreateJob of Job
+        | RemoveJob of JobID
+        | UpdateJob of Job
+        | ApplyJob of JobID
+        | SimulationSubscribe
+        | ShareKnowledge of Percept list
+    
+    
+    type SendMessage = SimulationID * MetaAction
 
     type Deadline = uint32
     type CurrentTime = uint32

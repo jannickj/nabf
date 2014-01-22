@@ -10,7 +10,6 @@ namespace NabfAgentLogic.AgentInterfaces
 
     type IAgentLogic = 
         abstract member HandlePercepts : IilPerceptCollection -> unit
-        abstract member CurrentDecision : IilAction
         abstract member Close : unit -> unit
         [<CLIEvent>]
         abstract member SendAgentServerAction : IEvent<UnaryValueHandler<IilAction>, UnaryValueEvent<IilAction>>

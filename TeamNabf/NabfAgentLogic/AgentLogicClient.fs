@@ -203,9 +203,6 @@
             member this.Close() = 
                 stopLogic()
                 ()
-            member this.CurrentDecision = 
-                let (_,bestAction) = lock decisionLock (fun () -> decidedAction)
-                new IilAction ""
 
             member this.HandlePercepts(iilpercepts) = 
                 if simEnded then
