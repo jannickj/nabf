@@ -60,7 +60,8 @@
                                                                             
         member private this.asyncCalculationAF name (stopToken:CancellationToken) func =
             if stopToken.IsCancellationRequested then
-                printf "%s was cancelled before execution" name
+                    lock runningCalcLock (fun () -> 
+                        printf "%s was cancelled before execution\n" name)
             else
                 let changeCals value = 
                     lock runningCalcLock (fun () -> 
@@ -151,6 +152,7 @@
 
         member private this.ReEvaluate percepts =
             stopDeciders.Cancel()
+            stopDeciders <- new CancellationTokenSource()
             let sharedPercepts = lock awaitingPerceptsLock (fun () -> 
                                         let percepts = this.awaitingPercepts
                                         this.awaitingPercepts <- []
@@ -196,12 +198,9 @@
             let knownjobs jobtype =List.filter (fun ((_, _, jt), _) -> jt = jobtype) this.KnownJobs
             let stateData = lock stateLock (fun () -> this.BeliefData)
             //List.iter (fun jobType -> (this.asyncCalculation "job" stopDeciders.Token )) jobTypeList 
-            if stopDeciders.IsCancellationRequested then
-                printfn "cancelled"
-            else
-                this.asyncCalculationMany "calc generate job" 
-                        (fun jobType -> ignore <| jobGenFunc jobType stateData (knownjobs jobType)) 
-                        jobTypeList stopDeciders.Token
+            this.asyncCalculationMany "calc generate job" 
+                    (fun jobType -> ignore <| jobGenFunc jobType stateData (knownjobs jobType)) 
+                    jobTypeList stopDeciders.Token
 
         member private this.evaluateJobs jobs =
             let update job = 
@@ -245,8 +244,12 @@
                         this.awaitingPercepts <- []
                         this.BeliefData <- buildInitState (agentname,sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
+                        let left = new DateTime(int64(deadline)*int64(10000))
+                        let timeleft = left-DateTime.Now ;
+                        let a = int64(deadline)
+                        Console.WriteLine("Action request started timeleft "+a.ToString())
+                        let start = DateTime.Now
                         let action = buildSharePerceptsAction (sharedPercepts percepts)
-                        stopDeciders <- new CancellationTokenSource()
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
                         this.ReEvaluate percepts
                         let knownJobs = lock knownJobsLock (fun () -> this.KnownJobs)
@@ -256,20 +259,27 @@
                         let forceDecision start totaltime =
                             async
                                 {
+                                    let! token = Async.CancellationToken
                                     let awaitingDecision = ref true
                                     //Thread.Sleep(800)
                                     while awaitingDecision.Value do 
-                                        Thread.Sleep(200)
-                                        let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
-                                        
-                                        let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
-                                        //Console.WriteLine(runningCalcs)
-
-                                        if (expired+int64(400)) > int64(totaltime) || runningCalcs = 0 then
-                                            SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
+                                        if token.IsCancellationRequested then
                                             awaitingDecision:=false
+                                        else
+                                            do! Async.Sleep(10)
+
+                                            let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
+                                        
+                                            let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
+                                            //Console.WriteLine(runningCalcs)
+
+                                            if (expired+int64(800)) > int64(totaltime) || runningCalcs = 0 then
+                                                SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
+                                                awaitingDecision:=false
                                 }
-                        Async.Start (forceDecision System.DateTime.Now.Ticks totalTime)
+                        Async.Start ((forceDecision System.DateTime.Now.Ticks totalTime),stopDeciders.Token)
+                        let dif = DateTime.Now - start
+                        Console.WriteLine("Action request time: "+dif.TotalMilliseconds.ToString());
                         ()
                     | ServerClosed -> ()
            

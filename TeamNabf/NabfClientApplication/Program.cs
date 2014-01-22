@@ -18,6 +18,7 @@ namespace NabfClientApplication
 	{
 		static void Main(string[] args)
 		{
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             int marsinfo_pos = 0;
             int selectIp = 0;
             //string master_server = args[0];
@@ -65,7 +66,7 @@ namespace NabfClientApplication
             AgentToMarsParser agentToMarsParser = new AgentToMarsParser();
 
             ClientApplication client = new ClientApplication(marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
-            client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalSeconds+")");
+            client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalMilliseconds+" ms)");
 
             Console.WriteLine("Authenticating: username=" + username + ", password=" + password);
 

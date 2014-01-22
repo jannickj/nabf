@@ -30,7 +30,7 @@ namespace NabfClientApplication.Client
         private AgentLogicFactory logicFactory;
 		//private XmlPacketTransmitter<IilPerceptCollection,IilAction> agentServCom;
 		private HashSet<Thread> activeThreads = new HashSet<Thread>();
-        private ConcurrentQueue<Tuple<int, InternalSendMessage>> marsPackets = new ConcurrentQueue<Tuple<int, InternalSendMessage>>();
+        private List<Tuple<int, InternalSendMessage>> marsPackets = new List<Tuple<int, InternalSendMessage>>();
 		private AutoResetEvent marsPacketAdded = new AutoResetEvent(false);
 		private ServerCommunication marsServCom;
         private MarsToAgentParser marsToAgentParser;
@@ -53,30 +53,33 @@ namespace NabfClientApplication.Client
 		public void UpdateMarsSender()
 		{
 			this.marsPacketAdded.WaitOne();
-			bool hasPacket = false;
-			do
-			{
-                Tuple<int, InternalSendMessage> packet;
-				hasPacket = this.marsPackets.TryDequeue(out packet);
-				if (hasPacket)
-				{
-                    bool packetAccepted = false;
-                    lock (simLock)
-                    {
-                        if (packet.Item1 == this.currentSimId)
-                            packetAccepted = true;
-                    }
-                    if (ActionSent != null)
-                    {
-                        var evtArgs = Tuple.Create((ActionMessage)packet.Item2, DateTime.Now - actionTimeStart);
-                            
-                        ActionSent(this, new UnaryValueEvent<Tuple<ActionMessage, TimeSpan>>(evtArgs));
-                    }
 
-                    if (packetAccepted)
-                        this.marsServCom.SeralizePacket(packet.Item2);
-				}
-			} while (hasPacket);
+            Tuple<int, InternalSendMessage>[] packets;
+            lock (marsPackets)
+            {
+                packets = this.marsPackets.ToArray();
+                this.marsPackets.Clear();
+            }
+
+            foreach(var packet in packets)
+            {
+			    bool packetAccepted = false;
+                lock (simLock)
+                {
+                    if (packet.Item1 == this.currentSimId)
+                        packetAccepted = true;
+                }
+                if (ActionSent != null)
+                {
+                    var evtArgs = Tuple.Create((ActionMessage)packet.Item2, DateTime.Now - actionTimeStart);
+                            
+                    ActionSent(this, new UnaryValueEvent<Tuple<ActionMessage, TimeSpan>>(evtArgs));
+                }
+
+                if (packetAccepted)
+                    this.marsServCom.SeralizePacket(packet.Item2);
+                
+			}
 
 		}
 
@@ -127,7 +130,8 @@ namespace NabfClientApplication.Client
 
 		private void AddMarsPacket(int id, InternalSendMessage packet)
 		{
-			this.marsPackets.Enqueue(Tuple.Create(id,packet));
+            lock(this.marsPackets)
+			    this.marsPackets.Add(Tuple.Create(id,packet));
 			this.marsPacketAdded.Set();
 		}
 
@@ -172,6 +176,8 @@ namespace NabfClientApplication.Client
         public void Start()
         {
             ReceiveMessage msg = (ReceiveMessage) marsServCom.DeserializePacket();
+            if(msg.Message is SimEndMessage)
+                msg = (ReceiveMessage)marsServCom.DeserializePacket();
             SimStartMessage sMsg = (SimStartMessage) msg.Message;
             var sMsgPercepts = (IilPerceptCollection) marsToAgentParser.ConvertToForeign(msg);
             StartSim(sMsg);
@@ -192,7 +198,7 @@ namespace NabfClientApplication.Client
             catch (Exception e)
             {
                 Console.WriteLine("Client failure: " + e.Message);
-                //Environment.Exit(1); 
+                Environment.Exit(1); 
             }
         }
 
