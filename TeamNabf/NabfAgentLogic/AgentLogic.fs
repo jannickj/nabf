@@ -51,6 +51,8 @@
             ;   Achievements = []
             ;   NewZone = None
             ;   Goals = []
+            ;   Jobs = []
+            ;   NewZoneFrontier = []
             } : State
 
         (* let updateState : State -> Percept list -> State *)
