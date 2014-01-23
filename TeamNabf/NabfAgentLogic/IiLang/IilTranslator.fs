@@ -26,8 +26,8 @@ namespace NabfAgentLogic.IiLang
 
         let parseIilAgentRole iilAgent =
             match iilAgent with
-            | [ Function ("role", [role])
-              ; Function ("agentId", [Identifier id])
+            | [ Function ("agentId", [Identifier id])
+              ; Function ("role", [role])
               ; Function ("sureness", [Numeral sureness])
               ] -> AgentRolePercept (id, (parseIilRole role).Value, int <| sureness)
             | _ -> raise <| InvalidIilException ("AgentRole", iilAgent)
@@ -344,12 +344,8 @@ namespace NabfAgentLogic.IiLang
                 | "noticeRemoved" ->
                     AgentServerMessage <| (RemovedJob <| parseIilJob tail)
                 | "receivedJob" ->
-                    let (Percept ("whichNodeIndexToGoTo", [Numeral nodeindex]))::rest = tail
-                    let rjob = parseIilJob rest
-                    let ((rjobid,_,_,_),rjobdata) = rjob
-                    let jnodes = getNodesFromJob rjobdata
-                    let usenode = List.nth jnodes (int nodeindex)
-                    AgentServerMessage <| (AcceptedJob <| ((rjobid.Value),usenode))
+                    let [Percept ("noticeId", [Numeral rjobid]); Percept ("whichNodeNameToGoTo", [Identifier nodename])] = tail
+                    AgentServerMessage <| (AcceptedJob <| ((int rjobid),nodename))
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"
         
@@ -394,9 +390,9 @@ namespace NabfAgentLogic.IiLang
         let buildPerceptAsIilFunction percept =
             match percept with
             | VertexProbed (vn, value) -> [Function ("nodeKnowledge", [Identifier vn; Numeral (float value)])]
-            | VertexSeen (vn,_) -> [Function ("nodeKnowledge", [Identifier vn])]
+            | VertexSeen (vn,_) -> [Function ("nodeKnowledge", [Identifier vn; Numeral 0.0])]
             | EdgeSeen (Some cost,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2; Numeral (float cost)])]
-            | EdgeSeen (None,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2])]
+            | EdgeSeen (None,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2; Numeral 0.0])]
             | EnemySeen { Role = Some role; Name = name } -> [Function ("roleKnowledge", [Identifier name; Identifier (role.ToString())])]
             | _ -> []
 
