@@ -49,12 +49,22 @@ namespace NabfProject.AI
 
 		public override void Start()
 		{
-            new Thread(new ThreadStart(() => { while (true) updateSend();})).Start();
-            while (true)
-            {
-                updateReceive();
-            }
+            new Thread(new ThreadStart(() => this.Updater(updateSend))).Start();
+            this.Updater(updateReceive);
 		}
+
+        private void Updater(Action action)
+        {
+            try
+            {
+                while(true)
+                    action();
+            }
+            catch (Exception e)
+            {
+                this.Agent.QueueAction(new AgentCrashed(e));
+            }
+        }
 
         private void updateReceive()
         {

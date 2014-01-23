@@ -56,7 +56,7 @@ namespace NabfServerApplication
         private static void ReceivedMessage(EntityXmasAction<NabfAgent> action)
         {
             Console.SetCursorPosition(15, consolepos[action.Source]*2);
-            Console.Write("received: " + action + "\t\t\t\t\t");
+            Console.Write("Received: " + action + "\t\t\t\t\t");
         }
 
         private static void SendMessage(NabfAgent agent, XmasEvent evt)
@@ -80,6 +80,15 @@ namespace NabfServerApplication
                 agent.Register(new Trigger<ActionStartingEvent<DeleteNoticeAction>>(evt => ReceivedMessage(evt.Action)));
                 agent.Register(new Trigger<ActionStartingEvent<NewRoundAction>>(evt => ReceivedMessage(evt.Action)));
                 agent.Register(new Trigger<ActionStartingEvent<SubscribeSimulationAction>>(evt => ReceivedMessage(evt.Action)));
+                agent.Register(new Trigger<ActionStartingEvent<AgentCrashed>>(evt =>
+                    {
+                        var message = "Crashed! (" + evt.Action.Exception.Message.Substring(0, 20) + "...)";
+                        Console.SetCursorPosition(15, consolepos[agent]*2);
+                        Console.Write("Received: " + message + "\t\t\t\t\t");
+
+                        Console.SetCursorPosition(15, consolepos[agent] * 2 + 1);
+                        Console.Write("Sent: " + message + "\t\t\t\t\t");
+                    }));
 
                 agent.Register(new Trigger<NewKnowledgeEvent>(evt => SendMessage(agent, evt)));
                 agent.Register(new Trigger<NewNoticeEvent>(evt => SendMessage(agent, evt)));

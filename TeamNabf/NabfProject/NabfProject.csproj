@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actions\AgentCrashed.cs" />
     <Compile Include="Actions\ChangeNoticeAction.cs" />
     <Compile Include="Actions\AddKnowledgeAction.cs" />
     <Compile Include="Actions\ApplyNoticeAction.cs" />
