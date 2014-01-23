@@ -175,6 +175,7 @@ namespace NabfClientApplication.Client
 
         public void Start()
         {
+			this.currentLogic = this.logicFactory.ConstructAgentLogic ();
             ReceiveMessage msg = (ReceiveMessage) marsServCom.DeserializePacket();
             if(msg.Message is SimEndMessage)
                 msg = (ReceiveMessage)marsServCom.DeserializePacket();
@@ -183,7 +184,7 @@ namespace NabfClientApplication.Client
             StartSim(sMsg);
             currentLogic.HandlePercepts(sMsgPercepts);
 
-            Thread marsSenderThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsSender(); })));
+			Thread marsSenderThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsSender(); })));
             Thread marsReceiverThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsReceiver(); })));
             marsSenderThread.Start();
             marsReceiverThread.Start();

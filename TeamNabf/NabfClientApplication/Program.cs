@@ -18,8 +18,13 @@ namespace NabfClientApplication
 	{
 		static void Main(string[] args)
 		{
-            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-            int marsinfo_pos = 0;
+			try
+			{
+            	CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+			}catch {
+			}
+
+			int marsinfo_pos = 0;
             int selectIp = 0;
             //string master_server = args[0];
             string mars_server = args[marsinfo_pos];

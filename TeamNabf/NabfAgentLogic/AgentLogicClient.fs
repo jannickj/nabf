@@ -30,7 +30,8 @@
         //let mutable lastHighestDesire:Desirability = 0
         
 
-        new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
+        new(name) = 
+            AgentLogicClient(name,fun () -> generateDecisionTree) 
 
         //Parallel helpers
         let mutable stopDeciders = new CancellationTokenSource()
@@ -244,6 +245,7 @@
                         this.awaitingPercepts <- []
                         this.BeliefData <- buildInitState (agentname,sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
+                        let evaluateTimerStart = DateTime.Now 
                         let left = new DateTime(int64(deadline)*int64(10000))
                         let timeleft = left-DateTime.Now ;
                         let a = int64(deadline)
@@ -251,6 +253,7 @@
                         let start = DateTime.Now
                         let action = buildSharePerceptsAction (sharedPercepts percepts)
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
+
                         this.ReEvaluate percepts
                         let knownJobs = lock knownJobsLock (fun () -> this.KnownJobs)
                         this.evaluateJobs knownJobs
@@ -259,6 +262,7 @@
                         let forceDecision start totaltime =
                             async
                                 {
+                                    
                                     let! token = Async.CancellationToken
                                     let awaitingDecision = ref true
                                     //Thread.Sleep(800)
@@ -266,6 +270,7 @@
                                         if token.IsCancellationRequested then
                                             awaitingDecision:=false
                                         else
+                                            printfn "LOOOOOOP"
                                             do! Async.Sleep(10)
 
                                             let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
@@ -277,8 +282,12 @@
                                                 SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
                                                 awaitingDecision:=false
                                 }
-                        Async.Start ((forceDecision System.DateTime.Now.Ticks totalTime),stopDeciders.Token)
+    
+                        Async.Start ((forceDecision System.DateTime.Now.Ticks totalTime), stopDeciders.Token)
                         let dif = DateTime.Now - start
+
+                        let evaluateTimerDiff = DateTime.Now - evaluateTimerStart
+                        Console.WriteLine ("time spent evaluating: {0}", evaluateTimerDiff);
                         Console.WriteLine("Action request time: "+dif.TotalMilliseconds.ToString());
                         ()
                     | ServerClosed -> ()
