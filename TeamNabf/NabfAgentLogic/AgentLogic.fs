@@ -177,9 +177,7 @@
 
         let generateJobs  (state:State) (jobs:Job list) = []
         
-        //Obsolete
-        let generateActions (state:State) = []
-        
+       
 
         let generateDecisionTree : Decision<(State -> (bool*Option<Action>))> = DecisionTree.getTree
 
@@ -236,9 +234,6 @@
             | JobType.AttackJob     -> generateAttackJob s knownJobs
             | _                     -> failwithf "Wrong JobType parameter passed to generateJob"
 
-        let buildJob (job:Job) = 
-            new IilAction "some action"
-
         let decideJob (state:State) (job:Job) : Desirability * bool =
             if state.Goals.IsEmpty 
             then
@@ -252,5 +247,5 @@
                 (0,false)
 
 
-        let buildIilSendMessage (sm:SendMessage) =
-            new IilAction "data"
+        let buildIilSendMessage ((id,act):SendMessage) =
+            IiLang.IiLangDefinitions.buildIilAction (IiLang.IilTranslator.buildIilMetaAction act id)
