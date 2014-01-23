@@ -21,9 +21,11 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
 
         public override DeleteNoticeAction BeginConversionToForeign(IilAction gobj)
         {
-            int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
+            IilFunction bonusfunc = ((IilFunction)gobj.Parameters[0]);
 
-            Int64 noticeId = (Int64)((IilNumeral)gobj.Parameters[1]).Value;
+            int simId = (int)((IilNumeral)bonusfunc.Parameters[0]).Value;
+
+            Int64 noticeId = (Int64)((IilNumeral)bonusfunc.Parameters[1]).Value;
 
             DeleteNoticeAction dna = new DeleteNoticeAction(simId, noticeId);
 

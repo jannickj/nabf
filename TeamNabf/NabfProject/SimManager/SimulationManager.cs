@@ -49,7 +49,7 @@ namespace NabfProject.SimManager
 
             b = _simDataStorage.TryGetValue(simID, out sd);
             if (b == false)
-                throw new ArgumentException("id " + simID + " not found.");
+                return false;// throw new ArgumentException("id " + simID + " not found.");
                 //return false;
 
             km = sd.KnowledgeManager;
@@ -78,11 +78,15 @@ namespace NabfProject.SimManager
         {
             KnowledgeManager km;
             NoticeBoard nb;
+            bool b;
             if (_currentID != simID)
             {
-                TryGetSimData(_currentID, out km, out nb);
-                km.Unsubscribe(agent);
-                nb.Unsubscribe(agent);
+                b = TryGetSimData(_currentID, out km, out nb);
+                if (b)
+                {
+                    km.Unsubscribe(agent);
+                    nb.Unsubscribe(agent);
+                }
 
                 TryInsertSimData(simID);
                 _currentID = simID;
@@ -159,9 +163,14 @@ namespace NabfProject.SimManager
             NoticeBoard nb;
             Notice notice;
             TryGetNoticeBoard(simID, out nb);
-            bool b = nb.TryGetNoticeFromId(id, out notice);
-            if (b == false)
-                return;
+            if (id != -1)
+            {
+                bool b = nb.TryGetNoticeFromId(id, out notice);
+                if (b == false)
+                    return;
+            }
+            else
+                notice = new EmptyJob();
 
             if (notice.IsEmpty())
                 _numberOfAgentsFinishedApplying++;

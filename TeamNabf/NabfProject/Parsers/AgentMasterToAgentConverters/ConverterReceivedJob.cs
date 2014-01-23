@@ -19,10 +19,12 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
             IilPerceptCollection ipc;
             IilPercept percept = ((IilPerceptCollection)Parsers.ConvertToForeign(gobj.Notice)).Percepts[0];
 
+            int receiverIndex = gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver);
+
             ipc = new IilPerceptCollection
             (
                 new IilPercept("receivedJob"),
-                new IilPercept("whichNodeIndexToGoTo", new IilNumeral(gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver))),
+                new IilPercept("whichNodeNameToGoTo", new IilIdentifier(gobj.Notice.WhichNodes[receiverIndex].Name)),
                 percept
             );
 

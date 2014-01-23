@@ -26,28 +26,30 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
 
         public override CreateNoticeAction BeginConversionToForeign(IilAction gobj)
         {
-            int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
+            IilFunction bonusfunc = ((IilFunction)gobj.Parameters[0]);
 
-            int type = (int)((IilNumeral)gobj.Parameters[1]).Value;
+            int simId = (int)((IilNumeral)bonusfunc.Parameters[0]).Value;
+
+            int type = (int)((IilNumeral)bonusfunc.Parameters[1]).Value;
             NoticeBoard.JobType jobType = (NoticeBoard.JobType)type;
 
-            int agentsNeeded = (int)((IilNumeral)gobj.Parameters[2]).Value;
-
-            List<NodeKnowledge> nodes = ((IilFunction)gobj.Parameters[3]).Parameters
+            int agentsNeeded = (int)((IilNumeral)bonusfunc.Parameters[2]).Value;
+            
+            List<NodeKnowledge> nodes = ((IilFunction)bonusfunc.Parameters[3]).Parameters
                 .Select(k => (NodeKnowledge)MasterDataParser.ConvertToKnown(k)).ToList();
 
-            int value = (int)((IilNumeral)gobj.Parameters[4]).Value;
+            int value = (int)((IilNumeral)bonusfunc.Parameters[4]).Value;
 
             List<NodeKnowledge> zone = new List<NodeKnowledge>();
             string agentToRepair = "";
             switch (jobType)
             {
                 case NoticeBoard.JobType.Occupy:
-                     zone = ((IilFunction)gobj.Parameters[5]).Parameters
+                    zone = ((IilFunction)bonusfunc.Parameters[3]).Parameters
                         .Select(k => (NodeKnowledge)MasterDataParser.ConvertToKnown(k)).ToList();
                     break;
                 case NoticeBoard.JobType.Repair:
-                    agentToRepair = ((IilIdentifier)gobj.Parameters[5]).Value;
+                    agentToRepair = ((IilIdentifier)((IilFunction)gobj.Parameters[0]).Parameters[0]).Value;
                     break;
             }
 

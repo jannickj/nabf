@@ -21,9 +21,11 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
 
         public override NewRoundAction BeginConversionToForeign(IilAction gobj)
         {
-            int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
+            IilFunction bonusfunc = ((IilFunction)gobj.Parameters[0]);
 
-            int roundNumber = (int)((IilNumeral)gobj.Parameters[1]).Value;
+            int simId = (int)((IilNumeral)bonusfunc.Parameters[0]).Value;
+
+            int roundNumber = (int)((IilNumeral)bonusfunc.Parameters[1]).Value;
 
             NewRoundAction nra = new NewRoundAction(simId, roundNumber);
 

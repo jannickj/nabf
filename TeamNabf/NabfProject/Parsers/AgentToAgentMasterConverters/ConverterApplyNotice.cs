@@ -21,11 +21,13 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
 
         public override ApplyNoticeAction BeginConversionToForeign(IilAction gobj)
         {
-            int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
+            IilFunction bonusfunc = ((IilFunction)gobj.Parameters[0]);
 
-            int noticeId = (int)((IilNumeral)gobj.Parameters[1]).Value;
+            int simId = (int)((IilNumeral)bonusfunc.Parameters[0]).Value;
 
-            int desire = (int)((IilNumeral)gobj.Parameters[2]).Value;            
+            int noticeId = (int)((IilNumeral)bonusfunc.Parameters[1]).Value;
+
+            int desire = (int)((IilNumeral)bonusfunc.Parameters[2]).Value;            
 
             ApplyNoticeAction ana = new ApplyNoticeAction(simId, noticeId, desire);
 

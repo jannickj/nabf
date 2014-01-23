@@ -39,7 +39,7 @@ namespace NabfProject.AI
         public void ReadXml(System.Xml.XmlReader reader)
         {
             reader.MoveToContent();
-            if(!reader.IsStartElement())
+            if (!reader.IsStartElement())
                 reader.ReadEndElement();
             this.ReadNode(reader);
             reader.ReadStartElement(NodeName);

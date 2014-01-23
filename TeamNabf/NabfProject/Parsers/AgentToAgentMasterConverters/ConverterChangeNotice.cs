@@ -25,30 +25,32 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
 
         public override ChangeNoticeAction BeginConversionToForeign(IilAction gobj)
         {
-            int simId = (int)((IilNumeral)gobj.Parameters[0]).Value;
+            IilFunction bonusfunc = ((IilFunction)gobj.Parameters[0]);
 
-            Int64 noticeId = (Int64)((IilNumeral)gobj.Parameters[1]).Value;
+            int simId = (int)((IilNumeral)bonusfunc.Parameters[0]).Value;
 
-            int type = (int)((IilNumeral)gobj.Parameters[2]).Value;
+            Int64 noticeId = (Int64)((IilNumeral)bonusfunc.Parameters[1]).Value;
+
+            int type = (int)((IilNumeral)bonusfunc.Parameters[2]).Value;
             NoticeBoard.JobType jobType = (NoticeBoard.JobType)type;
 
-            int agentsNeeded = (int)((IilNumeral)gobj.Parameters[3]).Value;
+            int agentsNeeded = (int)((IilNumeral)bonusfunc.Parameters[3]).Value;
 
-            List<NodeKnowledge> nodes = ((IilFunction)gobj.Parameters[4]).Parameters
+            List<NodeKnowledge> nodes = ((IilFunction)bonusfunc.Parameters[4]).Parameters
                 .Select(k => (NodeKnowledge)MasterDataParser.ConvertToKnown(k)).ToList();
 
-            int value = (int)((IilNumeral)gobj.Parameters[5]).Value;
+            int value = (int)((IilNumeral)bonusfunc.Parameters[5]).Value;
 
             List<NodeKnowledge> zone = new List<NodeKnowledge>();
             string agentToRepair = "";
             switch (jobType)
             {
                 case NoticeBoard.JobType.Occupy:
-                    zone = ((IilFunction)gobj.Parameters[6]).Parameters
+                    zone = ((IilFunction)bonusfunc.Parameters[6]).Parameters
                        .Select(k => (NodeKnowledge)MasterDataParser.ConvertToKnown(k)).ToList();
                     break;
                 case NoticeBoard.JobType.Repair:
-                    agentToRepair = ((IilIdentifier)gobj.Parameters[6]).Value;
+                    agentToRepair = ((IilIdentifier)bonusfunc.Parameters[6]).Value;
                     break;
             }
 
