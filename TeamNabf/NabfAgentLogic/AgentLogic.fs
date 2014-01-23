@@ -1,4 +1,4 @@
-﻿namespace NabfAgentLogic
+namespace NabfAgentLogic
     module AgentLogic =
         open System
         open Graphing.Graph
@@ -33,15 +33,16 @@
                     else 
                         { state with OwnedVertices = ownedVertices }
                 | VertexProbed (name, value) ->
-                    let valueVertex = {state.World.[name] with Value = Some value} 
-                    let updatedWorld = (addVertexValue state.World valueVertex)
-                    let vtex = updatedWorld.[name]
-                    { state with World = updatedWorld }
-                | EdgeSeen (cost, node1, node2) when (not <| Set.contains (cost, node2) state.World.[node1].Edges) ->
-                    { state with 
-                        World = addEdge state.World (cost, node1, node2) 
-                        NewEdges = (cost, node1, node2) :: state.NewEdges
-                    }
+                    { state with World = addVertexValue state.World {state.World.[name] with Value = Some value} }
+                | EdgeSeen (cost, node1, node2) ->
+                    let edgeAlreadyExists = fun (cost', otherVertexId) -> cost' = None || otherVertexId = node2
+                    if (not <| Set.exists edgeAlreadyExists state.World.[node1].Edges) then
+                        { state with 
+                            World = addEdge (cost, node1, node2) state.World 
+                            NewEdges = (cost, node1, node2) :: state.NewEdges
+                        }
+                    else
+                        state
                 | Team team ->
                     { state with 
                         TeamZoneScore = team.ZoneScore
@@ -106,45 +107,43 @@
             | (fromVertex, Goto toVertex, Successful) -> 
                 let edge = (Some (oldState.Self.Energy.Value - newState.Self.Energy.Value), fromVertex, toVertex)
                 { newState with 
-                    World = addEdgeCost newState.World edge
+                    World = addEdge edge newState.World
                     NewEdges = edge :: newState.NewEdges 
                 }
             | _ -> newState
 
-        let updateSelf (oldState : State) (newState : State) =
-            { newState with
-                Self = { newState.Self with
-                           Team = oldState.Self.Team
-                           Name = oldState.Self.Name
-                           Role = oldState.Self.Role
-                       }
+        let clearTempBeliefs state =
+            { state with 
+                NewEdges = []
+                NewVertices = []
+                NearbyAgents = [] 
             }
+
+        let updateSelf oldState newState =
+            let newSelf = 
+                { newState.Self with 
+                    Team = oldState.Self.Team
+                    Name = oldState.Self.Name
+                    Role = oldState.Self.Role
+                }
+            { newState with Self = newSelf }
            
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            let newState = clearTempBeliefs state
-            List.fold handlePercept newState percepts
-            |> updateTraversedEdgeCost state
-            |> updateSelf state
+            let state' = clearTempBeliefs state
 
-//            let newState = List.fold handlePercept state percepts
-//            
-//            let newSelf = { newState.Self with 
-//                              Team = state.Self.Team
-//                              Name = state.Self.Name
-//                              Role = state.Self.Role
-//                          }
-//            let newState = { newState with  Self = newSelf }
-//
-//            match (state.LastAction, state.LastActionResult) with
-//            | (Goto _, Successful) ->
-//                printfn "coming from %s" state.Self.Node
-//                printfn "edges before: %A" (Set.toList <| newState.World.[newState.Self.Node].Edges)
-//                let newNewState = updateTraversedEdgeCost state newState
-//                printfn "edges after: %A" (Set.toList <| newNewState.World.[newState.Self.Node].Edges)
-//                newNewState
-//            | _ -> updateTraversedEdgeCost state newState
+            let state'' = List.fold handlePercept state' percepts
 
+            let state''' = updateSelf state state''
+
+            match (state'''.LastAction, state'''.LastActionResult) with
+            | (Goto _, Successful) ->
+                printfn "coming from %s" state.Self.Node
+                printfn "edges before: %A" (Set.toList <| state'''.World.[state'''.Self.Node].Edges)
+                let state'''' = updateTraversedEdgeCost state state'''
+                printfn "edges after: %A" (Set.toList <| state''''.World.[state''''.Self.Node].Edges)
+                state''''
+            | _ -> updateTraversedEdgeCost state state'''
     
         let shouldSharePercept (state:State) percept =
             match percept with

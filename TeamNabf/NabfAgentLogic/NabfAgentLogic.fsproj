@@ -10,7 +10,7 @@
     <AssemblyName>NabfAgentLogic</AssemblyName>
     <Name>NabfAgentLogic</Name>
     <ProductVersion>12.0.0</ProductVersion>
-    <ProjectGuid>{039ee1f6-4fd5-4dc7-97ed-4d3e5e8b9c20}</ProjectGuid>
+    <ProjectGuid>{039EE1F6-4FD5-4DC7-97ED-4D3E5E8B9C20}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
