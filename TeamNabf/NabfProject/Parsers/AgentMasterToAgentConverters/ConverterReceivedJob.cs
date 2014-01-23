@@ -24,8 +24,8 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
             ipc = new IilPerceptCollection
             (
                 new IilPercept("receivedJob"),
-                new IilPercept("noticeId", new IilNumeral(gobj.Notice.Id));
-                new IilPercept("whichNodeNameToGoTo", new IilIdentifier(gobj.Notice.WhichNodes[receiverIndex].Name)),
+                new IilPercept("noticeId", new IilNumeral(gobj.Notice.Id)),
+                new IilPercept("whichNodeNameToGoTo", new IilIdentifier(gobj.Notice.WhichNodes[receiverIndex].Name))
                 //percept
             );
 
