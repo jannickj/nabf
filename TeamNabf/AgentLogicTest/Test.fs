@@ -176,7 +176,7 @@ type GraphTest() =
                            ; ("b", { Identifier = "b"; Value = None; Edges = [(Some 1, "a")] |> Set.ofList })
                            ] |> Map.ofList
 
-            let actual = addEdgeCost graph testEdge
+            let actual = addEdgeCost testEdge graph
 
             Assert.AreEqual (expected, actual)
 

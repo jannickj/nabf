@@ -33,7 +33,9 @@ namespace NabfAgentLogic
                     else 
                         { state with OwnedVertices = ownedVertices }
                 | VertexProbed (name, value) ->
-                    { state with World = addVertexValue state.World {state.World.[name] with Value = Some value} }
+                    { state with 
+                        World = addVertexValue name value state.World
+                    }
                 | EdgeSeen (cost, node1, node2) ->
                     let edgeAlreadyExists = fun (cost', otherVertexId) -> cost' = None || otherVertexId = node2
                     if (not <| Set.exists edgeAlreadyExists state.World.[node1].Edges) then

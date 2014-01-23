@@ -46,11 +46,8 @@
         let join (graph : Graph) (graph' : Graph) = 
             Map.empty<string, Vertex> : Graph
 
-        let addVertexValue (graph : Graph) (vertex : Vertex) =
-            let vertex' = graph.[vertex.Identifier]
-            let updatedVertex = { vertex' with Value = vertex.Value }
-            Map.remove vertex.Identifier graph
-            |> Map.add vertex.Identifier updatedVertex
+        let addVertexValue vertex value (graph : Graph) =
+            Map.add vertex { graph.[vertex] with Value = Some value } graph
 
         let addEdgeCost ((value, vertex1, vertex2) : Edge) (graph : Graph) =
             Map.empty<string,Vertex>
