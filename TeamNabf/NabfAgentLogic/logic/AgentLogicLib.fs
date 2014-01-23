@@ -29,12 +29,22 @@ module AgentLogicLib =
     let tryGo (v:Vertex) (s:State) =
         let edges = Set.toList s.World.[s.Self.Node].Edges
         let edge = List.find (fun (_,id) -> id = v.Identifier) edges
-        if (fst edge) = None 
-        then 
-            if s.Self.Energy < (Some 10) then recharge else (true,Some(Goto(v.Identifier)))
+
+        if (fst edge) = None then 
+            if s.Self.Energy < (Some 10) then 
+                printfn"\n\nTryGo 1: recharge \n" 
+                recharge 
+            else 
+                printfn"\n\nTryGo 1: %A \n" (true,Some(Goto(v.Identifier)))
+                (true,Some(Goto(v.Identifier)))
         else
             let value = (fst edge).Value
-            if value > s.Self.Energy.Value then recharge else (true,Some(Goto(v.Identifier)))
+            if value > s.Self.Energy.Value then 
+                printfn"\n\nTryGo 2: recharge \n" 
+                recharge 
+            else 
+                printfn"\n\nTryGo 2: %A \n" (true,Some(Goto(v.Identifier)))
+                (true,Some(Goto(v.Identifier)))
 
     let rec getSafeVertex (s:State) (l:Vertex list) (enemySabs:Agent list)=
         match l with

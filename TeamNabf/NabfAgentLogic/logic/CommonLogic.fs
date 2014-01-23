@@ -35,7 +35,7 @@ module CommonLogic =
             printfn "Unexplored NONE!"
             (false,None) 
         else            
-            printfn "TRY GO!"
+            printfn "TRY GO! to %s \n\t %A" unexplored.Value.Head s.World.[unexplored.Value.Head]
             tryGo s.World.[unexplored.Value.Head] s
             
     let idle (s:State) = recharge
