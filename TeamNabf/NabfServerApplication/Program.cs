@@ -41,8 +41,12 @@ namespace NabfServerApplication
 
             NabfModel model = (NabfModel)factory.ConstructModel(builder);
 
-            model.EventManager.Register(new Trigger<ActionStartingEvent<AddXmasObjectAction>>(AddedXmasObject));
-            
+            model.EventManager.Register(new Trigger<ActionCompletedEvent<AddXmasObjectAction>>(AddedXmasObject));
+            model.EventManager.Register(new Trigger<ActionFailedEvent>(evt =>
+                {
+                    Console.SetCursorPosition(0, 0);
+                    Console.Write("Error occured with " + evt.FailedAction.GetType().Name + ": " + evt.Exception.Message);
+                }));
             
 
             XmasEngineManager engine = new XmasEngineManager(factory);
@@ -55,22 +59,22 @@ namespace NabfServerApplication
 
         private static void ReceivedMessage(EntityXmasAction<NabfAgent> action)
         {
-            Console.SetCursorPosition(15, consolepos[action.Source]*2);
+            Console.SetCursorPosition(15, consolepos[action.Source]*2 +2);
             Console.Write("Received: " + action + "\t\t\t\t\t");
         }
 
         private static void SendMessage(NabfAgent agent, XmasEvent evt)
         {
-            Console.SetCursorPosition(15, consolepos[agent] * 2 + 1);
+            Console.SetCursorPosition(15, consolepos[agent] * 2 + 3);
             Console.Write("Sent: " + evt + "\t\t\t\t\t");
         }
 
-        private static void AddedXmasObject(ActionStartingEvent<AddXmasObjectAction> evten)
+        private static void AddedXmasObject(ActionCompletedEvent<AddXmasObjectAction> evten)
         {
             if (evten.Action.Object is NabfAgent)
             {
                 var agent = (NabfAgent)evten.Action.Object;
-                Console.SetCursorPosition(0, start*2);
+                Console.SetCursorPosition(0, start*2+2);
                 Console.Write("Agent: "+agent.Name);
                 consolepos.Add(agent, start);
                 agent.Register(new Trigger<ActionStartingEvent<AddKnowledgeAction>>(evt => ReceivedMessage(evt.Action)));

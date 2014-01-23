@@ -14,6 +14,10 @@ using XmasEngineModel.EntityLib;
 using System.IO;
 using JSLibrary.IiLang.Parameters;
 using NabfProject.Parsers;
+using System.Threading;
+using XmasEngineModel.Management;
+using XmasEngineModel.Management.Events;
+using XmasEngineModel.Management.Actions;
 
 namespace NabfProject.AI
 {
@@ -39,7 +43,7 @@ namespace NabfProject.AI
                 StreamReader sreader = new StreamReader(client.GetStream(), Encoding.UTF8);
                 StreamWriter swriter = new StreamWriter(client.GetStream(), Encoding.UTF8);
 				XmlPacketTransmitter<IilAction, IilPerceptCollection> transmitter = new XmlPacketTransmitter<IilAction, IilPerceptCollection>(sreader, swriter);
-
+                
                 IilAction action = transmitter.DeserializeMessage();
 
                 string agentName = ((IilIdentifier)action.Parameters[0]).Value;
@@ -51,7 +55,14 @@ namespace NabfProject.AI
                     {
                         agent = new NabfAgent(agentName);
                         agents.Add(agentName, agent);
+                        var agentAdded = new AutoResetEvent(false);
+                        var trigger = new Trigger<ActionCompletedEvent<AddXmasObjectAction>>(evt => { if (evt.Action.Object == agent) agentAdded.Set(); });
+                        this.EventManager.Register(trigger);
                         this.ActionManager.Queue(new XmasEngineModel.Management.Actions.AddXmasObjectAction(agent));
+                        agentAdded.WaitOne();
+                        this.EventManager.Deregister(trigger);
+
+
                     }
 
                 }
