@@ -27,7 +27,7 @@ namespace NabfProject.Parsers.KnowledgeConverters
             //  <IilIdentifier node2="?" />
             //  <IilNumeral value=? />
             //</ IilAction>
-            var ia = (IilAction)fobj;
+            var ia = (IilFunction)fobj;
 
             var identifier1 = (IilIdentifier)ia.Parameters[0];
             var identifier2 = (IilIdentifier)ia.Parameters[1];

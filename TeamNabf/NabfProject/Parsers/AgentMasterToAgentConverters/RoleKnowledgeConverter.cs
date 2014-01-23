@@ -23,17 +23,17 @@ namespace NabfProject.Parsers.KnowledgeConverters
         public override RoleKnowledge BeginConversionToKnown(IilElement fobj)
         {
             //<IilAction name="roleKnowledge" >
-            //  <IilIdentifier role="?" />
             //  <IilIdentifier agentId="?" />
+            //  <IilIdentifier role="?" />
             //  <IilNumeral sureness=? />
             //</ IilAction>
-            var ia = (IilAction)fobj;
+            var ia = (IilFunction)fobj;
 
             var identifier1 = (IilIdentifier)ia.Parameters[0];
             var identifier2 = (IilIdentifier)ia.Parameters[1];
             var numeral = (IilNumeral)ia.Parameters[2];
 
-            RoleKnowledge rk = new RoleKnowledge(identifier1.Value, identifier2.Value, (int)numeral.Value);
+            RoleKnowledge rk = new RoleKnowledge(identifier2.Value, identifier1.Value, (int)numeral.Value);
 
             return rk;
         }

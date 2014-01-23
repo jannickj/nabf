@@ -88,7 +88,7 @@ namespace NabfProject.AI
 		public virtual void BeforeDeserialize(XmlReader reader, StreamReader sreader)
 		{
             if (xreader == null)
-                xreader = XmlReader.Create(reader, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment });
+                xreader = XmlReader.Create(this.reader, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment });
 		}
 
 		public virtual void AfterDeserialize(XmlReader reader, StreamReader sreader)

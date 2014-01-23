@@ -51,6 +51,7 @@ namespace NabfProject.AI
                     {
                         agent = new NabfAgent(agentName);
                         agents.Add(agentName, agent);
+                        this.ActionManager.Queue(new XmasEngineModel.Management.Actions.AddXmasObjectAction(agent));
                     }
 
                 }

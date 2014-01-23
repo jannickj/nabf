@@ -5,6 +5,7 @@ using System.Text;
 using JSLibrary.Conversion;
 using JSLibrary.IiLang;
 using JSLibrary.IiLang.DataContainers;
+using JSLibrary.IiLang.Parameters;
 using NabfProject.Parsers.AgentToMarsConverters;
 using NabfProject.ServerMessages;
 
@@ -23,7 +24,7 @@ namespace NabfProject.Parsers
 
 		private object fetchId(IilElement element)
 		{
-            var ipc = (IilAction)element;
+            var ipc = (IilFunction)element;
 
             return ipc.Name;
 		}
