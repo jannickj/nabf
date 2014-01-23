@@ -4,13 +4,10 @@ module Inspector =
 
     open AgentTypes
     open AgentLogicLib
+    open InspectorLogic
 
     let getInspectorTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                
+                Choice(inspect)
             ]
-
-    let inspectorReact (s:State) (agents:Agent list * Agent list) =
-        let potentialEnemySabs = List.filter (fun a -> (a.Role = Some Saboteur) || (a.Role = None)) (fst agents)
-        runAway s potentialEnemySabs

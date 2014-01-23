@@ -4,13 +4,10 @@ module Repairer =
 
     open AgentTypes
     open AgentLogicLib
+    open RepairerLogic
 
     let getRepairerTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                
+                Choice(repairAgent)
             ]
-
-    let repairerReact (s:State) (agents:Agent list * Agent list) =
-        let potentialEnemySabs = List.filter (fun a -> (a.Role = Some Saboteur) || (a.Role = None)) (fst agents)
-        runAway s potentialEnemySabs

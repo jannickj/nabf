@@ -88,25 +88,40 @@ module AgentTypes =
         | Repair    of AgentName
         | Buy       of Upgrade
 
+    
+
     type JobID = int
     type JobValue = int
     type Desirability = int
 
     type JobType = 
+        | EmptyJob = 0
         | OccupyJob = 1
         | RepairJob = 2
         | DisruptJob = 3
         | AttackJob = 4
 
     type JobData =
-        | OccupyJob of VertexName list
+        | OccupyJob of VertexName list * VertexName list
         | RepairJob of VertexName * AgentName
         | DisruptJob of VertexName
         | AttackJob of VertexName list
+        | EmptyJob
+    
+    type AgentsNeededForJob = int
 
-    type JobHeader = JobID * JobValue * JobType
+    type JobHeader = Option<JobID> * JobValue * JobType * AgentsNeededForJob
+    type Goal =
+        | OccupyGoal of VertexName
+        | RepairGoal of VertexName * AgentName
+        | DisruptGoal of VertexName
+        | AttackGoal of VertexName
+
 
     type Job = JobHeader * JobData
+
+    
+    
 
     let levelToPoints start level =
         start * (pown 2 level)
@@ -122,6 +137,7 @@ module AgentTypes =
             | Parried  l          -> (l, 5)
 
     type SeenVertex = VertexName * TeamName option
+    type AgentRolePercept = AgentName * AgentRole * int
 
     type Percept =
         | EnemySeen         of Agent
@@ -135,6 +151,21 @@ module AgentTypes =
         | ZoneScore         of int
         | Team              of TeamState
         | Self              of Agent
+        | AgentRolePercept  of AgentRolePercept
+        
+
+    type SimulationID = int
+
+    type MetaAction =
+        | CreateJob of Job
+        | RemoveJob of JobID
+        | UpdateJob of Job
+        | ApplyJob of JobID*Desirability
+        | SimulationSubscribe
+        | ShareKnowledge of Percept list
+        | NewRound of int
+    
+    type SendMessage = SimulationID * MetaAction
 
     type Deadline = uint32
     type CurrentTime = uint32
@@ -152,8 +183,9 @@ module AgentTypes =
         }
 
     type AgentServerMessage =
-        | NewJobs of Job List
-        | AcceptedJob of JobID
+        | AddedOrChangedJob of Job
+        | RemovedJob of Job
+        | AcceptedJob of JobID*VertexName
         | SharedPercepts of Percept list
 
     type MarsServerMessage =  
@@ -184,7 +216,10 @@ module AgentTypes =
             LastActionResult : ActionResult
             LastAction       : Action
             TeamZoneScore    : int
-
+            NewZone          : Option<Graph * bool>
+            NewZoneFrontier  : VertexName list
+            Goals            : Goal list
+            Jobs             : Job list
         }
 
     type OptionFunc = State -> (bool*Option<Action>)
