@@ -112,13 +112,6 @@ namespace NabfAgentLogic
                 }
             | _ -> newState
 
-        let clearTempBeliefs state =
-            { state with 
-                NewEdges = []
-                NewVertices = []
-                NearbyAgents = [] 
-            }
-
         let updateSelf oldState newState =
             let newSelf = 
                 { newState.Self with 
