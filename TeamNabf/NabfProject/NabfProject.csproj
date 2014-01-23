@@ -54,6 +54,7 @@
     <Compile Include="Events\NoticeUpdatedEvent.cs" />
     <Compile Include="Events\NoticeRemovedEvent.cs" />
     <Compile Include="Events\SimulationSubscribed.cs" />
+    <Compile Include="Library\StreamSplitter.cs" />
     <Compile Include="NabfModelFactory.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterNewNotice.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterNewKnowledge.cs" />
