@@ -86,7 +86,7 @@ namespace NabfTest.Scenarios
 
             masterSerCom.SeralizePacket(new IilAction("newRoundAction", newroundpacket));
             masterSerCom.SeralizePacket(new IilAction("applyNoticeAction", applypacket));
-            masterSerCom.SeralizePacket(new IilAction("applyNoticeAction", finishedapplypacket));
+            //masterSerCom.SeralizePacket(new IilAction("applyNoticeAction", finishedapplypacket));
 
             ipc2 = masterSerCom.DeserializeMessage();
             System.Diagnostics.Debugger.Break();

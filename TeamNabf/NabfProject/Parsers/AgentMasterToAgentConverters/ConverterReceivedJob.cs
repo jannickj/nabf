@@ -17,15 +17,16 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
         public override IilPerceptCollection BeginConversionToForeign(ReceivedJobEvent gobj)
         {
             IilPerceptCollection ipc;
-            IilPercept percept = ((IilPerceptCollection)Parsers.ConvertToForeign(gobj.Notice)).Percepts[0];
+            //IilPercept percept = ((IilPerceptCollection)Parsers.ConvertToForeign(gobj.Notice)).Percepts[0];
 
             int receiverIndex = gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver);
 
             ipc = new IilPerceptCollection
             (
                 new IilPercept("receivedJob"),
+                new IilPercept("noticeId", new IilNumeral(gobj.Notice.Id));
                 new IilPercept("whichNodeNameToGoTo", new IilIdentifier(gobj.Notice.WhichNodes[receiverIndex].Name)),
-                percept
+                //percept
             );
 
             return ipc;
