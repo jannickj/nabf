@@ -26,6 +26,12 @@ namespace NabfProject.ServerMessages
         {
             reader.MoveToContent();
             messageName = reader.LocalName;
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                reader.MoveToContent();
+                return;
+            }
             reader.Read();
             reader.MoveToContent();
 
@@ -37,7 +43,17 @@ namespace NabfProject.ServerMessages
                 visibleEntities.Add(message);
                 reader.Read();
                 reader.MoveToContent();
-            } 
+            }
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                reader.MoveToContent();
+            }
+            else
+            {
+                reader.ReadEndElement();
+                reader.MoveToContent();
+            }
         }
     }
 }

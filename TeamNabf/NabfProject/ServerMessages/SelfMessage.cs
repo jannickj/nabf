@@ -105,6 +105,12 @@ namespace NabfProject.ServerMessages
             strength = Convert.ToInt32(reader["strength"]);
             visRange = Convert.ToInt32(reader["visRange"]);
             zoneScore = Convert.ToInt32(reader["zoneScore"]);
+
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                reader.MoveToContent();
+            }
         }
     }
 }

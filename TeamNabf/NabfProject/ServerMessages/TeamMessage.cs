@@ -40,7 +40,7 @@ namespace NabfProject.ServerMessages
             get { return messageName; }
         }
 
-        private InternalReceiveMessage achievements;
+        private InternalReceiveMessage achievements = new AchievementsMessage();
 
         public AchievementsMessage Achievements
         {
@@ -56,16 +56,23 @@ namespace NabfProject.ServerMessages
             money = Convert.ToInt32(reader["money"]);
             score = Convert.ToInt32(reader["score"]);
             zonesScore = Convert.ToInt32(reader["zonesScore"]);
-
-            reader.Read();
-            if ("achievements" == reader.LocalName)
+            
+           
+            if (!reader.IsEmptyElement)
             {
+                reader.Read();
                 reader.MoveToContent();
                 var message = ServerMessageFactory.Instance.ConstructMessage(reader.LocalName);
                 message.ReadXml(reader);
                 achievements = message;
 
                 reader.ReadEndElement();
+                reader.MoveToContent();
+            }
+            else if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                reader.MoveToContent();
             }
         }
     }

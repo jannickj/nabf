@@ -73,7 +73,7 @@ type GraphTest() =
                            ; ("b", {Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
                            ] |> Map.ofList
              
-            let actual = addEdge initialGraph testEdge
+            let actual = addEdge testEdge initialGraph
             Assert.AreEqual (expected, actual)
 
         [<Test>]
@@ -155,4 +155,29 @@ type GraphTest() =
             printfn "actual: %A" <| Map.toList actual
 
             Assert.AreEqual (expected, actual)
+
+        [<Test>]
+        member this.AddCostToEdge_GraphWithEdgeWithUnknownCost_GraphWithEdgeWithKnownCost () =
+            (*
+             *   A        A
+             *   |        | 
+             *   | *  ~>  | 1
+             *   |        |
+             *   B        B
+             *)
+
+            let testEdge = (Some 1, "a", "b")
+
+            let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList })
+                         ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                         ] |> Map.ofList
+
+            let expected = [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 1, "b")] |> Set.ofList })
+                           ; ("b", { Identifier = "b"; Value = None; Edges = [(Some 1, "a")] |> Set.ofList })
+                           ] |> Map.ofList
+
+            let actual = addEdgeCost testEdge graph
+
+            Assert.AreEqual (expected, actual)
+
 

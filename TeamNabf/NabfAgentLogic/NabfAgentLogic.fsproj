@@ -10,7 +10,7 @@
     <AssemblyName>NabfAgentLogic</AssemblyName>
     <Name>NabfAgentLogic</Name>
     <ProductVersion>12.0.0</ProductVersion>
-    <ProjectGuid>{039ee1f6-4fd5-4dc7-97ed-4d3e5e8b9c20}</ProjectGuid>
+    <ProjectGuid>{039EE1F6-4FD5-4DC7-97ED-4D3E5E8B9C20}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -45,13 +45,18 @@
     <Compile Include="PathFinding.fs" />
     <Compile Include="IiLang\IiLang.fs" />
     <Compile Include="IiLang\IilTranslator.fs" />
-    <Compile Include="AgentLogicLib.fs" />
-    <Compile Include="Saboteur.fs" />
+    <Compile Include="Logic\AgentLogicLib.fs" />
+    <Compile Include="Logic\ExplorerLogic.fs" />
+    <Compile Include="Logic\SaboteurLogic.fs" />
+    <Compile Include="Logic\InspectorLogic.fs" />
+    <Compile Include="Logic\SentinelLogic.fs" />
+    <Compile Include="Logic\RepairerLogic.fs" />
+    <Compile Include="Logic\CommonLogic.fs" />
     <Compile Include="Explorer.fs" />
     <Compile Include="Inspector.fs" />
-    <Compile Include="Sentinel.fs" />
     <Compile Include="Repairer.fs" />
-    <Compile Include="CommonLogic.fs" />
+    <Compile Include="Saboteur.fs" />
+    <Compile Include="Sentinel.fs" />
     <Compile Include="DecisionTree.fs" />
     <Compile Include="AgentLogic.fs" />
     <Compile Include="AgentInterfaces.fs" />

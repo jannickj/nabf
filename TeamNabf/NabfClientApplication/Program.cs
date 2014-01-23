@@ -25,6 +25,14 @@ namespace NabfClientApplication
             int marsinfo_pos = masterinfo_pos+1;
             
             string master_server = args[masterinfo_pos];
+			try
+			{
+            	CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+			}catch {
+			}
+
+			in selectIp = 0;
+            string master_server = args[0];
             string mars_server = args[marsinfo_pos];
             string username = args[marsinfo_pos+1];
             string password = args[marsinfo_pos+2];
@@ -38,15 +46,28 @@ namespace NabfClientApplication
             TcpClient masterClient = new TcpClient();
 
             Console.WriteLine("Connecting to Mars Server: " + mars_server);
-            ConnectToServer(marsClient, marsServerPoints);
-            Console.WriteLine("Successfully connected to Mars Server");
 
-            Console.WriteLine("Connecting to Agent Master Server: " + master_server);
-            ConnectToServer(masterClient, masterServerPoints);
-            Console.WriteLine("Successfully connected to Agent Master Server");
+            IPEndPoint marsServerPoint = marsServerPoints[selectIp];
 
+            for (int attempts = 0; attempts < 42; attempts++)
+            {
+                try
+                {
+                    marsClient.Connect(marsServerPoint);
+                    break;
+                }
+                catch (Exception)
+                {
+                    if (++selectIp >= marsServerPoints.Length)
+                        throw new Exception("Could not connect to server on any address");
+                    else
+                        marsServerPoint = marsServerPoints[selectIp];
+                }
+            }
+            
 
-
+            
+            Console.WriteLine("Successfully connected to mars server");
 
             AgentLogicFactory logicFactory = new AgentLogicFactory(username);
             ServerCommunication marsSerCom = new ServerCommunication(
@@ -60,7 +81,8 @@ namespace NabfClientApplication
             MarsToAgentParser marsToAgentParser = new MarsToAgentParser();
             AgentToMarsParser agentToMarsParser = new AgentToMarsParser();
 
-            ClientApplication client = new ClientApplication(masterSerCom, marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
+            ClientApplication client = new ClientApplication(marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
+            client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalMilliseconds+" ms)");
 
             Console.WriteLine("Authenticating: username=" + username + ", password=" + password);
 

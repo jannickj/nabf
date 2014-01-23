@@ -12,6 +12,8 @@ namespace NabfAgentLogic.IiLang
             else 
                 Normal
 
+
+
         let parseIilRole iilRole = 
             match iilRole with
             | Identifier "Saboteur"  -> Some Saboteur
@@ -21,6 +23,14 @@ namespace NabfAgentLogic.IiLang
             | Identifier "Sentinel"  -> Some Sentinel
             | Identifier ""          -> None
             | _ -> raise <| InvalidIilException ("Role", [iilRole])
+
+        let parseIilAgentRole iilAgent =
+            match iilAgent with
+            | [ Function ("role", [role])
+              ; Function ("agentId", [Identifier id])
+              ; Function ("sureness", [Numeral sureness])
+              ] -> AgentRolePercept (id, (parseIilRole role).Value, int <| sureness)
+            | _ -> raise <| InvalidIilException ("AgentRole", iilAgent)
         
         let parseIilAgent iilData =
             match iilData with
@@ -84,6 +94,7 @@ namespace NabfAgentLogic.IiLang
 
         let parseIilAction iilAction iilActionParam =
             match (iilAction, iilActionParam) with
+            | (Identifier "noAction", _)                   
             | (Identifier "skip", _)                       -> Skip
             | (Identifier "recharge", _)                   -> Recharge
             | (Identifier "goto", Identifier vertexName)   -> Goto vertexName
@@ -127,6 +138,7 @@ namespace NabfAgentLogic.IiLang
               ; Function ("zoneScore", [Numeral zoneScore])
               ] -> [ ZoneScore <| int zoneScore 
                    ; MaxEnergyDisabled <| int maxEnergyDisabled
+                   ; LastAction <| parseIilAction action actionParam
                    ; LastActionResult <| parseIilActionResult actionResult
                    ; Self { Energy = Some (int energy)
                           ; Health = Some (int health)
@@ -224,13 +236,18 @@ namespace NabfAgentLogic.IiLang
                       ; Status = parseIilStatus status
                       }
             | _ -> raise <| InvalidIilException ("visibleEntity", [visibleEntity])
+        
+        let parseIilTeamName teamName =
+            match teamName with
+            | Identifier team when team.Length > 0 -> Some team
+            | _ -> None
 
         let parseIilVisibleVertex visibleVertex =
             match visibleVertex with
             | Function ("visibleVertex", 
                 [ Function ("name", [Identifier name])
-                ; Function ("team", [Identifier team])
-                ]) -> (name, team)
+                ; Function ("team", [team])
+                ]) -> (name, parseIilTeamName team)
             | _ -> raise <| InvalidIilException ("visibleVertex", [visibleVertex])
 
         let parseIilSimStart iilSimStart = 
@@ -261,14 +278,50 @@ namespace NabfAgentLogic.IiLang
                 | "inspectedEntities" -> List.map (parseIilAgent >> Percept.EnemySeen) data
                 | "probedVertices"    -> List.map (parseIilProbedVertex >> Percept.VertexProbed) data
                 | "self"              -> parseIilSelf data
-                | "simulation"              -> [SimulationStep <| parseIilStep data]
+                | "simulation"        -> [SimulationStep <| parseIilStep data]
                 | "surveyedEdges"     -> List.map (parseIilSurveyedEdge >> Percept.EdgeSeen) data
                 | "team"              -> [Team <| parseIilTeam data]
                 | "visibleEdges"      -> List.map (parseIilVisibleEdge >> Percept.EdgeSeen) data
                 | "visibleEntities"   -> List.map (parseIilVisibleEntity >> EnemySeen) data
                 | "visibleVertices"   -> List.map (parseIilVisibleVertex >> VertexSeen) data
+                | "roleKnowledge"     -> [parseIilAgentRole data]
                 | _ -> raise <| InvalidIilException ("iilPercept", data)
             | _ -> failwith "no"    
+        
+        let parseIilJob iilPercept =
+                match iilPercept with
+                | [Percept ("notice", data)] ->
+                    match data with
+                    | Function ("type", [Numeral jobType])
+                      ::Function ("agentsNeeded",[Numeral aNeeded]) 
+                      ::Function ("id", [Numeral id])
+                      ::Function ("value", [Numeral value])
+                      ::Function ("whichNodes", nodelist)::optional ->
+                        let jt = enum<JobType>(int(jobType))
+                        let nodes = List.map (fun (Identifier vertex) -> vertex) nodelist
+                        let jobdata = 
+                            match jt with
+                            | JobType.AttackJob -> AttackJob(nodes)
+                            | JobType.DisruptJob -> DisruptJob(nodes.Head)
+                            | JobType.OccupyJob -> 
+                                let [Function ("zoneNodes", nodeData)] = optional
+                                let zone = List.map (fun (Identifier vName) -> vName) nodeData
+                                OccupyJob(nodes,zone)
+                            | JobType.RepairJob -> 
+                                let [Function ("agentToRepair", [Identifier agentName])] = optional
+                                RepairJob(nodes.Head,agentName)
+                            | JobType.EmptyJob -> EmptyJob
+                            | _ -> raise <| InvalidIilException("Job type Wrong", data)
+                        (((Some (int id)),int value,jt,int aNeeded),jobdata): Job
+                    | _ -> raise <| InvalidIilException("notice percept",data)
+       
+        let getNodesFromJob job = 
+            match job with
+            | AttackJob nodes -> nodes
+            | DisruptJob nh -> [nh]
+            | OccupyJob (nodes,_) -> nodes
+            | RepairJob (nh,_) -> [nh]
+            | EmptyJob -> []                  
 
         let parseIilServerMessage iilServerMessage =
             match iilServerMessage with
@@ -281,6 +334,22 @@ namespace NabfAgentLogic.IiLang
                     MarsServerMessage <| (SimulationStart <| parseIilSimStart data)
                 | "simEnd" ->
                     MarsServerMessage <| (SimulationEnd <| parseIilSimEnd data)
+                | "newKnowledge" ->
+                    let percepts = List.concat <| List.map parseIilPercept tail
+                    AgentServerMessage <| SharedPercepts percepts
+                | "newNotice" ->
+                    AgentServerMessage <| (AddedOrChangedJob <| parseIilJob tail)
+                | "noticeUpdated" ->
+                    AgentServerMessage <| (AddedOrChangedJob <| parseIilJob tail)
+                | "noticeRemoved" ->
+                    AgentServerMessage <| (RemovedJob <| parseIilJob tail)
+                | "receivedJob" ->
+                    let (Percept ("whichNodeIndexToGoTo", [Numeral nodeindex]))::rest = tail
+                    let rjob = parseIilJob rest
+                    let ((rjobid,_,_,_),rjobdata) = rjob
+                    let jnodes = getNodesFromJob rjobdata
+                    let usenode = List.nth jnodes (int nodeindex)
+                    AgentServerMessage <| (AcceptedJob <| ((rjobid.Value),usenode))
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"
         
@@ -291,16 +360,63 @@ namespace NabfAgentLogic.IiLang
             | Attack a -> Action ("goto", [Numeral id; Identifier a])
             | Recharge -> Action ("recharge", [Numeral id])
             | Buy a -> Action ("buy", [Numeral id; Identifier (a.ToString().ToLower())])
-            | Inspect a ->
-                    if a.IsNone then
-                        Action ("inspect", [Numeral id; Identifier a.Value])
-                    else
-                        Action ("inspect", [Numeral id])
+            | Inspect None -> Action ("inspect", [Numeral id])
+            | Inspect (Some a) -> Action ("inspect", [Numeral id; Identifier a])
             | Parry -> Action ("parry", [Numeral id])
-            | Probe a ->
-                if a.IsNone then
-                        Action ("probe", [Numeral id; Identifier a.Value])
-                    else
-                        Action ("probe", [Numeral id])
+            | Probe None ->  Action ("probe", [Numeral id])
+            | Probe (Some vn) -> Action ("probe", [Numeral id; Identifier vn])
             | Repair a -> Action ("repair", [Numeral id; Identifier a])
             | Survey -> Action ("survey", [Numeral id])
+
+        let vertexToIdentifer vlist = List.map (fun v -> Identifier v) vlist
+
+        let buildIilJobData simid job = 
+            let ((id,value,jt,aNeeded),jdata) = job
+            let idparam = 
+                match id with
+                | Some id -> [Numeral (float id)]
+                | None -> []
+            let (vl,optional) =
+                match jdata with
+                | AttackJob vl ->  (vertexToIdentifer vl),[]
+                | OccupyJob (vl,zl) -> (vertexToIdentifer vl), [(Function ("zone",vertexToIdentifer zl))]
+                | RepairJob (vn,an) -> (vertexToIdentifer [vn]), [(Identifier an)]
+                | DisruptJob vn -> (vertexToIdentifer [vn]),[]
+                | EmptyJob -> [],[]
+            [  Numeral (float simid)]
+            @  idparam
+            @[ Numeral (float jt)
+            ;  Numeral (float aNeeded)
+            ;  Function ("nodes",vl)
+            ;  Numeral (float value)
+            ]@optional 
+
+        let buildPerceptAsIilFunction percept =
+            match percept with
+            | VertexProbed (vn, value) -> [Function ("nodeKnowledge", [Identifier vn; Numeral (float value)])]
+            | VertexSeen (vn,_) -> [Function ("nodeKnowledge", [Identifier vn])]
+            | EdgeSeen (Some cost,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2; Numeral (float cost)])]
+            | EdgeSeen (None,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2])]
+            | EnemySeen { Role = Some role; Name = name } -> [Function ("roleKnowledge", [Identifier name; Identifier (role.ToString())])]
+            | _ -> []
+
+        let buildIilMetaAction maction simid =
+            match maction with
+            | ApplyJob (jobid,desire) -> 
+                Action ("applyNoticeAction", [Numeral (float simid); Numeral (float jobid); Numeral (float desire)])
+            | CreateJob job -> 
+                let datalist = buildIilJobData simid job
+                Action ("createNoticeAction", datalist)
+            | UpdateJob job -> 
+                let datalist = buildIilJobData simid job
+                Action ("changeNoticeAction", datalist)
+            | RemoveJob jobid ->
+                Action ("deleteNoticeAction", [Numeral (float simid); Numeral (float jobid)])
+            | NewRound rid ->
+                Action ("newRoundAction", [Numeral (float simid); Numeral (float rid)])
+            | SimulationSubscribe -> 
+                Action ("subscribeSimulationAction", [Numeral (float simid)])
+            | ShareKnowledge perceptlist ->
+                let iilfuncs = List.collect (fun percept -> buildPerceptAsIilFunction percept) perceptlist
+                Action ("addKnowledgeAction", iilfuncs)
+                

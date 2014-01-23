@@ -18,8 +18,8 @@ namespace NabfProject.AI
 	{
         private StreamReader reader;
         private StreamWriter writer;
-		private XmlSerializer serializerReciever;
-		private XmlSerializer serializerSender;
+//		private XmlSerializer serializerReciever;
+//		private XmlSerializer serializerSender;
         private XmlReader xreader;
         private XmlWriter xwriter;
 
@@ -28,8 +28,8 @@ namespace NabfProject.AI
 			
 			this.reader = reader;
 			this.writer = writer;
-			serializerReciever = new XmlSerializer(typeof(TRecieve));
-			serializerSender = new XmlSerializer(typeof(TSend));
+//			serializerReciever = new XmlSerializer(typeof(TRecieve));
+//			serializerSender = new XmlSerializer(typeof(TSend));
 		}
 
         protected virtual XmlTransmitterMessage<TRecieve> ConstrutReceiverMessage()
@@ -73,7 +73,7 @@ namespace NabfProject.AI
                 xwriter = XmlWriter.Create(writer, new XmlWriterSettings() { ConformanceLevel = System.Xml.ConformanceLevel.Fragment });
 
 			BeforeSerialize(xwriter, this.writer, packet);
-            packet.WriteXml(this.xwriter,this.serializerSender);
+			packet.WriteXml(this.xwriter,null);
             this.xwriter.Flush();
 			AfterSerialize(xwriter, this.writer, packet);
             

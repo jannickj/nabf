@@ -301,6 +301,446 @@ namespace NabfTest
 
         }
 
+        [Test]
+        public void ReceiveMessageRequestActionNoAchievements_Connected_XmlMessageReceived()
+        {
+            long timestamp = 1297263230578;
+            long perception_deadline = 1297263232578;
+            int perception_id = 201;
+            int simulation_step = 200;
+            int self_energy = 19;
+            int self_health = 9;
+            string self_lastAction = "skip";
+            string self_lastActionParam = "";
+            string self_lastActionResult = "successful";
+            int self_maxEnergy = 19;
+            int self_maxEnergyDisabled = 9;
+            int self_maxHealth = 9;
+            string self_position = "vertex4";
+            int self_strength = 5;
+            int self_visRange = 5;
+            int self_zoneScore = 27;
+            int team_lastStepScore = 27;
+            int team_money = 1;
+            int team_score = 4270;
+            int team_zonesScore = 26;
+            string achievement_name = "area20";
+            string visibleVertex_name = "vertex19";
+            string visibleVertex_team = "none";
+            string visibleEdge_node1 = "vertex0";
+            string visibleEdge_node2 = "vertex11";
+            string visibleEntity_status = "normal";
+            int probedVertex_value = 4;
+            int surveyedEdge_weight = 2;
+            int inspectedEntity_maxHealth = 9;
+
+            writer.Write("<message timestamp=\"" + timestamp + "\" type=\"request-action\">"
+                            + "<perception deadline=\"" + perception_deadline + "\" id=\"" + perception_id + "\">"
+                            + "<simulation step=\"" + simulation_step + "\"/>"
+                            + "<self energy=\"" + self_energy + "\" health=\"" + self_health + "\" lastAction=\"" + self_lastAction + "\" "
+                            + "lastActionParam=\"" + self_lastActionParam + "\" lastActionResult=\"" + self_lastActionResult + "\" maxEnergy=\"" + self_maxEnergy + "\" "
+                            + "maxEnergyDisabled=\"" + self_maxEnergyDisabled + "\" maxHealth=\"" + self_maxHealth + "\" position=\"" + self_position + "\" "
+                            + "strength=\"" + self_strength + "\" visRange=\"" + self_visRange + "\" zoneScore=\"" + self_zoneScore + "\"/>"
+                            + "<team lastStepScore=\"" + team_lastStepScore + "\" money=\"" + team_money + "\" score=\"" + team_score + "\" zonesScore=\"" + team_zonesScore + "\"/>"
+                            
+                            + "<visibleVertices>"
+                            + "<visibleVertex name=\"" + visibleVertex_name + "\" team=\"" + visibleVertex_team + "\"/>"
+                            + "</visibleVertices>"
+                            + "<visibleEdges>"
+                            + "<visibleEdge node1=\"" + visibleEdge_node1 + "\" node2=\"" + visibleEdge_node2 + "\"/>"
+                            + "</visibleEdges>"
+                            + "<visibleEntities>"
+                            + "<visibleEntity name=\"b5\" team=\"B\" node=\"vertex0\" "
+                            + "status=\"" + visibleEntity_status + "\"/>"
+                            + "</visibleEntities>"
+                            + "<probedVertices>"
+                            + "<probedVertex name=\"vertex18\" value=\"" + probedVertex_value + "\"/>"
+                            + "</probedVertices>"
+                            + "<surveyedEdges>"
+                            + "<surveyedEdge node1=\"vertex3\" node2=\"vertex7\" weight=\"" + surveyedEdge_weight + "\"/>"
+                            + "</surveyedEdges>"
+                            + "<inspectedEntities>"
+                            + "<inspectedEntity energy=\"8\" health=\"9\" maxEnergy=\"8\" "
+                            + "maxHealth=\"" + inspectedEntity_maxHealth + "\" name=\"b5\" node=\"vertex10\" role=\"role2\" "
+                            + "strength=\"6\" team=\"B\" visRange=\"2\"/>"
+                            + "</inspectedEntities>"
+                            + "</perception>"
+                            + "</message>");
+
+            writer.Flush();
+            writer.BaseStream.WriteByte(0);
+            writer.BaseStream.Flush();
+
+            memStream.Position = 0;
+
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
+
+            ReceiveMessage packet = (ReceiveMessage)servCom.DeserializePacket();
+            InternalReceiveMessage message = packet.Message;
+
+            RequestActionMessage requestActionData = (RequestActionMessage)message;
+            PerceptionMessage perceptionData = (PerceptionMessage)requestActionData.Response;
+            SimulationMessage simulationData = (SimulationMessage)perceptionData.Elements[0];
+            SelfMessage selfData = (SelfMessage)perceptionData.Elements[1];
+            TeamMessage teamData = (TeamMessage)perceptionData.Elements[2];
+            VisibleVertexMessage visibleVertexData = (VisibleVertexMessage)((VisibleVerticesMessage)perceptionData.Elements[3]).VisibleVertices[0];
+            VisibleEdgeMessage visibleEdgeData = (VisibleEdgeMessage)((VisibleEdgesMessage)perceptionData.Elements[4]).VisibleEdges[0];
+            VisibleEntityMessage visibleEntityData = (VisibleEntityMessage)((VisibleEntitiesMessage)perceptionData.Elements[5]).VisibleEntities[0];
+            ProbedVertexMessage probedVertexData = (ProbedVertexMessage)((ProbedVerticesMessage)perceptionData.Elements[6]).ProbedVertices[0];
+            SurveyedEdgeMessage surveyedEdgeData = (SurveyedEdgeMessage)((SurveyedEdgesMessage)perceptionData.Elements[7]).SurveyedEdges[0];
+            InspectedEntityMessage inspectedEntityData = (InspectedEntityMessage)((InspectedEntitiesMessage)perceptionData.Elements[8]).InspectedEntities[0];
+
+            Assert.AreEqual("perception", perceptionData.MessageName);
+            Assert.AreEqual("simulation", simulationData.MessageName);
+            Assert.AreEqual("self", selfData.MessageName);
+            Assert.AreEqual("team", teamData.MessageName);
+
+            Assert.AreEqual(timestamp, packet.Timestamp);
+            Assert.AreEqual(perception_deadline, perceptionData.Deadline);
+            Assert.AreEqual(perception_id, perceptionData.Id);
+            Assert.AreEqual(simulation_step, simulationData.Step);
+            Assert.AreEqual(self_energy, selfData.Energy);
+            Assert.AreEqual(self_lastActionParam, selfData.LastActionParam);
+            Assert.AreEqual(team_lastStepScore, teamData.LastStepScore);
+            Assert.AreEqual(visibleVertex_name, visibleVertexData.Name);
+            Assert.AreEqual(visibleEdge_node1, visibleEdgeData.Node1);
+            Assert.AreEqual(visibleEntity_status, visibleEntityData.Status);
+            Assert.AreEqual(probedVertex_value, probedVertexData.Value);
+            Assert.AreEqual(surveyedEdge_weight, surveyedEdgeData.Weight);
+            Assert.AreEqual(inspectedEntity_maxHealth, inspectedEntityData.MaxHealth);
+
+        }
+
+        [Test]
+        public void ReceiveMessageRequestActionNoAchievementsAlternative_Connected_XmlMessageReceived()
+        {
+            long timestamp = 1297263230578;
+            long perception_deadline = 1297263232578;
+            int perception_id = 201;
+            int simulation_step = 200;
+            int self_energy = 19;
+            int self_health = 9;
+            string self_lastAction = "skip";
+            string self_lastActionParam = "";
+            string self_lastActionResult = "successful";
+            int self_maxEnergy = 19;
+            int self_maxEnergyDisabled = 9;
+            int self_maxHealth = 9;
+            string self_position = "vertex4";
+            int self_strength = 5;
+            int self_visRange = 5;
+            int self_zoneScore = 27;
+            int team_lastStepScore = 27;
+            int team_money = 1;
+            int team_score = 4270;
+            int team_zonesScore = 26;
+            string achievement_name = "area20";
+            string visibleVertex_name = "vertex19";
+            string visibleVertex_team = "none";
+            string visibleEdge_node1 = "vertex0";
+            string visibleEdge_node2 = "vertex11";
+            string visibleEntity_status = "normal";
+            int probedVertex_value = 4;
+            int surveyedEdge_weight = 2;
+            int inspectedEntity_maxHealth = 9;
+
+            writer.Write("<message timestamp=\"" + timestamp + "\" type=\"request-action\">"
+                            + "<perception deadline=\"" + perception_deadline + "\" id=\"" + perception_id + "\">"
+                            + "<simulation step=\"" + simulation_step + "\"/>"
+                            + "<self energy=\"" + self_energy + "\" health=\"" + self_health + "\" lastAction=\"" + self_lastAction + "\" "
+                            + "lastActionParam=\"" + self_lastActionParam + "\" lastActionResult=\"" + self_lastActionResult + "\" maxEnergy=\"" + self_maxEnergy + "\" "
+                            + "maxEnergyDisabled=\"" + self_maxEnergyDisabled + "\" maxHealth=\"" + self_maxHealth + "\" position=\"" + self_position + "\" "
+                            + "strength=\"" + self_strength + "\" visRange=\"" + self_visRange + "\" zoneScore=\"" + self_zoneScore + "\"/>"
+                            + "<team lastStepScore=\"" + team_lastStepScore + "\" money=\"" + team_money + "\" score=\"" + team_score + "\" zonesScore=\"" + team_zonesScore + "\">"
+                            + "<achievements>"
+                            + "</achievements>"
+                            + "</team>"
+                            + "<visibleVertices>"
+                            + "<visibleVertex name=\"" + visibleVertex_name + "\" team=\"" + visibleVertex_team + "\"/>"
+                            + "</visibleVertices>"
+                            + "<visibleEdges>"
+                            + "<visibleEdge node1=\"" + visibleEdge_node1 + "\" node2=\"" + visibleEdge_node2 + "\"/>"
+                            + "</visibleEdges>"
+                            + "<visibleEntities>"
+                            + "<visibleEntity name=\"b5\" team=\"B\" node=\"vertex0\" "
+                            + "status=\"" + visibleEntity_status + "\"/>"
+                            + "</visibleEntities>"
+                            + "<probedVertices>"
+                            + "<probedVertex name=\"vertex18\" value=\"" + probedVertex_value + "\"/>"
+                            + "</probedVertices>"
+                            + "<surveyedEdges>"
+                            + "<surveyedEdge node1=\"vertex3\" node2=\"vertex7\" weight=\"" + surveyedEdge_weight + "\"/>"
+                            + "</surveyedEdges>"
+                            + "<inspectedEntities>"
+                            + "<inspectedEntity energy=\"8\" health=\"9\" maxEnergy=\"8\" "
+                            + "maxHealth=\"" + inspectedEntity_maxHealth + "\" name=\"b5\" node=\"vertex10\" role=\"role2\" "
+                            + "strength=\"6\" team=\"B\" visRange=\"2\"/>"
+                            + "</inspectedEntities>"
+                            + "</perception>"
+                            + "</message>");
+
+            writer.Flush();
+            writer.BaseStream.WriteByte(0);
+            writer.BaseStream.Flush();
+
+            memStream.Position = 0;
+
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
+
+            ReceiveMessage packet = (ReceiveMessage)servCom.DeserializePacket();
+            InternalReceiveMessage message = packet.Message;
+
+            RequestActionMessage requestActionData = (RequestActionMessage)message;
+            PerceptionMessage perceptionData = (PerceptionMessage)requestActionData.Response;
+            SimulationMessage simulationData = (SimulationMessage)perceptionData.Elements[0];
+            SelfMessage selfData = (SelfMessage)perceptionData.Elements[1];
+            TeamMessage teamData = (TeamMessage)perceptionData.Elements[2];
+            VisibleVertexMessage visibleVertexData = (VisibleVertexMessage)((VisibleVerticesMessage)perceptionData.Elements[3]).VisibleVertices[0];
+            VisibleEdgeMessage visibleEdgeData = (VisibleEdgeMessage)((VisibleEdgesMessage)perceptionData.Elements[4]).VisibleEdges[0];
+            VisibleEntityMessage visibleEntityData = (VisibleEntityMessage)((VisibleEntitiesMessage)perceptionData.Elements[5]).VisibleEntities[0];
+            ProbedVertexMessage probedVertexData = (ProbedVertexMessage)((ProbedVerticesMessage)perceptionData.Elements[6]).ProbedVertices[0];
+            SurveyedEdgeMessage surveyedEdgeData = (SurveyedEdgeMessage)((SurveyedEdgesMessage)perceptionData.Elements[7]).SurveyedEdges[0];
+            InspectedEntityMessage inspectedEntityData = (InspectedEntityMessage)((InspectedEntitiesMessage)perceptionData.Elements[8]).InspectedEntities[0];
+
+            Assert.AreEqual("perception", perceptionData.MessageName);
+            Assert.AreEqual("simulation", simulationData.MessageName);
+            Assert.AreEqual("self", selfData.MessageName);
+            Assert.AreEqual("team", teamData.MessageName);
+
+            Assert.AreEqual(timestamp, packet.Timestamp);
+            Assert.AreEqual(perception_deadline, perceptionData.Deadline);
+            Assert.AreEqual(perception_id, perceptionData.Id);
+            Assert.AreEqual(simulation_step, simulationData.Step);
+            Assert.AreEqual(self_energy, selfData.Energy);
+            Assert.AreEqual(self_lastActionParam, selfData.LastActionParam);
+            Assert.AreEqual(team_lastStepScore, teamData.LastStepScore);
+            Assert.AreEqual(visibleVertex_name, visibleVertexData.Name);
+            Assert.AreEqual(visibleEdge_node1, visibleEdgeData.Node1);
+            Assert.AreEqual(visibleEntity_status, visibleEntityData.Status);
+            Assert.AreEqual(probedVertex_value, probedVertexData.Value);
+            Assert.AreEqual(surveyedEdge_weight, surveyedEdgeData.Weight);
+            Assert.AreEqual(inspectedEntity_maxHealth, inspectedEntityData.MaxHealth);
+
+        }
+
+        [Test]
+        public void ReceiveMessageRequestActionNoAchievementsAlternative2_Connected_XmlMessageReceived()
+        {
+            long timestamp = 1297263230578;
+            long perception_deadline = 1297263232578;
+            int perception_id = 201;
+            int simulation_step = 200;
+            int self_energy = 19;
+            int self_health = 9;
+            string self_lastAction = "skip";
+            string self_lastActionParam = "";
+            string self_lastActionResult = "successful";
+            int self_maxEnergy = 19;
+            int self_maxEnergyDisabled = 9;
+            int self_maxHealth = 9;
+            string self_position = "vertex4";
+            int self_strength = 5;
+            int self_visRange = 5;
+            int self_zoneScore = 27;
+            int team_lastStepScore = 27;
+            int team_money = 1;
+            int team_score = 4270;
+            int team_zonesScore = 26;
+            string achievement_name = "area20";
+            string visibleVertex_name = "vertex19";
+            string visibleVertex_team = "none";
+            string visibleEdge_node1 = "vertex0";
+            string visibleEdge_node2 = "vertex11";
+            string visibleEntity_status = "normal";
+            int probedVertex_value = 4;
+            int surveyedEdge_weight = 2;
+            int inspectedEntity_maxHealth = 9;
+
+            writer.Write("<message timestamp=\"" + timestamp + "\" type=\"request-action\">"
+                            + "<perception deadline=\"" + perception_deadline + "\" id=\"" + perception_id + "\">"
+                            + "<simulation step=\"" + simulation_step + "\"/>"
+                            + "<self energy=\"" + self_energy + "\" health=\"" + self_health + "\" lastAction=\"" + self_lastAction + "\" "
+                            + "lastActionParam=\"" + self_lastActionParam + "\" lastActionResult=\"" + self_lastActionResult + "\" maxEnergy=\"" + self_maxEnergy + "\" "
+                            + "maxEnergyDisabled=\"" + self_maxEnergyDisabled + "\" maxHealth=\"" + self_maxHealth + "\" position=\"" + self_position + "\" "
+                            + "strength=\"" + self_strength + "\" visRange=\"" + self_visRange + "\" zoneScore=\"" + self_zoneScore + "\"/>"
+                            + "<team lastStepScore=\"" + team_lastStepScore + "\" money=\"" + team_money + "\" score=\"" + team_score + "\" zonesScore=\"" + team_zonesScore + "\">"
+                            + "<achievements/>"
+                            + "</team>"
+                            + "<visibleVertices>"
+                            + "<visibleVertex name=\"" + visibleVertex_name + "\" team=\"" + visibleVertex_team + "\"/>"
+                            + "</visibleVertices>"
+                            + "<visibleEdges>"
+                            + "<visibleEdge node1=\"" + visibleEdge_node1 + "\" node2=\"" + visibleEdge_node2 + "\"/>"
+                            + "</visibleEdges>"
+                            + "<visibleEntities>"
+                            + "<visibleEntity name=\"b5\" team=\"B\" node=\"vertex0\" "
+                            + "status=\"" + visibleEntity_status + "\"/>"
+                            + "</visibleEntities>"
+                            + "<probedVertices>"
+                            + "<probedVertex name=\"vertex18\" value=\"" + probedVertex_value + "\"/>"
+                            + "</probedVertices>"
+                            + "<surveyedEdges>"
+                            + "<surveyedEdge node1=\"vertex3\" node2=\"vertex7\" weight=\"" + surveyedEdge_weight + "\"/>"
+                            + "</surveyedEdges>"
+                            + "<inspectedEntities>"
+                            + "<inspectedEntity energy=\"8\" health=\"9\" maxEnergy=\"8\" "
+                            + "maxHealth=\"" + inspectedEntity_maxHealth + "\" name=\"b5\" node=\"vertex10\" role=\"role2\" "
+                            + "strength=\"6\" team=\"B\" visRange=\"2\"/>"
+                            + "</inspectedEntities>"
+                            + "</perception>"
+                            + "</message>");
+
+            writer.Flush();
+            writer.BaseStream.WriteByte(0);
+            writer.BaseStream.Flush();
+
+            memStream.Position = 0;
+
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
+
+            ReceiveMessage packet = (ReceiveMessage)servCom.DeserializePacket();
+            InternalReceiveMessage message = packet.Message;
+
+            RequestActionMessage requestActionData = (RequestActionMessage)message;
+            PerceptionMessage perceptionData = (PerceptionMessage)requestActionData.Response;
+            SimulationMessage simulationData = (SimulationMessage)perceptionData.Elements[0];
+            SelfMessage selfData = (SelfMessage)perceptionData.Elements[1];
+            TeamMessage teamData = (TeamMessage)perceptionData.Elements[2];
+            VisibleVertexMessage visibleVertexData = (VisibleVertexMessage)((VisibleVerticesMessage)perceptionData.Elements[3]).VisibleVertices[0];
+            VisibleEdgeMessage visibleEdgeData = (VisibleEdgeMessage)((VisibleEdgesMessage)perceptionData.Elements[4]).VisibleEdges[0];
+            VisibleEntityMessage visibleEntityData = (VisibleEntityMessage)((VisibleEntitiesMessage)perceptionData.Elements[5]).VisibleEntities[0];
+            ProbedVertexMessage probedVertexData = (ProbedVertexMessage)((ProbedVerticesMessage)perceptionData.Elements[6]).ProbedVertices[0];
+            SurveyedEdgeMessage surveyedEdgeData = (SurveyedEdgeMessage)((SurveyedEdgesMessage)perceptionData.Elements[7]).SurveyedEdges[0];
+            InspectedEntityMessage inspectedEntityData = (InspectedEntityMessage)((InspectedEntitiesMessage)perceptionData.Elements[8]).InspectedEntities[0];
+
+            Assert.AreEqual("perception", perceptionData.MessageName);
+            Assert.AreEqual("simulation", simulationData.MessageName);
+            Assert.AreEqual("self", selfData.MessageName);
+            Assert.AreEqual("team", teamData.MessageName);
+
+            Assert.AreEqual(timestamp, packet.Timestamp);
+            Assert.AreEqual(perception_deadline, perceptionData.Deadline);
+            Assert.AreEqual(perception_id, perceptionData.Id);
+            Assert.AreEqual(simulation_step, simulationData.Step);
+            Assert.AreEqual(self_energy, selfData.Energy);
+            Assert.AreEqual(self_lastActionParam, selfData.LastActionParam);
+            Assert.AreEqual(team_lastStepScore, teamData.LastStepScore);
+            Assert.AreEqual(visibleVertex_name, visibleVertexData.Name);
+            Assert.AreEqual(visibleEdge_node1, visibleEdgeData.Node1);
+            Assert.AreEqual(visibleEntity_status, visibleEntityData.Status);
+            Assert.AreEqual(probedVertex_value, probedVertexData.Value);
+            Assert.AreEqual(surveyedEdge_weight, surveyedEdgeData.Weight);
+            Assert.AreEqual(inspectedEntity_maxHealth, inspectedEntityData.MaxHealth);
+
+        }
+
+        [Test]
+        public void ReceiveMessageRequestActionAlternateXmlDoc_Connected_XmlMessageReceived()
+        {
+            long timestamp = 1297263230578;
+            long perception_deadline = 1297263232578;
+            int perception_id = 201;
+            int simulation_step = 200;
+            int self_energy = 19;
+            int self_health = 9;
+            string self_lastAction = "skip";
+            string self_lastActionParam = "";
+            string self_lastActionResult = "successful";
+            int self_maxEnergy = 19;
+            int self_maxEnergyDisabled = 9;
+            int self_maxHealth = 9;
+            string self_position = "vertex4";
+            int self_strength = 5;
+            int self_visRange = 5;
+            int self_zoneScore = 27;
+            int team_lastStepScore = 27;
+            int team_money = 1;
+            int team_score = 4270;
+            int team_zonesScore = 26;
+            string achievement_name = "area20";
+            string visibleVertex_name = "vertex19";
+            string visibleVertex_team = "none";
+            string visibleEdge_node1 = "vertex0";
+            string visibleEdge_node2 = "vertex11";
+            string visibleEntity_status = "normal";
+            int probedVertex_value = 4;
+            int surveyedEdge_weight = 2;
+            int inspectedEntity_maxHealth = 9;
+
+            writer.Write("<message timestamp=\"" + timestamp + "\" type=\"request-action\">"
+                            + "<perception deadline=\"" + perception_deadline + "\" id=\"" + perception_id + "\">"
+                            + "<simulation step=\"" + simulation_step + "\"/>"
+                            + "<self energy=\"" + self_energy + "\" health=\"" + self_health + "\" lastAction=\"" + self_lastAction + "\" "
+                            + "lastActionParam=\"" + self_lastActionParam + "\" lastActionResult=\"" + self_lastActionResult + "\" maxEnergy=\"" + self_maxEnergy + "\" "
+                            + "maxEnergyDisabled=\"" + self_maxEnergyDisabled + "\" maxHealth=\"" + self_maxHealth + "\" position=\"" + self_position + "\" "
+                            + "strength=\"" + self_strength + "\" visRange=\"" + self_visRange + "\" zoneScore=\"" + self_zoneScore + "\"/>"
+                            + "<team lastStepScore=\"" + team_lastStepScore + "\" money=\"" + team_money + "\" score=\"" + team_score + "\" zonesScore=\"" + team_zonesScore + "\"/>"
+
+                            + "<visibleVertices>"
+                            + "</visibleVertices>"
+                            + "<visibleEntities>"
+                            + "<visibleEntity name=\"b5\" team=\"B\" node=\"vertex0\" "
+                            + "status=\"" + visibleEntity_status + "\"/>"
+                            + "</visibleEntities>"
+                            + "<probedVertices/>"
+                            + "<surveyedEdges>"
+                            + "<surveyedEdge node1=\"vertex3\" node2=\"vertex7\" weight=\"" + surveyedEdge_weight + "\"/>"
+                            + "</surveyedEdges>"
+                            + "<inspectedEntities>"
+                            + "<inspectedEntity energy=\"8\" health=\"9\" maxEnergy=\"8\" "
+                            + "maxHealth=\"" + inspectedEntity_maxHealth + "\" name=\"b5\" node=\"vertex10\" role=\"role2\" "
+                            + "strength=\"6\" team=\"B\" visRange=\"2\"/>"
+                            + "</inspectedEntities>"
+                            + "</perception>"
+                            + "</message>");
+
+            writer.Flush();
+            writer.BaseStream.WriteByte(0);
+            writer.BaseStream.Flush();
+
+            memStream.Position = 0;
+
+            reader = new StreamReader(memStream);
+            servCom = new ServerCommunication(reader, writer);
+
+            ReceiveMessage packet = (ReceiveMessage)servCom.DeserializePacket();
+            InternalReceiveMessage message = packet.Message;
+
+            //RequestActionMessage requestActionData = (RequestActionMessage)message;
+            //PerceptionMessage perceptionData = (PerceptionMessage)requestActionData.Response;
+            //SimulationMessage simulationData = (SimulationMessage)perceptionData.Elements[0];
+            //SelfMessage selfData = (SelfMessage)perceptionData.Elements[1];
+            //TeamMessage teamData = (TeamMessage)perceptionData.Elements[2];
+            //VisibleVertexMessage visibleVertexData = (VisibleVertexMessage)((VisibleVerticesMessage)perceptionData.Elements[3]).VisibleVertices[0];
+            //VisibleEdgeMessage visibleEdgeData = (VisibleEdgeMessage)((VisibleEdgesMessage)perceptionData.Elements[4]).VisibleEdges[0];
+            //VisibleEntityMessage visibleEntityData = (VisibleEntityMessage)((VisibleEntitiesMessage)perceptionData.Elements[5]).VisibleEntities[0];
+            //ProbedVertexMessage probedVertexData = (ProbedVertexMessage)((ProbedVerticesMessage)perceptionData.Elements[6]).ProbedVertices[0];
+            //SurveyedEdgeMessage surveyedEdgeData = (SurveyedEdgeMessage)((SurveyedEdgesMessage)perceptionData.Elements[7]).SurveyedEdges[0];
+            //InspectedEntityMessage inspectedEntityData = (InspectedEntityMessage)((InspectedEntitiesMessage)perceptionData.Elements[8]).InspectedEntities[0];
+
+            //Assert.AreEqual("perception", perceptionData.MessageName);
+            //Assert.AreEqual("simulation", simulationData.MessageName);
+            //Assert.AreEqual("self", selfData.MessageName);
+            //Assert.AreEqual("team", teamData.MessageName);
+
+            //Assert.AreEqual(timestamp, packet.Timestamp);
+            //Assert.AreEqual(perception_deadline, perceptionData.Deadline);
+            //Assert.AreEqual(perception_id, perceptionData.Id);
+            //Assert.AreEqual(simulation_step, simulationData.Step);
+            //Assert.AreEqual(self_energy, selfData.Energy);
+            //Assert.AreEqual(self_lastActionParam, selfData.LastActionParam);
+            //Assert.AreEqual(team_lastStepScore, teamData.LastStepScore);
+            //Assert.AreEqual(visibleVertex_name, visibleVertexData.Name);
+            //Assert.AreEqual(visibleEdge_node1, visibleEdgeData.Node1);
+            //Assert.AreEqual(visibleEntity_status, visibleEntityData.Status);
+            //Assert.AreEqual(probedVertex_value, probedVertexData.Value);
+            //Assert.AreEqual(surveyedEdge_weight, surveyedEdgeData.Weight);
+            //Assert.AreEqual(inspectedEntity_maxHealth, inspectedEntityData.MaxHealth);
+            Assert.Pass();
+        }
 
      
     }

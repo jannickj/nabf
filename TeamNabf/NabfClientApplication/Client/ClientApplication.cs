@@ -30,7 +30,7 @@ namespace NabfClientApplication.Client
         private AgentLogicFactory logicFactory;
 		//private XmlPacketTransmitter<IilPerceptCollection,IilAction> agentServCom;
 		private HashSet<Thread> activeThreads = new HashSet<Thread>();
-        private ConcurrentQueue<Tuple<int, InternalSendMessage>> marsPackets = new ConcurrentQueue<Tuple<int, InternalSendMessage>>();
+        private List<Tuple<int, InternalSendMessage>> marsPackets = new List<Tuple<int, InternalSendMessage>>();
         private ConcurrentQueue<Tuple<int, IilAction>> masterPackets = new ConcurrentQueue<Tuple<int, IilAction>>();
 		private AutoResetEvent marsPacketAdded = new AutoResetEvent(false);
         private AutoResetEvent masterPacketAdded = new AutoResetEvent(false);
@@ -38,8 +38,12 @@ namespace NabfClientApplication.Client
         private MarsToAgentParser marsToAgentParser;
         private AgentToMarsParser agentToMarsParser;
         private XmlPacketTransmitter<IilPerceptCollection, IilAction> masterSerCom;
+        private DateTime actionTimeStart;
 
         public ClientApplication(XmlPacketTransmitter<IilPerceptCollection, IilAction> masterSerCom, ServerCommunication marsServCom, MarsToAgentParser marsParser, AgentToMarsParser agentToMarsParser, AgentLogicFactory factory)
+        public event UnaryValueHandler<Tuple<ActionMessage,TimeSpan>> ActionSent;
+
+        public ClientApplication(ServerCommunication marsServCom, MarsToAgentParser marsParser, AgentToMarsParser agentToMarsParser, AgentLogicFactory factory)
 		{
             this.masterSerCom = masterSerCom;
             this.marsServCom = marsServCom;
@@ -48,55 +52,43 @@ namespace NabfClientApplication.Client
             //this.agentServCom = agentServCom;
             this.logicFactory = factory;
             //logic.EvaluationStarted += logic_needMessageSent;
-			
+            actionTimeStart = DateTime.Now;
 		}
-
 
 		public void UpdateMarsSender()
 		{
 			this.marsPacketAdded.WaitOne();
-			bool hasPacket = false;
-			do
-			{
-                Tuple<int, InternalSendMessage> packet;
-				hasPacket = this.marsPackets.TryDequeue(out packet);
-				if (hasPacket)
-				{
-                    bool packetAccepted = false;
-                    lock (simLock)
-                    {
-                        if (packet.Item1 != this.currentSimId)
-                            packetAccepted = true;
-                    }
-                    if (packetAccepted)
-                        this.marsServCom.SeralizePacket(packet.Item2);
-				}
-			} while (hasPacket);
+
+            Tuple<int, InternalSendMessage>[] packets;
+            lock (marsPackets)
+            {
+                packets = this.marsPackets.ToArray();
+                this.marsPackets.Clear();
+            }
+
+            foreach(var packet in packets)
+            {
+			    bool packetAccepted = false;
+                lock (simLock)
+                {
+                    if (packet.Item1 == this.currentSimId)
+                        packetAccepted = true;
+                }
+                if (ActionSent != null)
+                {
+                    var evtArgs = Tuple.Create((ActionMessage)packet.Item2, DateTime.Now - actionTimeStart);
+                            
+                    ActionSent(this, new UnaryValueEvent<Tuple<ActionMessage, TimeSpan>>(evtArgs));
+                }
+
+                if (packetAccepted)
+                    this.marsServCom.SeralizePacket(packet.Item2);
+                
+			}
 
 		}
 
-        public void UpdateMasterSender()
-        {
-            this.masterPacketAdded.WaitOne();
-            bool hasPacket = false;
-            do
-            {
-                Tuple<int, IilAction> packet;
-                hasPacket = this.masterPackets.TryDequeue(out packet);
-                if (hasPacket)
-                {
-                    bool packetAccepted = false;
-                    lock (simLock)
-                    {
-                        if (packet.Item1 != this.currentSimId)
-                            packetAccepted = true;
-                    }
-                    if (packetAccepted)
-                        this.masterSerCom.SeralizePacket(packet.Item2);
-                }
-            } while (hasPacket);
-
-        }
+       
 
 		public void UpdateMarsReceiver()
 		{
@@ -111,6 +103,10 @@ namespace NabfClientApplication.Client
                 {
                     StartSim((SimStartMessage)data.Message);
                     logic = this.currentLogic;
+                }
+                else if (data.Message is RequestActionMessage)
+                {
+                    actionTimeStart = DateTime.Now;
                 }
             }
 
@@ -155,7 +151,8 @@ namespace NabfClientApplication.Client
 
 		private void AddMarsPacket(int id, InternalSendMessage packet)
 		{
-			this.marsPackets.Enqueue(Tuple.Create(id,packet));
+            lock(this.marsPackets)
+			    this.marsPackets.Add(Tuple.Create(id,packet));
 			this.marsPacketAdded.Set();
 		}
 
@@ -164,7 +161,6 @@ namespace NabfClientApplication.Client
             this.masterPackets.Enqueue(Tuple.Create(id, packet));
             this.masterPacketAdded.Set();
         }
-
 
         private void StartSim(SimStartMessage msg)
         {
@@ -213,20 +209,36 @@ namespace NabfClientApplication.Client
 
         public void Start()
         {
+			this.currentLogic = this.logicFactory.ConstructAgentLogic ();
             ReceiveMessage msg = (ReceiveMessage) marsServCom.DeserializePacket();
+            if(msg.Message is SimEndMessage)
+                msg = (ReceiveMessage)marsServCom.DeserializePacket();
             SimStartMessage sMsg = (SimStartMessage) msg.Message;
             var sMsgPercepts = (IilPerceptCollection) marsToAgentParser.ConvertToForeign(msg);
             StartSim(sMsg);
             currentLogic.HandlePercepts(sMsgPercepts);
 
-            Thread marsSenderThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMarsSender(); }));
-            Thread marsReceiverThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMarsReceiver(); }));
+			Thread marsSenderThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsSender(); })));
+            Thread marsReceiverThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsReceiver(); })));
             Thread masterSenderThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMasterSender(); }));
             Thread masterReceiverThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMasterReceiver(); }));
             marsSenderThread.Start();
             marsReceiverThread.Start();
             masterSenderThread.Start();
             masterReceiverThread.Start();
+        }
+
+        private void ExecuteThread(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Client failure: " + e.Message);
+                Environment.Exit(1); 
+            }
         }
 
         

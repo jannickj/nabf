@@ -18,6 +18,12 @@ namespace NabfProject.ServerMessages
         public override void ReadXml(System.Xml.XmlReader reader)
         {
             reader.MoveToContent();
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                reader.MoveToContent();
+                return;
+            }
             reader.Read();
             reader.MoveToContent();
 
@@ -29,7 +35,9 @@ namespace NabfProject.ServerMessages
                 achievementList.Add(message);
                 reader.Read();
                 reader.MoveToContent();
-            } 
+            }
+            reader.ReadEndElement();
+            reader.MoveToContent();
         }
     }
 }
