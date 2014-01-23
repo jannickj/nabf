@@ -31,7 +31,7 @@ namespace NabfClientApplication.Client
 		//private XmlPacketTransmitter<IilPerceptCollection,IilAction> agentServCom;
 		private HashSet<Thread> activeThreads = new HashSet<Thread>();
         private List<Tuple<int, InternalSendMessage>> marsPackets = new List<Tuple<int, InternalSendMessage>>();
-        private ConcurrentQueue<Tuple<int, IilAction>> masterPackets = new ConcurrentQueue<Tuple<int, IilAction>>();
+        private List<Tuple<int, IilAction>> masterPackets = new List<Tuple<int, IilAction>>();
 		private AutoResetEvent marsPacketAdded = new AutoResetEvent(false);
         private AutoResetEvent masterPacketAdded = new AutoResetEvent(false);
 		private ServerCommunication marsServCom;
@@ -40,10 +40,10 @@ namespace NabfClientApplication.Client
         private XmlPacketTransmitter<IilPerceptCollection, IilAction> masterSerCom;
         private DateTime actionTimeStart;
 
-        public ClientApplication(XmlPacketTransmitter<IilPerceptCollection, IilAction> masterSerCom, ServerCommunication marsServCom, MarsToAgentParser marsParser, AgentToMarsParser agentToMarsParser, AgentLogicFactory factory)
+        
         public event UnaryValueHandler<Tuple<ActionMessage,TimeSpan>> ActionSent;
 
-        public ClientApplication(ServerCommunication marsServCom, MarsToAgentParser marsParser, AgentToMarsParser agentToMarsParser, AgentLogicFactory factory)
+        public ClientApplication(XmlPacketTransmitter<IilPerceptCollection, IilAction> masterSerCom, ServerCommunication marsServCom, MarsToAgentParser marsParser, AgentToMarsParser agentToMarsParser, AgentLogicFactory factory)
 		{
             this.masterSerCom = masterSerCom;
             this.marsServCom = marsServCom;
@@ -88,7 +88,32 @@ namespace NabfClientApplication.Client
 
 		}
 
-       
+        public void UpdateMasterSender()
+        {
+            this.masterPacketAdded.WaitOne();
+
+            Tuple<int, IilAction>[] packets;
+            lock (masterPackets)
+            {
+                packets = this.masterPackets.ToArray();
+                this.marsPackets.Clear();
+            }
+
+            foreach (var packet in packets)
+            {
+                bool packetAccepted = false;
+                lock (simLock)
+                {
+                    if (packet.Item1 == this.currentSimId)
+                        packetAccepted = true;
+                }
+               
+                if (packetAccepted)
+                    this.masterSerCom.SeralizePacket(packet.Item2);
+
+            }
+
+        }
 
 		public void UpdateMarsReceiver()
 		{
@@ -158,7 +183,8 @@ namespace NabfClientApplication.Client
 
         private void AddMasterPacket(int id, IilAction packet)
         {
-            this.masterPackets.Enqueue(Tuple.Create(id, packet));
+            lock(this.masterPackets)
+                this.masterPackets.Add(Tuple.Create(id, packet));
             this.masterPacketAdded.Set();
         }
 
