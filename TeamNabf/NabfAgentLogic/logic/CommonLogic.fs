@@ -25,10 +25,17 @@ module CommonLogic =
 
     let exploreLocalGraph (s:State) =
         let unexplored = (pathToNearestUnExplored s.Self s.World)
+        printfn "Unexplored nodes: %A\n"  unexplored
+        ignore <| match unexplored with
+                    | Some (head :: _) -> printfn "Edges from first unexplored node: %A\n" s.World.[head]
+                    | _ -> ()
+
         if unexplored = None 
         then 
+            printfn "Unexplored NONE!"
             (false,None) 
-        else
+        else            
+            printfn "TRY GO!"
             tryGo s.World.[unexplored.Value.Head] s
             
     let idle (s:State) = recharge

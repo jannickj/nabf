@@ -131,12 +131,15 @@ namespace NabfAgentLogic
 
             let state''' = updateSelf state state''
 
+            printfn "World size: %A" (state'''.World.Count)
+            //printfn "World: %A" (Map.toList <| state'''.World)
+
             match (state'''.LastAction, state'''.LastActionResult) with
             | (Goto _, Successful) ->
-                printfn "coming from %s" state.Self.Node
-                printfn "edges before: %A" (Set.toList <| state'''.World.[state'''.Self.Node].Edges)
+                //printfn "coming from %s" state.Self.Node
+                //printfn "edges before: %A" (Set.toList <| state'''.World.[state'''.Self.Node].Edges)
                 let state'''' = updateTraversedEdgeCost state state'''
-                printfn "edges after: %A" (Set.toList <| state''''.World.[state''''.Self.Node].Edges)
+                //printfn "edges after: %A" (Set.toList <| state''''.World.[state''''.Self.Node].Edges)
                 state''''
             | _ -> updateTraversedEdgeCost state state'''
     

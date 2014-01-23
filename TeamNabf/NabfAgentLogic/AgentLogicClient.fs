@@ -307,10 +307,10 @@
                                         if token.IsCancellationRequested then
                                             awaitingDecision:=false
                                         else                                          
-                                            Console.WriteLine(runningCalc);
+                                            //Console.WriteLine(runningCalc);
                                             
                                             let dif = DateTime.Now - startAsyncTime
-                                            Console.WriteLine("async load time: "+dif.TotalMilliseconds.ToString())
+                                            //Console.WriteLine("async load time: "+dif.TotalMilliseconds.ToString())
                                             let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         
                                             let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
