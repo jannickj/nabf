@@ -107,8 +107,10 @@ module AgentTypes =
         | DisruptJob of VertexName
         | AttackJob of VertexName list
         | EmptyJob
+    
+    type AgentsNeededForJob = int
 
-    type JobHeader = Option<JobID> * JobValue * JobType
+    type JobHeader = Option<JobID> * JobValue * JobType * AgentsNeededForJob
     type Goal =
         | OccupyGoal of VertexName
         | RepairGoal of VertexName * AgentName

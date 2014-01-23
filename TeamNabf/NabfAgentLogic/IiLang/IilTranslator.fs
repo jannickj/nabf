@@ -303,20 +303,23 @@ namespace NabfAgentLogic.IiLang
                             match jt with
                             | JobType.AttackJob -> AttackJob(nodes)
                             | JobType.DisruptJob -> DisruptJob(nodes.Head)
-                            | JobType.OccupyJob -> OccupyJob(nodes)
+                            | JobType.OccupyJob -> 
+                                let [Function ("zoneNodes", nodeData)] = optional
+                                let zone = List.map (fun (Identifier vName) -> vName) nodeData
+                                OccupyJob(nodes,zone)
                             | JobType.RepairJob -> 
-                                let [Identifier agentName] = optional
+                                let [Function ("agentToRepair", [Identifier agentName])] = optional
                                 RepairJob(nodes.Head,agentName)
                             | JobType.EmptyJob -> EmptyJob
                             | _ -> raise <| InvalidIilException("Job type Wrong", data)
-                        (((Some (int id)),int value,jt),jobdata): Job
+                        (((Some (int id)),int value,jt,int aNeeded),jobdata): Job
                     | _ -> raise <| InvalidIilException("notice percept",data)
        
         let getNodesFromJob job = 
             match job with
             | AttackJob nodes -> nodes
             | DisruptJob nh -> [nh]
-            | OccupyJob nodes -> nodes
+            | OccupyJob (nodes,_) -> nodes
             | RepairJob (nh,_) -> [nh]
             | EmptyJob -> []                  
 
@@ -343,7 +346,7 @@ namespace NabfAgentLogic.IiLang
                 | "receivedJob" ->
                     let (Percept ("whichNodeIndexToGoTo", [Numeral nodeindex]))::rest = tail
                     let rjob = parseIilJob rest
-                    let ((rjobid,_,_),rjobdata) = rjob
+                    let ((rjobid,_,_,_),rjobdata) = rjob
                     let jnodes = getNodesFromJob rjobdata
                     let usenode = List.nth jnodes (int nodeindex)
                     AgentServerMessage <| (AcceptedJob <| ((rjobid.Value),usenode))
@@ -373,14 +376,53 @@ namespace NabfAgentLogic.IiLang
 
         let vertexToIdentifer vlist = List.map (fun v -> Identifier v) vlist
 
+        let buildIilJobData simid job = 
+            let ((id,value,jt,aNeeded),jdata) = job
+            let idparam = 
+                match id with
+                | Some id -> [Numeral (float id)]
+                | None -> []
+            let (vl,optional) =
+                match jdata with
+                | AttackJob vl ->  (vertexToIdentifer vl),[]
+                | OccupyJob (vl,zl) -> (vertexToIdentifer vl), [(Function ("zone",vertexToIdentifer zl))]
+                | RepairJob (vn,an) -> (vertexToIdentifer [vn]), [(Identifier an)]
+                | DisruptJob vn -> (vertexToIdentifer [vn]),[]
+                | EmptyJob -> [],[]
+            [  Numeral (float simid)]
+            @  idparam
+            @[ Numeral (float jt)
+            ;  Numeral (float aNeeded)
+            ;  Function ("nodes",vl)
+            ;  Numeral (float value)
+            ]@optional 
+
+        let buildPerceptAsIilFunction percept =
+            match percept with
+            | VertexProbed (vn, value) -> [Function ("nodeKnowledge", [Identifier vn; Numeral (float value)])]
+            | VertexSeen (vn,_) -> [Function ("nodeKnowledge", [Identifier vn])]
+            | EdgeSeen (Some cost,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2; Numeral (float cost)])]
+            | EdgeSeen (None,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2])]
+            | EnemySeen { Role = Some role; Name = name } -> [Function ("roleKnowledge", [Identifier name; Identifier (role.ToString())])]
+            | _ -> []
+
         let buildIilMetaAction maction simid =
             match maction with
-            | MetaAction.ApplyJob (jobid,desire) -> Action ("applyNoticeAction", [Numeral (float simid); Numeral (float jobid); Numeral (float desire)])
+            | ApplyJob (jobid,desire) -> 
+                Action ("applyNoticeAction", [Numeral (float simid); Numeral (float jobid); Numeral (float desire)])
             | CreateJob job -> 
-                let ((id,value,jt),jdata) = job
-                let datalist = [Numeral (float simid); Numeral (float jt); Numeral (float value)]@
-                    match jdata with
-                    | AttackJob vl ->  (vertexToIdentifer vl)
-                    | OccupyJob vl -> (vertexToIdentifer vl)@
-                    | Rep
+                let datalist = buildIilJobData simid job
                 Action ("createNoticeAction", datalist)
+            | UpdateJob job -> 
+                let datalist = buildIilJobData simid job
+                Action ("changeNoticeAction", datalist)
+            | RemoveJob jobid ->
+                Action ("deleteNoticeAction", [Numeral (float simid); Numeral (float jobid)])
+            | NewRound rid ->
+                Action ("newRoundAction", [Numeral (float simid); Numeral (float rid)])
+            | SimulationSubscribe -> 
+                Action ("subscribeSimulationAction", [Numeral (float simid)])
+            | ShareKnowledge perceptlist ->
+                let iilfuncs = List.collect (fun percept -> buildPerceptAsIilFunction percept) perceptlist
+                Action ("addKnowledgeAction", iilfuncs)
+                

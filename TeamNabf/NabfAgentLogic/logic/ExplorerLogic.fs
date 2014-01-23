@@ -50,15 +50,15 @@ module ExplorerLogic =
         let enemySabs = List.filter (fun a -> (a.Role = Some Saboteur) || (a.Role = None)) (fst agents)
         runAway s enemySabs
 
-    let generateOccupyJobExplorer (s:State) (knownJobs:Job list) =
+    let generateOccupyJobExplorer (s:State) (knownJobs:Job list) : Option<Job> =
         match s.NewZone.Value with
         | (g,true) -> 
-            let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType),_) -> jType = JobType.OccupyJob) knownJobs)
+            let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
             
             if overlapping = []
             then
                 let names = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
-                Some ((-1,-1,JobType.OccupyJob),JobData.OccupyJob(([(*Put position list here*)]),names))
+                Some ((None,0(*put value here*),JobType.OccupyJob,0(*put agents needed here*)),JobData.OccupyJob(([(*Put position list here*)]),names))
             else
                 None // Join w. overlapping jobs and return the joined job
         | _ -> None
@@ -86,7 +86,7 @@ module ExplorerLogic =
 
     let startDiscoveringZone (s:State) =
         if s.NewZone.IsNone && s.World.[s.Self.Node].Value.Value = 10 
-            && not (zoneAlreadyFound (List.filter (fun ((_,_,jType),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
+            && not (zoneAlreadyFound (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
         then
             let rn = getRelevantNeighbours s
             let s = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) 

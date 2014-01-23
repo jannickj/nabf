@@ -141,11 +141,29 @@
                 newNewState
             | _ -> updateTraversedEdgeCost state newState
 
+    
+        let shouldSharePercept (state:State) percept =
+            match percept with
+            | VertexProbed (vp,d) -> 
+                if state.World.ContainsKey(vp) then
+                    let v = state.World.Item vp
+                    if v.Value.IsNone then 
+                        true
+                    else 
+                        false
+                else 
+                    false
+            | EdgeSeen es -> true
+            | VertexSeen (vp,t) -> 
+                not (state.World.ContainsKey(vp))                
+            | EnemySeen { Name = name; Role = Some _ } ->
+                not (List.exists (fun { Role = Some _; Name = an } -> an = name) (state.EnemyData))
+            | _ -> false
 
-        let sharedPercepts (percepts:Percept list) =
-            []:(Percept list)
+        let selectSharedPercepts state (percepts:Percept list) =
+            List.filter (shouldSharePercept state) percepts
         
-        let updateStateWhenGivenJob (state:State) (job:Job) =
+        let updateStateWhenGivenJob (state:State) (job:Job) (moveTo:VertexName) =
             state
 
         let buildIilAction id (action:Action) =
@@ -175,13 +193,13 @@
             | (_ , rdata) :: tail -> if rdata = RepairJob(s.Self.Node,s.Self.Name) then Some knownJobs.Head else tryFindRepairJob s tail
             | [] -> None
 
-        let generateRepairJob (s:State) (knownJobs:Job list) =
+        let generateRepairJob (s:State) (knownJobs:Job list) : Option<Job> =
             if s.Self.Health.Value = 0 
             then
                 let j = tryFindRepairJob s knownJobs
                 match j with
-                | None -> Some ((-1,5,JobType.RepairJob),RepairJob(s.Self.Node,s.Self.Name))
-                | Some ((id,d,_),_) -> Some ((id,d,JobType.RepairJob),RepairJob(s.Self.Node,s.Self.Name))
+                | None -> Some ((None,5,JobType.RepairJob,1),RepairJob(s.Self.Node,s.Self.Name))
+                | Some ((id,d,_,an),_) -> Some ((id,d,JobType.RepairJob,an),RepairJob(s.Self.Node,s.Self.Name))
             else
                 None
 
@@ -206,7 +224,7 @@
                     | _ -> false ) knownJobs
             if (isOccupyingPosition s) && not attackJobFound 
             then 
-                Some ((-1,-1,JobType.AttackJob),AttackJob [s.Self.Node])
+                Some ((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])
             else 
                 None
 
@@ -225,18 +243,13 @@
             if state.Goals.IsEmpty 
             then
                 match job with
-                | ((_,_,JobType.RepairJob),_) -> if state.Self.Role.Value = Repairer then (10,true) else (0,false)
-                | ((_,_,JobType.AttackJob),_) -> if state.Self.Role.Value = Saboteur then (10,true) else (0,false)
-                | ((_,_,JobType.DisruptJob),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
-                | ((_,_,JobType.OccupyJob),_) -> (8,true)
+                | ((_,_,JobType.RepairJob,_),_) -> if state.Self.Role.Value = Repairer then (10,true) else (0,false)
+                | ((_,_,JobType.AttackJob,_),_) -> if state.Self.Role.Value = Saboteur then (10,true) else (0,false)
+                | ((_,_,JobType.DisruptJob,_),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
+                | ((_,_,JobType.OccupyJob,_),_) -> (8,true)
                 | _                           -> (0,false)
             else
                 (0,false)
-
-        let buildEvaluationStarted =
-            new IilAction "evaluation_started"
-        let buildEvaluationEnded =
-            new IilAction "evaluation_ended"
 
 
         let buildIilSendMessage (sm:SendMessage) =

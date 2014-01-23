@@ -153,6 +153,12 @@
                                         let percepts = this.awaitingPercepts
                                         this.awaitingPercepts <- []
                                         percepts)
+            let oldstate = (lock stateLock (fun () -> this.BeliefData))
+            let generateSharedPercepts() =
+                let sharedP = (selectSharedPercepts oldstate percepts)
+                let action = buildIilSendMessage (this.simulationID,ShareKnowledge sharedPercepts)
+                SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
+            this.asyncCalculation "generating shared percept" stopDeciders.Token generateSharedPercepts
             lock stateLock (fun () -> this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts))
             runningCalc <- 0
             lock decisionLock ( fun () ->
@@ -165,14 +171,14 @@
             stopDeciders.Cancel()
             simEnded <- true
         
-        member private this.CalculateAcceptedJob id =
-            let foundJob = List.tryFind (fun ((jid,_,_),_) -> jid = id) this.KnownJobs
+        member private this.CalculateAcceptedJob id moveTo =
+            let foundJob = List.tryFind (fun ((jid,_,_,_),_) -> jid = id) this.KnownJobs
             if foundJob.IsSome then
                 let update = 
                     async
                         {
                             let ajob = foundJob.Value
-                            lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob)
+                            lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob moveTo)
                             this.asyncCalculation "Calc accept job" stopDeciders.Token (fun () -> this.EvaluteState())
                         }
                 Async.Start update
@@ -183,7 +189,7 @@
             let removeJobFunc job =
                 let state = lock stateLock (fun () -> this.BeliefData)
                 let decide = shouldRemoveJob state job
-                let ((jobid,_,_),_) = job
+                let ((jobid,_,_,_),_) = job
                 if decide then
                     let removejobAct = buildIilSendMessage(this.simulationID,(RemoveJob jobid.Value))
                     SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(removejobAct))
@@ -197,8 +203,8 @@
                 | Some job ->
                     let metaAction = 
                         match job with
-                        | ((Some jobid,_,_),_) -> UpdateJob job
-                        | ((None,_,_),_) -> CreateJob job
+                        | ((Some jobid,_,_,_),_) -> UpdateJob job
+                        | ((None,_,_,_),_) -> CreateJob job
                     let createjobMsg = buildIilSendMessage (this.simulationID,metaAction)
                     SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(createjobMsg)) 
                     jobGenFunc jobtype state (job::knownJobs)                            
@@ -206,24 +212,33 @@
 
             let jobTypeList = List.ofSeq (jobTypes.Cast<JobType>())
             let joblist = lock knownJobsLock (fun () -> this.KnownJobs)
-            let knownjobs jobtype =List.filter (fun ((_, _, jt), _) -> jt = jobtype) joblist
+            let knownjobs jobtype =List.filter (fun ((_, _, jt,_), _) -> jt = jobtype) joblist
             let stateData = lock stateLock (fun () -> this.BeliefData)
             //List.iter (fun jobType -> (this.asyncCalculation "job" stopDeciders.Token )) jobTypeList 
             this.asyncCalculationMany "calc generate job" 
                     (fun jobType -> ignore <| jobGenFunc jobType stateData (knownjobs jobType)) 
                     jobTypeList stopDeciders.Token
-
-        member private this.evaluateJobs jobs =
-            let update job = 
+        member private this.EvaluateJob  job =
+            let jobs = lock knownJobsLock (fun () -> this.KnownJobs)
+            let eval job () = 
                 let stateData = lock stateLock (fun () -> this.BeliefData)
                 let (desire,wantJob) = decideJob stateData job
                 if wantJob then
-                    let ((jobid,_,_),_) = job
+                    let ((jobid,_,_,_),_) = job
                     let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((jobid.Value),desire))
                     SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))  
-            lock knownJobsLock (fun () -> this.KnownJobs <- jobs@this.KnownJobs)
+            this.asyncCalculation "evaluate job" stopDeciders.Token (eval job) 
+
+        member private this.updateJob job =
+            lock knownJobsLock (fun () -> 
+                                    let filteredJobs = List.filter (fun ((Some jid,_,_,_),_) ->  
+                                                                match job with
+                                                                | ((Some id,_,_,_),_) -> not (id = jid)
+                                                                | _ -> true) this.KnownJobs 
+                                     
+                                    this.KnownJobs <- job::filteredJobs)
             
-            this.asyncCalculationMany "evaluate job" update jobs stopDeciders.Token
+            this.EvaluateJob job
 
 
         interface IAgentLogic with
@@ -238,10 +253,10 @@
                 match ServerMessage with
                 | AgentServerMessage msg ->
                     match msg with
-                    | NewJobs jobs ->
-                        this.evaluateJobs jobs
-                    | AcceptedJob id ->
-                        this.CalculateAcceptedJob (Some id)
+                    | AddedOrChangedJob job ->
+                        this.updateJob job
+                    | AcceptedJob (id,vn) ->
+                        this.CalculateAcceptedJob (Some id) vn
                     | SharedPercepts percepts ->
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                 |  MarsServerMessage msg ->
@@ -258,6 +273,7 @@
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(subscribeAction))
                         this.BeliefData <- buildInitState (agentname,sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
+                        
                         let left = new DateTime(int64(deadline)*int64(10000))
                         let timeleft = left-DateTime.Now ;
                         let a = int64(deadline)
@@ -265,11 +281,10 @@
                         let newRoundAct = buildIilSendMessage (this.simulationID, NewRound(id))
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(newRoundAct))
                         let start = DateTime.Now
-                        let action = buildIilSendMessage (this.simulationID,ShareKnowledge percepts)
-                        SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
+                        
                         this.ReEvaluate percepts
                         let knownJobs = lock knownJobsLock (fun () -> this.KnownJobs)
-                        this.evaluateJobs knownJobs
+                        List.iter this.EvaluateJob knownJobs
                         this.generateNewJobs()
                         let totalTime = deadline - actionTime
                         let forceDecision start totaltime =
