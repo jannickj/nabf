@@ -306,21 +306,20 @@
                                     while awaitingDecision.Value do 
                                         if token.IsCancellationRequested then
                                             awaitingDecision:=false
-                                        else
-                                            do! Async.Sleep(10)
-                                            
-                                            
+                                        else                                          
                                             Console.WriteLine(runningCalc);
+                                            
+                                            let dif = DateTime.Now - startAsyncTime
+                                            Console.WriteLine("async load time: "+dif.TotalMilliseconds.ToString())
                                             let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         
                                             let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
                                             //Console.WriteLine(runningCalcs)
 
                                             if runningCalcs <= 0 || (expired+int64(800)) > int64(totaltime) then
-                                                let dif = DateTime.Now - startAsyncTime
-                                                Console.WriteLine("async load time: "+dif.TotalMilliseconds.ToString())
                                                 SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
                                                 awaitingDecision:=false
+                                            ignore <| Async.Sleep(100)
                                 }
                         Async.Start ((forceDecision System.DateTime.Now.Ticks totalTime),stopDeciders.Token)
                         
