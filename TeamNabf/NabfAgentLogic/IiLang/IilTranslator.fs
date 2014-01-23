@@ -344,12 +344,8 @@ namespace NabfAgentLogic.IiLang
                 | "noticeRemoved" ->
                     AgentServerMessage <| (RemovedJob <| parseIilJob tail)
                 | "receivedJob" ->
-                    let (Percept ("whichNodeIndexToGoTo", [Numeral nodeindex]))::rest = tail
-                    let rjob = parseIilJob rest
-                    let ((rjobid,_,_,_),rjobdata) = rjob
-                    let jnodes = getNodesFromJob rjobdata
-                    let usenode = List.nth jnodes (int nodeindex)
-                    AgentServerMessage <| (AcceptedJob <| ((rjobid.Value),usenode))
+                    let [Percept ("noticeId", [Numeral rjobid]); Percept ("whichNodeNameToGoTo", [Identifier nodename])] = tail
+                    AgentServerMessage <| (AcceptedJob <| ((int rjobid),nodename))
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"
         
