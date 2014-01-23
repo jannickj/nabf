@@ -73,7 +73,7 @@ type GraphTest() =
                            ; ("b", {Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
                            ] |> Map.ofList
              
-            let actual = addEdge initialGraph testEdge
+            let actual = addEdge testEdge initialGraph
             Assert.AreEqual (expected, actual)
 
         [<Test>]
