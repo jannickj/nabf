@@ -418,5 +418,5 @@ namespace NabfAgentLogic.IiLang
                 Action ("subscribeSimulationAction", [Numeral (float simid)])
             | ShareKnowledge perceptlist ->
                 let iilfuncs = List.collect (fun percept -> buildPerceptAsIilFunction percept) perceptlist
-                Action ("addKnowledgeAction", iilfuncs)
+                Action ("addKnowledgeAction",[Numeral (float simid); Function ("knowledges",iilfuncs)])
                 

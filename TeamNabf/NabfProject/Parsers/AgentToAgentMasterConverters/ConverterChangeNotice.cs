@@ -25,7 +25,7 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
 
         public override ChangeNoticeAction BeginConversionToForeign(IilAction gobj)
         {
-            IilFunction bonusfunc = ((IilFunction)gobj.Parameters[0]);
+            var bonusfunc = gobj;
 
             int simId = (int)((IilNumeral)bonusfunc.Parameters[0]).Value;
 

@@ -55,14 +55,14 @@ namespace NabfServerApplication
 
         private static void ReceivedMessage(EntityXmasAction<NabfAgent> action)
         {
-            Console.SetCursorPosition(50, consolepos[action.Source]*2);
-            Console.Write("received: "+action.GetType().Name);
+            Console.SetCursorPosition(15, consolepos[action.Source]*2);
+            Console.Write("received: " + action + "\t\t\t\t\t");
         }
 
         private static void SendMessage(NabfAgent agent, XmasEvent evt)
         {
-            Console.SetCursorPosition(50, consolepos[agent] * 2 + 1);
-            Console.Write("Sent: " + evt.GetType().Name);
+            Console.SetCursorPosition(15, consolepos[agent] * 2 + 1);
+            Console.Write("Sent: " + evt + "\t\t\t\t\t");
         }
 
         private static void AddedXmasObject(ActionStartingEvent<AddXmasObjectAction> evten)

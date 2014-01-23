@@ -153,8 +153,10 @@
             let oldstate = (lock stateLock (fun () -> this.BeliefData))
             let generateSharedPercepts() =
                 let sharedP = (selectSharedPercepts oldstate percepts)
-                let action = buildIilSendMessage (this.simulationID,ShareKnowledge sharedPercepts)
-                SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
+                if not ( List.isEmpty sharedPercepts) then
+                    let sharedPs = ShareKnowledge sharedPercepts
+                    let action = buildIilSendMessage (this.simulationID,sharedPs)
+                    SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
             this.asyncCalculation "generating shared percept" stopDeciders.Token generateSharedPercepts
             let newstate = lock stateLock (fun () -> this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
                                                      this.BeliefData)
