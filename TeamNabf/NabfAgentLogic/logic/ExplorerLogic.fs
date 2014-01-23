@@ -51,8 +51,8 @@ module ExplorerLogic =
         runAway s enemySabs
 
     let generateOccupyJobExplorer (s:State) (knownJobs:Job list) : Option<Job> =
-        match s.NewZone.Value with
-        | (g,true) -> 
+        match s.NewZone with
+        | Some (g,true) -> 
             let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
             
             if overlapping = []
@@ -64,7 +64,7 @@ module ExplorerLogic =
         | _ -> None
 
     let probeVertex (s:State) =
-        if s.World.[s.Self.Node].Value = None then tryDo (Probe None) s else (false,None)
+        if s.World.[s.Self.Node].Value.IsNone then tryDo (Probe None) s else (false,None)
 
     let exploreZone (s:State) = 
         match s.NewZone with

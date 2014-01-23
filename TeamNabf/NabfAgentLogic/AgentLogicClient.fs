@@ -68,18 +68,15 @@
                     if runningCalc = 0 then
                         EvaluationCompletedEvent.Trigger(this, new EventArgs())
                     )
-                let asyncF f = 
+                let AsyncF f =
                     async
                         {
-                            Async.RunSynchronously f  
+                            Async.StartImmediate(f,stopToken)
                             changeCals(-1)
-                            ()
                         }
-            
                 changeCals(1)
 
-            
-                Async.Start ((asyncF func), stopToken)
+                Async.Start (AsyncF func,stopToken)
                 () 
 
         member private this.EvaluateDecision    (rankCur:DecisionRank) 
@@ -159,13 +156,19 @@
                 let action = buildIilSendMessage (this.simulationID,ShareKnowledge sharedPercepts)
                 SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
             this.asyncCalculation "generating shared percept" stopDeciders.Token generateSharedPercepts
-            lock stateLock (fun () -> this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts))
+            let newstate = lock stateLock (fun () -> this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
+                                                     this.BeliefData)
+          
+            
             runningCalc <- 0
             lock decisionLock ( fun () ->
                                     decidedAction <- (Int32.MaxValue,Action.Recharge)
                                     decisionId <- (decisionId + 1)
                                 )
+            let start = DateTime.Now
             this.EvaluteState()
+            let dif = DateTime.Now - start
+            Console.WriteLine("Evaluate state: "+dif.TotalMilliseconds.ToString());
 
         let stopLogic () =
             stopDeciders.Cancel()
@@ -181,7 +184,7 @@
                             lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob moveTo)
                             this.asyncCalculation "Calc accept job" stopDeciders.Token (fun () -> this.EvaluteState())
                         }
-                Async.Start update
+                Async.StartImmediate update
 
             
         member private this.removeUselessJobs() =
@@ -210,7 +213,7 @@
                     jobGenFunc jobtype state (job::knownJobs)                            
                 | None -> ()
 
-            let jobTypeList = List.ofSeq (jobTypes.Cast<JobType>())
+            let jobTypeList = (List.ofSeq (jobTypes.Cast<JobType>())).Tail
             let joblist = lock knownJobsLock (fun () -> this.KnownJobs)
             let knownjobs jobtype =List.filter (fun ((_, _, jt,_), _) -> jt = jobtype) joblist
             let stateData = lock stateLock (fun () -> this.BeliefData)
@@ -283,6 +286,11 @@
                         let start = DateTime.Now
                         
                         this.ReEvaluate percepts
+
+                        let dif = DateTime.Now - start
+                        Console.WriteLine("Evaluate percepts: "+dif.TotalMilliseconds.ToString());
+
+                        let startAsyncTime = DateTime.Now
                         let knownJobs = lock knownJobsLock (fun () -> this.KnownJobs)
                         List.iter this.EvaluateJob knownJobs
                         this.generateNewJobs()
@@ -290,7 +298,9 @@
                         let forceDecision start totaltime =
                             async
                                 {
+                                    
                                     let! token = Async.CancellationToken
+                                    
                                     let awaitingDecision = ref true
                                     //Thread.Sleep(800)
                                     while awaitingDecision.Value do 
@@ -298,19 +308,22 @@
                                             awaitingDecision:=false
                                         else
                                             do! Async.Sleep(10)
-
+                                            
+                                            
+                                            Console.WriteLine(runningCalc);
                                             let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         
                                             let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
                                             //Console.WriteLine(runningCalcs)
 
-                                            if (expired+int64(800)) > int64(totaltime) || runningCalcs = 0 then
+                                            if runningCalcs <= 0 || (expired+int64(800)) > int64(totaltime) then
+                                                let dif = DateTime.Now - startAsyncTime
+                                                Console.WriteLine("async load time: "+dif.TotalMilliseconds.ToString())
                                                 SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
                                                 awaitingDecision:=false
                                 }
                         Async.Start ((forceDecision System.DateTime.Now.Ticks totalTime),stopDeciders.Token)
-                        let dif = DateTime.Now - start
-                        Console.WriteLine("Action request time: "+dif.TotalMilliseconds.ToString());
+                        
                         ()
                     | ServerClosed -> ()
            

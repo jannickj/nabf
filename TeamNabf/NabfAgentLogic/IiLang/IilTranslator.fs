@@ -360,17 +360,11 @@ namespace NabfAgentLogic.IiLang
             | Attack a -> Action ("goto", [Numeral id; Identifier a])
             | Recharge -> Action ("recharge", [Numeral id])
             | Buy a -> Action ("buy", [Numeral id; Identifier (a.ToString().ToLower())])
-            | Inspect a ->
-                    if a.IsNone then
-                        Action ("inspect", [Numeral id; Identifier a.Value])
-                    else
-                        Action ("inspect", [Numeral id])
+            | Inspect None -> Action ("inspect", [Numeral id])
+            | Inspect (Some a) -> Action ("inspect", [Numeral id; Identifier a])
             | Parry -> Action ("parry", [Numeral id])
-            | Probe a ->
-                if a.IsNone then
-                        Action ("probe", [Numeral id; Identifier a.Value])
-                    else
-                        Action ("probe", [Numeral id])
+            | Probe None ->  Action ("probe", [Numeral id])
+            | Probe (Some vn) -> Action ("probe", [Numeral id; Identifier vn])
             | Repair a -> Action ("repair", [Numeral id; Identifier a])
             | Survey -> Action ("survey", [Numeral id])
 
