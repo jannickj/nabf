@@ -128,7 +128,7 @@ module ExplorerLogic =
         List.filter (fun zv -> (List.exists (fun v -> v.Identifier = zv.Vertex.Identifier) vl)) zl
     
     let shouldZoneVertexLock (graph:Graph) (zl:ZoneVertex list) (zoneV:ZoneVertex) =
-        if zoneV.ControlValue <= 3 || zoneV.Lock then true
+        if ((zoneV.ControlValue <= 3 && not (isIsland zoneV.Vertex)) || zoneV.Lock) && (zoneV.HasAgent) then true
         else
             let zneighbours = getZoneVertexNeighbour graph zl zoneV
             List.exists (fun zn -> zn.ControlValue = 2) zneighbours
@@ -137,7 +137,7 @@ module ExplorerLogic =
         let init = if zoneV.HasAgent then 2 else 0
         let vl = getNeighbours zoneV.Vertex.Identifier graph
         let zbours = getZoneVertexNeighbour graph zl zoneV 
-        List.length (List.filter (fun zn -> zn.HasAgent) zbours)
+        init + List.length (List.filter (fun zn -> zn.HasAgent) zbours)
     
     let calcDesire (graph:Graph) (zl:ZoneVertex list) (zoneV:ZoneVertex) =       
         let zneighbours = getZoneVertexNeighbour graph zl zoneV
@@ -150,32 +150,34 @@ module ExplorerLogic =
         List.exists (fun zn -> zn.Lock ) zneighbours
 
     let choseRemove (graph:Graph) (zl:ZoneVertex list)= 
-        let sorted = List.sortBy (fun zv -> zv.Desire) zl
-        if List.isEmpty sorted then
+        let sorted = List.rev (List.sortBy (fun zv -> zv.Desire) zl)
+        let allLocked = List.forall (fun zv -> zv.Lock) zl
+        if allLocked || List.isEmpty sorted then
             None
         else
-            let findNLocked = List.tryFind ( fun zn -> hasLockedNeighbour graph zl zn) sorted
+            let findNLocked = List.tryFind ( fun zn -> (hasLockedNeighbour graph zl zn) && (not zn.Lock) && (zn.HasAgent)) sorted
             if findNLocked.IsSome then
                 findNLocked
             else
-                Some sorted.Head
+                List.tryFind (fun zn -> (not zn.Lock) && (zn.HasAgent) ) sorted
+                
     
     let rec calcAgentPositions (graph:Graph) (zl:ZoneVertex list) =
-        let zl = List.map (fun zn -> {zn with Lock = (shouldZoneVertexLock graph zl zn)}) zl
-        let zl = List.map (fun zn -> {zn with ControlValue = calcControlValue graph zl zn}) zl
-        let zl = List.map (fun zn -> {zn with Desire = calcDesire graph zl zn}) zl
-        let rz = choseRemove graph zl
+        let zl1 = List.map (fun zn -> {zn with ControlValue = calcControlValue graph zl zn}) zl
+        let zl2 = List.map (fun zn -> {zn with Lock = (shouldZoneVertexLock graph zl1 zn)}) zl1
+        let zl3 = List.map (fun zn -> {zn with Desire = calcDesire graph zl2 zn}) zl2
+        let rz = choseRemove graph zl3
         match rz with
-        | None -> zl
+        | None -> zl3
         | Some removed -> 
-            let zl =    {   removed with HasAgent = false}
-                        ::  (List.filter (fun zn -> zn.Vertex.Identifier <> removed.Vertex.Identifier ) zl)
-            calcAgentPositions graph zl 
+            let zl4 =    {   removed with HasAgent = false}
+                        ::  (List.filter (fun zn -> zn.Vertex.Identifier <> removed.Vertex.Identifier ) zl3)
+            calcAgentPositions graph zl4
 
     let findAgentPlacement (subgraph:Graph) =
         let vl = snd (List.unzip (Map.toList subgraph))
         let zl = List.map buildZoneVertex vl
-        let zl = List.map (fun zn -> {zn with Lock = (shouldZoneVertexLockBasedOnIsland subgraph zn)}) zl
-        let zl = calcAgentPositions subgraph zl
+        let zll = List.map (fun zn -> {zn with Lock = (shouldZoneVertexLockBasedOnIsland subgraph zn); HasAgent = not (isIsland zn.Vertex)}) zl
+        let zl = calcAgentPositions subgraph zll
         let zl = List.filter (fun zn -> zn.HasAgent ) zl
         List.map (fun zn -> zn.Vertex.Identifier) zl
