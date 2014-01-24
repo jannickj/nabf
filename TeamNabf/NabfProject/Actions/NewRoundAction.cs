@@ -11,8 +11,8 @@ namespace NabfProject.Actions
 {
     public class NewRoundAction : EntityXmasAction<NabfAgent>
     {
-        private int RoundNumber;
-        private int SimId;
+        public int RoundNumber { get; private set; }
+        public int SimId { get; private set; }
 
         public NewRoundAction(int simID, int roundNumber)
         {

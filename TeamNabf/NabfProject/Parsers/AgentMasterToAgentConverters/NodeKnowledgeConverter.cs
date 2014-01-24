@@ -40,14 +40,13 @@ namespace NabfProject.Parsers.KnowledgeConverters
         {
             if (gobj.Value == 0)
             {
-                return new IilPerceptCollection(new IilPercept("visibleVertex"
-                    , new IilFunction("name", new IilIdentifier(gobj.Name))
-                    , new IilFunction("team", new IilIdentifier(""))
-                    ));
+                return new IilPerceptCollection(new IilPercept("visibleVertices"
+                    , new IilFunction("name", new IilIdentifier(gobj.Name)))
+                    );
             }
             else
             {
-                return new IilPerceptCollection(new IilPercept("probedVertex"
+                return new IilPerceptCollection(new IilPercept("probedVertices"
                     , new IilFunction("name", new IilIdentifier(gobj.Name))
                     , new IilFunction("value", new IilNumeral(gobj.Value))
                     ));

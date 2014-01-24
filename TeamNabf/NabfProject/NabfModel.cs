@@ -16,6 +16,7 @@ namespace NabfProject
         public NabfModel(SimulationManager simMan, XmasWorldBuilder builder, ActionManager actman, EventManager evtman, XmasFactory factory) : base(builder,actman,evtman,factory)
 		{
             this.SimulationManager = simMan;
+            this.AddActor(simMan);
         }
 
 	}

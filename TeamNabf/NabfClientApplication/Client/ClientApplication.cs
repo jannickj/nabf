@@ -246,8 +246,8 @@ namespace NabfClientApplication.Client
 
 			Thread marsSenderThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsSender(); })));
             Thread marsReceiverThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMarsReceiver(); })));
-            Thread masterSenderThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMasterSender(); }));
-            Thread masterReceiverThread = new Thread(new ThreadStart(() => { while (true) this.UpdateMasterReceiver(); }));
+            Thread masterSenderThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMasterSender(); })));
+            Thread masterReceiverThread = new Thread(new ThreadStart(() => ExecuteThread(() => { while (true) this.UpdateMasterReceiver(); })));
             marsSenderThread.Start();
             marsReceiverThread.Start();
             masterSenderThread.Start();
@@ -263,7 +263,7 @@ namespace NabfClientApplication.Client
             catch (Exception e)
             {
                 Console.WriteLine("Client failure: " + e.Message);
-                Environment.Exit(1); 
+                //Environment.Exit(1); 
             }
         }
 

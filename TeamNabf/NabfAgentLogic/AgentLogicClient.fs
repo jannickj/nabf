@@ -21,6 +21,7 @@
         [<DefaultValue>] val mutable private awaitingPercepts : List<Percept>
         [<DefaultValue>] val mutable private simulationID : SimulationID
 
+        let mutable currentRound = 0
         let agentname = name
         let decisionTree = decisionTreeGenerator()
         let mutable simEnded = false
@@ -36,6 +37,7 @@
         //Parallel helpers
         let mutable stopDeciders = new CancellationTokenSource()
 
+        let roundLock = new Object()
         let stateLock = new Object()
         let decisionLock = new Object()
         let runningCalcLock = new Object()
@@ -264,12 +266,14 @@
                         this.CalculateAcceptedJob (Some id) vn
                     | SharedPercepts percepts ->
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
+                    | RoundChanged id ->
+                        lock roundLock (fun () -> currentRound <- id)
                 |  MarsServerMessage msg ->
                     match msg with
                     | SimulationEnd _ -> 
                         SimulationEndedEvent.Trigger(this, new EventArgs())
                         stopLogic()
-                        ()
+                        ()                        
                     | SimulationStart sData ->
                         this.KnownJobs <- []
                         this.awaitingPercepts <- []
@@ -283,7 +287,8 @@
                         let timeleft = left-DateTime.Now ;
                         let a = int64(deadline)
                         Console.WriteLine("Action request started timeleft "+a.ToString())
-                        let newRoundAct = buildIilSendMessage (this.simulationID, NewRound(id))
+                        let round = lock roundLock (fun () -> currentRound <- 1+currentRound; currentRound)
+                        let newRoundAct = buildIilSendMessage (this.simulationID, NewRound(round))
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(newRoundAct))
                         let start = DateTime.Now
                         

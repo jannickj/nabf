@@ -244,10 +244,11 @@ namespace NabfAgentLogic.IiLang
 
         let parseIilVisibleVertex visibleVertex =
             match visibleVertex with
-            | Function ("visibleVertex", 
-                [ Function ("name", [Identifier name])
-                ; Function ("team", [team])
-                ]) -> (name, parseIilTeamName team)
+            | Function ("visibleVertex", data) ->
+                match data with
+                |   [ Function ("name", [Identifier name])
+                    ; Function ("team", [team])]                -> (name, parseIilTeamName team)
+                |   [ Function ("name", [Identifier name])]     -> (name, None)
             | _ -> raise <| InvalidIilException ("visibleVertex", [visibleVertex])
 
         let parseIilSimStart iilSimStart = 
@@ -343,6 +344,9 @@ namespace NabfAgentLogic.IiLang
                     AgentServerMessage <| (AddedOrChangedJob <| parseIilJob tail)
                 | "noticeRemoved" ->
                     AgentServerMessage <| (RemovedJob <| parseIilJob tail)
+                | "roundChanged" ->
+                    let [Numeral roundid] = data
+                    AgentServerMessage <| (RoundChanged  <| (int roundid))
                 | "receivedJob" ->
                     let [Percept ("noticeId", [Numeral rjobid]); Percept ("whichNodeNameToGoTo", [Identifier nodename])] = tail
                     AgentServerMessage <| (AcceptedJob <| ((int rjobid),nodename))

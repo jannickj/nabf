@@ -187,6 +187,7 @@ module AgentTypes =
         | RemovedJob of Job
         | AcceptedJob of JobID*VertexName
         | SharedPercepts of Percept list
+        | RoundChanged of int
 
     type MarsServerMessage =  
         | ActionRequest of ActionRequestData * Percept list

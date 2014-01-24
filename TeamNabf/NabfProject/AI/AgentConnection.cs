@@ -19,7 +19,7 @@ namespace NabfProject.AI
 {
 	public class AgentConnection : AgentController
 	{
-
+        private bool disconnected = false;
         private object simLock = new object();
         private bool simulationSubscribed = false;
         private ConcurrentQueue<IilPerceptCollection> packets = new ConcurrentQueue<IilPerceptCollection>();
@@ -41,7 +41,9 @@ namespace NabfProject.AI
             this.Agent.Register(new Trigger<NoticeRemovedEvent>(evt => receivedEvent(evt)));
             this.Agent.Register(new Trigger<NoticeUpdatedEvent>(evt => receivedEvent(evt)));
             this.Agent.Register(new Trigger<ReceivedJobEvent>(evt => receivedEvent(evt)));
+            this.Agent.EventManager.Register(new Trigger<RoundChangedEvent>(evt => receivedEvent(evt)));
             this.Agent.Register(new Trigger<SimulationSubscribedEvent>(simSubscribedEvent));
+
 			this.masterToAgentParser = masterToAgentParser;
             this.agentToMasterParser = agentToMasterParser;
 		}
@@ -49,19 +51,32 @@ namespace NabfProject.AI
 
 		public override void Start()
 		{
-            new Thread(new ThreadStart(() => this.Updater(updateSend))).Start();
-            this.Updater(updateReceive);
+            var senderThread  = new Thread(new ThreadStart(() => this.Updater(updateSend)));
+            var updaterThread = new Thread(new ThreadStart(() =>  this.Updater(updateReceive)));
+
+            senderThread.Name = "Agent " + this.Agent.Name + ": Sender Thread";
+            updaterThread.Name = "Agent " + this.Agent.Name + ": Updater Thread";
+
+            senderThread.Start();
+            updaterThread.Start();
 		}
 
         private void Updater(Action action)
         {
             try
             {
-                while(true)
+                while (true)
+                {
+                    if (disconnected)
+                        throw new Exception("Connection closed");
                     action();
+                }
             }
             catch (Exception e)
             {
+                lock (simLock)
+                    this.disconnected = true;
+
                 this.Agent.QueueAction(new AgentCrashed(e));
             }
         }
@@ -75,7 +90,11 @@ namespace NabfProject.AI
             if (xaction is SubscribeSimulationAction)
                 lock (simLock)
                     this.simulationSubscribed = false;
-            agent.QueueAction(xaction);
+            bool noaction = false;
+            lock (simLock)
+                noaction = disconnected;
+            if(!noaction)
+                agent.QueueAction(xaction);
         }
 
         private void updateSend()
@@ -104,7 +123,7 @@ namespace NabfProject.AI
             var packet = this.masterToAgentParser.ConvertToForeign(evt);
 
             lock (simLock)
-                if (simulationSubscribed)
+                if (simulationSubscribed && !disconnected)
                     addPacket(packet);
         }
 
