@@ -96,7 +96,7 @@ namespace NabfClientApplication.Client
             lock (masterPackets)
             {
                 packets = this.masterPackets.ToArray();
-                this.marsPackets.Clear();
+                this.masterPackets.Clear();
             }
 
             foreach (var packet in packets)
