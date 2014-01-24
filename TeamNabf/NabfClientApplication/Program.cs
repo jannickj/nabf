@@ -23,7 +23,8 @@ namespace NabfClientApplication
 		{
             int masterinfo_pos = 0;
             int marsinfo_pos = masterinfo_pos+1;
-            
+
+            const bool DebugModeOn = false;
             
 			try
 			{
@@ -35,8 +36,8 @@ namespace NabfClientApplication
             string mars_server = args[marsinfo_pos];
             string username = args[marsinfo_pos+1];
             string password = args[marsinfo_pos+2];
-
-            Console.WriteLine("Got: Server: " + mars_server + ", Username: " + username + ", Password: " + password);
+            if (DebugModeOn)
+                Console.WriteLine("Got: Server: " + mars_server + ", Username: " + username + ", Password: " + password);
 
             IPEndPoint[] masterServerPoints = CreateIPEndPoint(master_server);
             IPEndPoint[] marsServerPoints = CreateIPEndPoint(mars_server);
@@ -69,7 +70,8 @@ namespace NabfClientApplication
             AgentToMarsParser agentToMarsParser = new AgentToMarsParser();
 
             ClientApplication client = new ClientApplication(masterSerCom,marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
-            client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalMilliseconds+" ms)");
+            if (DebugModeOn)
+                client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalMilliseconds+" ms)");
 
             Console.WriteLine("Authenticating: username=" + username + ", password=" + password);
 

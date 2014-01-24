@@ -9,6 +9,8 @@ namespace NabfAgentLogic
         open ExplorerLogic
         open IiLang.IiLangDefinitions
         open IiLang.IilTranslator
+        open XmasEngineExtensions
+        open Logging
         
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
@@ -131,8 +133,9 @@ namespace NabfAgentLogic
 
             let state''' = updateSelf state state''
 
+            logError "hejsa\n\n\n\nLALALLALLAALLALA\n\n\nLALALALALALALA"
             printfn "World size: %A" (state'''.World.Count)
-            //printfn "World: %A" (Map.toList <| state'''.World)
+            
 
             match (state'''.LastAction, state'''.LastActionResult) with
             | (Goto _, Successful) ->
