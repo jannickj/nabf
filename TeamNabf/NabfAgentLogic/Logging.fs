@@ -1,6 +1,6 @@
 namespace NabfAgentLogic
 module Logging =
-    open XmasEngineExtensions.LoggerExtension
+    open JSLibrary.Logging
     open System
     open System.IO
 
