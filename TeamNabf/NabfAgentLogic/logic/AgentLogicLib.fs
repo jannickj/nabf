@@ -57,6 +57,7 @@ module AgentLogicLib =
                 Some head
 
     let runAway (s:State) (enemySabs:Agent list)= 
+        printfn "RUNRUNRUNRUNRUNRUNRUN"
         let neighbours = getNeighbours s.Self.Node s.World
         let partition = List.partition (fun (v:Vertex) -> v.Edges.Count > 1) neighbours
         let sortedNeighbours = List.append (fst partition) (snd partition)
