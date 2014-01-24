@@ -127,8 +127,9 @@
                                 {
                                     use! handler = Async.OnCancel(fun () -> stopSource.Cancel())
                                     let (b,_) = c s
-                                    let source = new CancellationTokenSource()
-                                    this.EvaluateDecision rankCur stopSource.Token source (s,d)
+                                    if b then
+                                        let source = new CancellationTokenSource()
+                                        this.EvaluateDecision rankCur stopSource.Token source (s,d)
                                 })
                     
 
