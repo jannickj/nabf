@@ -98,15 +98,15 @@ namespace NabfProject.SimManager
             {
                 km.Subscribe(agent);
                 nb.Subscribe(agent);
-                agent.Raise(new SimulationSubscribedEvent(simID));
+                //agent.Raise(new SimulationSubscribedEvent(simID));
             }
 
-            //send out all knowledge to agent if he was subscribed or not(since the agent could be subscribed even thought it lost its data)
+            //send out all knowledge to agent
             agent.Raise(new SimulationSubscribedEvent(simID));
-            km.SendOutAllKnowledgeToAgent(agent);
-            nb.SendOutAllNoticesToAgent(agent);
             try { this.EventManager.Raise(new RoundChangedEvent(_currentRoundNumber)); }
             catch { }
+            km.SendOutAllKnowledgeToAgent(agent);
+            nb.SendOutAllNoticesToAgent(agent);
         }
 
         public void SendKnowledge(int id, List<Knowledge> sentKnowledge, NabfAgent sender)
