@@ -9,6 +9,7 @@ namespace NabfAgentLogic
         open ExplorerLogic
         open IiLang.IiLangDefinitions
         open IiLang.IilTranslator
+        open Logging
 
         let OurTeam = "Nabf"
         
@@ -124,6 +125,7 @@ namespace NabfAgentLogic
            
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
+            logError "HEJHEJHEJHEJHEJHEJHEJHEJHEJHEJHEJ"
             let state' = clearTempBeliefs state
             List.fold handlePercept state' percepts 
             |> updateTraversedEdgeCost state'

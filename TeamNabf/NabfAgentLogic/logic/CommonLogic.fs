@@ -14,7 +14,6 @@ module CommonLogic =
     let reactToEnemyAgent (s:State) =
         printfn "Self: %A" s.Self
         let agents = List.partition (fun a -> (a.Node = s.Self.Node) && (a.Team <> s.Self.Team)) s.NearbyAgents
-        printfn "enemies at this vertex: %A" agents
         if not (fst agents).IsEmpty then
             match s.Self.Role.Value with
             | Saboteur -> saboteurReact s agents
