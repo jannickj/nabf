@@ -18,7 +18,7 @@ namespace NabfProject.SimManager
         private Dictionary<int, SimulationData> _simDataStorage = new Dictionary<int, SimulationData>();
         private SimulationFactory _factory;
         private int _currentID = -1;
-        private int _currentRoundNumber;
+        private int _currentRoundNumber = -1;
         private bool _applicationClosed = false;
         private bool _jobsFoundForThisRound = false;
         private int _numberOfAgentsFinishedApplying = 0;
@@ -130,14 +130,14 @@ namespace NabfProject.SimManager
             return ret;
         }
 
-        public bool RemoveNotice(int simID, Int64 id)
+        public bool RemoveNotice(int simID, Int64 noticeId)
         {
             if (_currentID != simID)
                 return false;
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
 
-            return nb.RemoveNotice(id);
+            return nb.RemoveNotice(noticeId);
         }
 
         public bool UpdateNotice(int simID, Int64 noticeID, int agentsNeeded, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, string agentToRepair, int value)
@@ -158,16 +158,16 @@ namespace NabfProject.SimManager
             return NoticeBoard.NoticeToJobType(no);
         }
 
-        public void ApplyToNotice(int simID, Int64 id, int desirability, NabfAgent a)
+        public void ApplyToNotice(int simID, Int64 noticeId, int desirability, NabfAgent a)
         {
             if (_currentID != simID || _applicationClosed)
                 return;
             NoticeBoard nb;
             Notice notice;
             TryGetNoticeBoard(simID, out nb);
-            if (id != -1)
+            if (noticeId != -1)
             {
-                bool b = nb.TryGetNoticeFromId(id, out notice);
+                bool b = nb.TryGetNoticeFromId(noticeId, out notice);
                 if (b == false)
                     return;
             }
@@ -184,7 +184,7 @@ namespace NabfProject.SimManager
             if (numberOfAgents <= _numberOfAgentsFinishedApplying)
                 FindJobs(simID);
         }
-        public void UnApplyToNotice(int simID, Int64 id, NabfAgent a)
+        public void UnApplyToNotice(int simID, Int64 noticeId, NabfAgent a)
         {
             if (_currentID != simID || _applicationClosed)
                 return;
@@ -192,7 +192,7 @@ namespace NabfProject.SimManager
             NoticeBoard nb;
             Notice notice;
             TryGetNoticeBoard(simID, out nb);
-            bool b = nb.TryGetNoticeFromId(id, out notice);
+            bool b = nb.TryGetNoticeFromId(noticeId, out notice);
             if (b == false)
                 return;
 
