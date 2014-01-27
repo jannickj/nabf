@@ -122,26 +122,31 @@ namespace NabfAgentLogic
                     Role = oldState.Self.Role
                 }
             { newState with Self = newSelf }
+
+        let updateEdgeCosts (lastState:State) (state:State) =
+            match (state.LastAction, state.LastActionResult) with
+            | (Goto _, Successful) ->
+                let state4 = updateTraversedEdgeCost lastState state
+                state4
+            | _ -> updateTraversedEdgeCost lastState state
            
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            let state' = clearTempBeliefs state
+            let state1 = clearTempBeliefs state
 
-            let state'' = List.fold handlePercept state' percepts
+            let state2 = List.fold handlePercept state1 percepts
 
-            let state''' = updateSelf state state''
+            let state3 = updateSelf state state2
 
-            printfn "World size: %A" (state'''.World.Count)
-            //printfn "World: %A" (Map.toList <| state'''.World)
+            let state4 = updateEdgeCosts state state3
 
-            match (state'''.LastAction, state'''.LastActionResult) with
-            | (Goto _, Successful) ->
-                //printfn "coming from %s" state.Self.Node
-                //printfn "edges before: %A" (Set.toList <| state'''.World.[state'''.Self.Node].Edges)
-                let state'''' = updateTraversedEdgeCost state state'''
-                //printfn "edges after: %A" (Set.toList <| state''''.World.[state''''.Self.Node].Edges)
-                state''''
-            | _ -> updateTraversedEdgeCost state state'''
+            let state5 = if state4.Self.Role = Some Explorer then findNewZone state4 else state4
+
+            let state6 = if state5.Self.Role = Some Explorer then updateExploreZone state5 else state5
+
+            state5
+
+            
     
         let shouldSharePercept (state:State) percept =
             match percept with
@@ -185,24 +190,24 @@ namespace NabfAgentLogic
         let generateOccupyJob (s:State) (knownJobs:Job list) =
             match s.Self.Role with
             | Some Explorer -> generateOccupyJobExplorer s knownJobs
-            | _ -> None
+            | _ -> ([],[])
 
         let rec tryFindRepairJob (s:State) (knownJobs:Job list) =
             match knownJobs with
             | (_ , rdata) :: tail -> if rdata = RepairJob(s.Self.Node,s.Self.Name) then Some knownJobs.Head else tryFindRepairJob s tail
             | [] -> None
 
-        let generateRepairJob (s:State) (knownJobs:Job list) : Option<Job> =
+        let generateRepairJob (s:State) (knownJobs:Job list) =
             if s.Self.Health.Value = 0 
             then
                 let j = tryFindRepairJob s knownJobs
                 match j with
-                | None -> Some ((None,5,JobType.RepairJob,1),RepairJob(s.Self.Node,s.Self.Name))
-                | Some ((id,d,_,an),_) -> Some ((id,d,JobType.RepairJob,an),RepairJob(s.Self.Node,s.Self.Name))
+                | None -> ([((None,5,JobType.RepairJob,1),RepairJob(s.Self.Node,s.Self.Name))],[])
+                | Some ((id,d,_,an),_) -> ([((id,d,JobType.RepairJob,an),RepairJob(s.Self.Node,s.Self.Name))],[])
             else
-                None
+                ([],[])
 
-        let generateDisruptJob (s:State) (knownJobs:Job list) = None
+        let generateDisruptJob (s:State) (knownJobs:Job list) = ([],[])
 
         let rec tryFindOccupyGoal (l:Goal list) =
             match l with
@@ -223,11 +228,12 @@ namespace NabfAgentLogic
                     | _ -> false ) knownJobs
             if (isOccupyingPosition s) && not attackJobFound 
             then 
-                Some ((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])
+                ([((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])],[])
             else 
-                None
+                ([],[])
 
-        let generateJob (jt:JobType) (s:State) (knownJobs:Job list) : option<Job> =
+        let generateJob (jt:JobType) (s:State) (knownJobs:Job list) : Job list * JobID list = 
+        //Returns a tuple of jobs to add and IDs of jobs to remove
             match jt with
             | JobType.OccupyJob     -> generateOccupyJob s knownJobs
             | JobType.RepairJob     -> generateRepairJob s knownJobs

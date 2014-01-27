@@ -10,6 +10,7 @@ module Explorer =
         Options 
             [
                 Choice(probeVertex)
+                Choice(exploreNewZone)
             ]
 
     

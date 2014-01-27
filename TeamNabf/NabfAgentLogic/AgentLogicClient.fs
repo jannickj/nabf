@@ -208,7 +208,7 @@
             let rec jobGenFunc jobtype state knownJobs =
                 let jobopt = generateJob jobtype state knownJobs
                 match jobopt with
-                | Some job ->
+                | ([job],_) ->
                     let metaAction = 
                         match job with
                         | ((Some jobid,_,_,_),_) -> UpdateJob job
@@ -216,7 +216,7 @@
                     let createjobMsg = buildIilSendMessage (this.simulationID,metaAction)
                     SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(createjobMsg)) 
                     jobGenFunc jobtype state (job::knownJobs)                            
-                | None -> ()
+                | ([],[]) -> ()
 
             let jobTypeList = (List.ofSeq (jobTypes.Cast<JobType>())).Tail
             let joblist = lock knownJobsLock (fun () -> this.KnownJobs)
