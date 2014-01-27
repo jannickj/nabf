@@ -248,7 +248,7 @@ namespace NabfAgentLogic
                 | ((_,_,JobType.RepairJob,_),_) -> if state.Self.Role.Value = Repairer then (10,true) else (0,false)
                 | ((_,_,JobType.AttackJob,_),_) -> if state.Self.Role.Value = Saboteur then (10,true) else (0,false)
                 | ((_,_,JobType.DisruptJob,_),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
-                | ((_,_,JobType.OccupyJob,_),_) -> (8,true)
+                | ((_,_,JobType.OccupyJob,_),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
                 | _                           -> (0,false)
             else
                 (0,false)
