@@ -12,7 +12,8 @@ module CommonLogic =
     open AgentLogicLib
 
     let reactToEnemyAgent (s:State) =
-        let agents = List.partition (fun a -> a.Node = s.Self.Node && a.Team <> s.Self.Team) s.NearbyAgents
+        printfn "Self: %A" s.Self
+        let agents = List.partition (fun a -> (a.Node = s.Self.Node) && (a.Team <> s.Self.Team)) s.NearbyAgents
         if not (fst agents).IsEmpty then
             match s.Self.Role.Value with
             | Saboteur -> saboteurReact s agents

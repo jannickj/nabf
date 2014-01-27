@@ -41,6 +41,7 @@
     <Compile Include="Graphing\Dijkstra.fsi" />
     <Compile Include="Graphing\Dijkstra.fs" />
     <Compile Include="AgentTypes.fs" />
+    <Compile Include="Logging.fs" />
     <Compile Include="PathFinding.fsi" />
     <Compile Include="PathFinding.fs" />
     <Compile Include="IiLang\IiLang.fs" />
@@ -72,6 +73,10 @@
     <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
       <Project>{02121C4A-B1FB-46B8-BDE8-C5C6CA28C036}</Project>
       <Name>JSLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineExtensions\XmasEngineExtensions.csproj">
+      <Project>{F0965EBC-FEAF-4445-A43B-998D0A8D249D}</Project>
+      <Name>XmasEngineExtensions</Name>
     </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

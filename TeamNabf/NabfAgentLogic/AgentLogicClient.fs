@@ -281,7 +281,7 @@
                         this.simulationID <- sData.SimId
                         let subscribeAction = buildIilSendMessage (this.simulationID, SimulationSubscribe)
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(subscribeAction))
-                        this.BeliefData <- buildInitState (agentname,sData)
+                        this.BeliefData <- buildInitState (agentname, sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
                         
                         let left = new DateTime(int64(deadline)*int64(10000))

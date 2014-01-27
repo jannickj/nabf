@@ -17,14 +17,14 @@ module AgentLogicLib =
      
     let tryDo (action : Action) (s:State) =
         match action with
-        | Probe(o)  -> if s.Self.Energy.Value >= ProbeCost then (true,Some(Probe(o))) else recharge
-        | Survey    -> if s.Self.Energy.Value >= SurveyCost then (true,Some(Survey)) else recharge
-        | Inspect(a)-> if s.Self.Energy.Value >= InspectCost then (true,Some(Inspect(a))) else recharge
-        | Attack(a) -> if s.Self.Energy.Value >= AttackCost then (true,Some(Attack(a))) else recharge
-        | Parry     -> if s.Self.Energy.Value >= ParryCost then (true,Some(Parry)) else recharge
-        | Repair(a) -> if ((s.Self.Energy.Value >= RepairCost) && (s.Self.Health.Value > 0)) || (s.Self.Energy.Value >= RepairCostDisabled) then (true,Some(Repair(a))) else recharge
-        | Buy(u)    -> if s.Self.Energy.Value > BuyCost then (true,Some(Buy(u))) else recharge
-        | _         -> (false,None)
+        | Probe(o)  -> if s.Self.Energy.Value >= ProbeCost then (true,Some(Probe(o))) else printfn "TryDo: recharging"; recharge
+        | Survey    -> if s.Self.Energy.Value >= SurveyCost then (true,Some(Survey)) else printfn "TryDo: recharging"; recharge
+        | Inspect(a)-> if s.Self.Energy.Value >= InspectCost then (true,Some(Inspect(a))) else printfn "TryDo: recharging"; recharge
+        | Attack(a) -> if s.Self.Energy.Value >= AttackCost then (true,Some(Attack(a))) else printfn "TryDo: recharging"; recharge
+        | Parry     -> if s.Self.Energy.Value >= ParryCost then (true,Some(Parry)) else printfn "TryDo: recharging"; recharge
+        | Repair(a) -> if ((s.Self.Energy.Value >= RepairCost) && (s.Self.Health.Value > 0)) || (s.Self.Energy.Value >= RepairCostDisabled) then (true,Some(Repair(a))) else printfn "TryDo: recharging"; recharge
+        | Buy(u)    -> if s.Self.Energy.Value > BuyCost then (true,Some(Buy(u))) else printfn "TryDo: recharging"; recharge
+        | _         -> printfn "PHILIP'S FAIL STORE.COM"; (false,None)
 
     let tryGo (v:Vertex) (s:State) =
         let edges = Set.toList s.World.[s.Self.Node].Edges
