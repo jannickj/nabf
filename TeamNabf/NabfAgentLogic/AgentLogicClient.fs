@@ -12,6 +12,8 @@
     open Logging
     open System.Reflection
     open System.Diagnostics
+    open DebuggingFeatures
+    
 
     type public AgentLogicClient(name,decisionTreeGenerator) = class 
         
@@ -31,8 +33,9 @@
         let mutable decisionId = 0
         let mutable decidedAction = (Int32.MaxValue,Action.Recharge)
         
-
+        new(name,moveTo) = AgentLogicClient(name,fun () -> moveToDTree moveTo)
         new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
+        
 
         //Parallel helpers
         let mutable stopDeciders = new CancellationTokenSource()

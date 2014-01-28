@@ -10,6 +10,7 @@ namespace NabfProject.AI
     public class AgentLogicFactory
     {
         private string name;
+		private string forcedMove = null;
 
         public AgentLogicFactory(string agentName)
         {
@@ -18,7 +19,15 @@ namespace NabfProject.AI
 
         public virtual IAgentLogic ConstructAgentLogic()
         {
-            return new AgentLogicClient(name);
+			if (forcedMove == null)
+				return new AgentLogicClient(name);
+			else
+				return new AgentLogicClient(name, forcedMove);
         }
-    }
+
+		public void SetForcedMove(string moveTo)
+		{
+			forcedMove = moveTo;
+		}
+	}
 }
