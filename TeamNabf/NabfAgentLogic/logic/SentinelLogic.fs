@@ -18,7 +18,7 @@ module SentinelLogic =
             | _ -> findOccupyGoal tail
         | [] -> None
 
-    let sentinelOccupy (s:State) =
+    let workOnOccupyGoal (s:State) =
         match (findOccupyGoal s.Goals) with
         | Some v ->
             let goal = pathTo s.Self v s.World
