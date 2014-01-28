@@ -4,6 +4,7 @@ module SaboteurLogic =
 
     open AgentTypes
     open AgentLogicLib
+    open PathFinding
 
     let saboteurRank (allies:Agent list) (self:Agent) =
         let order = List.sort (self :: allies)
@@ -29,3 +30,20 @@ module SaboteurLogic =
         match target with
         | Some t -> tryDo (Attack(t.Name)) s
         | None -> (false, None)
+
+    let rec findAttackGoal (g:Goal list) =
+        match g with
+        | head :: tail -> 
+            match head with
+            | AttackGoal(v) -> Some v
+            | _ -> findAttackGoal tail
+        | [] -> None
+
+    let workOnAttackGoal (s:State) =
+        match (findAttackGoal s.Goals) with
+        | Some v ->
+            let goal = pathTo s.Self v s.World
+            match goal with
+            | Some vl -> tryGo s.World.[vl.Head] s
+            | None -> (false,None)
+        | None -> (false,None)
