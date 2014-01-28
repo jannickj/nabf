@@ -36,14 +36,15 @@ namespace NabfAgentLogic
                         }
                     else 
                         { state with OwnedVertices = ownedVertices }
+
                 | VertexProbed (name, value) ->
-                    if not (state.World.ContainsKey name) then
-                        logError ("missing in world: "+name)
-                        state
-                    else
-                        { state with 
-                            World = addVertexValue name value state.World
-                        }
+                    let newWorld =
+                        if not (state.World.ContainsKey name) then
+                            addVertex state.World { Identifier = name; Value = Some value; Edges = Set.empty }
+                        else 
+                            addVertexValue name value state.World
+                    { state with World = newWorld }
+
                 | EdgeSeen (cost, node1, node2) ->
                     let edgeAlreadyExists = fun (cost', otherVertexId) -> cost' = None || otherVertexId = node2
                     if ( not <| ((Map.containsKey node1 state.World) && Set.exists edgeAlreadyExists state.World.[node1].Edges)) then
@@ -53,6 +54,7 @@ namespace NabfAgentLogic
                         }
                     else
                         state
+
                 | Team team ->
                     { state with 
                         TeamZoneScore = team.ZoneScore
