@@ -58,10 +58,13 @@
         member private this.protectedExecute (name, action, returnedOnError) =
             try
                 action()
-            with e -> 
+            with 
+            | :? ThreadAbortException as e -> raise e
+            | e -> 
                 let s = sprintf "%A" e.StackTrace
-                logError (name + " crashed with:\n"+s)
+                logError (name + " crashed with: "+e.Message+"\n"+s)
                 returnedOnError()
+
 
         member private this.protectedExecute (name, action) = this.protectedExecute (name, action, (fun () -> ()))
 
@@ -122,7 +125,7 @@
                             use! handler = Async.OnCancel(cancelFunc)
                             let output = ref (false,Option.None)
                             let timer:float = 10.0
-                            let success = Parallel.TryExecute<(bool*Option<Action>)>((fun () -> f s),timer,(fun () -> stopToken.IsCancellationRequested),output);
+                            let success = Parallel.TryExecute<(bool*Option<Action>)>((fun () -> this.protectedExecute((f.ToString()),(fun () -> f s),(fun () -> (false,None))) ),timer,(fun () -> stopToken.IsCancellationRequested),output);
                             
                             
                             if success then
