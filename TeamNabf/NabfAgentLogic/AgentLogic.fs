@@ -9,6 +9,7 @@ namespace NabfAgentLogic
         open ExplorerLogic
         open IiLang.IiLangDefinitions
         open IiLang.IilTranslator
+        open ExplorerLogic
         
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
@@ -132,19 +133,16 @@ namespace NabfAgentLogic
            
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            let state1 = clearTempBeliefs state
+            let clearedState = clearTempBeliefs state
 
-            let state2 = List.fold handlePercept state1 percepts
+            let updatedState = 
+                List.fold handlePercept clearedState percepts
+                |> updateSelf state
+                |> updateEdgeCosts state
 
-            let state3 = updateSelf state state2
-
-            let state4 = updateEdgeCosts state state3
-
-            let state5 = if state4.Self.Role = Some Explorer then findNewZone state4 else state4
-
-            let state6 = if state5.Self.Role = Some Explorer then updateExploreZone state5 else state5
-
-            state5
+            match updatedState.Self.Role.Value with
+            | Explorer -> updateStateExplorer updatedState
+            | _ -> updatedState
 
             
     

@@ -144,19 +144,23 @@ module ExplorerLogic =
         | head :: tail -> mergeListIntoGraph s (addVertex graph s.World.[head]) tail
         | [] -> graph
 
+    let rec listEquals l1 l2 =
+        match l1 with
+        | [] -> true
+        | head :: tail -> if (List.tryFind (fun e -> e = head) l2).IsSome then listEquals tail l2 else false
+
     //Check if you need to make a new occupy job based on NewZone
     let generateOccupyJobExplorer (s:State) (knownJobs:Job list) =
+        let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
         match s.NewZone with
         | Some (g,true) -> 
             let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
-            
-            if overlapping = []
+            if (List.tryFind (fun (_,JobData.OccupyJob(_,verts)) ->  (listEquals verts zone)) overlapping ).IsSome then ([],[]) //If the job is already in the job list
+            elif overlapping = [] //Nothing is overlapping
             then
-                let completeZone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
                 let zonePoints = findAgentPlacement (fst s.NewZone.Value)
-                ([((None,(calcZoneValue zonePoints.Length (fst s.NewZone.Value)),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,completeZone))],[])
-            else
-                let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
+                ([((None,(calcZoneValue zonePoints.Length (fst s.NewZone.Value)),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,zone))],[])
+            else //There is a conflict with at least one other occupy job. We need to merge.                
                 let mergedZone = mergeZones zone overlapping
                 let newGraph = mergeListIntoGraph s Map.empty<string,Vertex> mergedZone
                 let zonePoints = findAgentPlacement newGraph
@@ -217,5 +221,7 @@ module ExplorerLogic =
         else
             s
 
-
+    let updateStateExplorer (s:State) =
+        let s2 = findNewZone s
+        updateExploreZone s2
    
