@@ -218,8 +218,7 @@ module ExplorerLogic =
             && not (zoneAlreadyFound (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
         then
             let newS = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) }
-            let rn = getRelevantNeighbours newS
-            {newS with NewZoneFrontier = rn.Tail}
+            {newS with NewZoneFrontier = getRelevantNeighbours newS}
         else
             s
 
