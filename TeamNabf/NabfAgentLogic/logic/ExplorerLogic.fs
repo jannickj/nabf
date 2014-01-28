@@ -151,9 +151,10 @@ module ExplorerLogic =
 
     //Check if you need to make a new occupy job based on NewZone
     let generateOccupyJobExplorer (s:State) (knownJobs:Job list) =
-        let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
+        
         match s.NewZone with
         | Some (g,true) -> 
+            let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
             let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
             if (List.tryFind (fun (_,JobData.OccupyJob(_,verts)) ->  (listEquals verts zone)) overlapping ).IsSome then ([],[]) //If the job is already in the job list
             elif overlapping = [] //Nothing is overlapping
@@ -185,7 +186,12 @@ module ExplorerLogic =
     //If the explorer is in the middle of finding a new zone to post, keep exploring it. Has lower priority than probe.
     let exploreNewZone (s:State) =
         match s.NewZoneFrontier with
-        | head :: tail -> tryGo s.World.[s.NewZoneFrontier.Head] s
+        | head :: tail -> 
+            let path = pathTo s.Self s.NewZoneFrontier.Head s.World
+            if path.IsSome && not path.Value.IsEmpty  then
+                tryGo (s.World.[path.Value.Head]) s
+            else
+                (false,None)
         | [] -> (false,None)
 
 

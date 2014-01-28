@@ -53,6 +53,21 @@
         let EvaluationStartedEvent = new Event<EventHandler, EventArgs>()
         let SimulationEndedEvent = new Event<EventHandler, EventArgs>()
 
+        
+
+        member private this.protectedExecute (name, action, returnedOnError) =
+            try
+                action()
+            with 
+            | :? ThreadAbortException as e -> raise e
+            | e -> 
+                let s = sprintf "%A" e.StackTrace
+                logError (name + " crashed with: "+e.Message+"\n"+s)
+                returnedOnError()
+
+
+        member private this.protectedExecute (name, action) = this.protectedExecute (name, action, (fun () -> ()))
+
         member public this.DecidedAction = decidedAction
 
         member private this.asyncCalculation id name stopToken func = this.asyncCalculationAF id name stopToken  (async {  func() })
@@ -75,13 +90,12 @@
                 let AsyncF f =
                     async
                         {
-                            try
+                            let action() =
                                 logAll ("Starting: "+name)
                                 Async.StartImmediate(f,stopToken)
                                 logAll ("Finished: "+name)
-                            with e -> 
-                                let (trace:StackTrace) = new StackTrace(e)
-                                logError (name+" crashed: "+trace.GetFrame(0).ToString())
+                            this.protectedExecute (name, action)
+                            
                             
                             changeCals(-1)
                         }
@@ -111,7 +125,7 @@
                             use! handler = Async.OnCancel(cancelFunc)
                             let output = ref (false,Option.None)
                             let timer:float = 10.0
-                            let success = Parallel.TryExecute<(bool*Option<Action>)>((fun () -> f s),timer,(fun () -> stopToken.IsCancellationRequested),output);
+                            let success = Parallel.TryExecute<(bool*Option<Action>)>((fun () -> this.protectedExecute((f.ToString()),(fun () -> f s),(fun () -> (false,None))) ),timer,(fun () -> stopToken.IsCancellationRequested),output);
                             
                             
                             if success then
@@ -183,16 +197,14 @@
             this.asyncCalculation runningCalcID "generating shared percept" stopDeciders.Token generateSharedPercepts
             
             let newstate = lock stateLock (fun () -> 
-                            try
+                            let action() =
                                 this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
                                 this.BeliefData
-                            with e -> 
-                                let (trace:StackTrace) = new StackTrace(e)
-                                let s = sprintf "%A" e.StackTrace
-                                logError ("State Update Crash: "+s)
+                            let onFail() =
                                 lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- this.awaitingPercepts@sharedPercepts)
-                                this.BeliefData    
-                                )
+                                this.BeliefData
+                            this.protectedExecute("State Update",action,onFail)
+                            )
 
           
             
