@@ -16,7 +16,9 @@
         type Graph = Map<string, Vertex>
 
         let getNeighbours identifier (graph:Graph) = 
-            let vertices = List.filter (fun id -> graph.ContainsKey id) (snd (List.unzip (Set.toList graph.[identifier].Edges)))
+            let nEdges = Set.toList graph.[identifier].Edges
+            let neighbourName  =(snd (List.unzip nEdges))
+            let vertices = List.filter (fun id -> graph.ContainsKey id) neighbourName
             List.map (fun id -> graph.[id]) vertices
 
         let isVertexAdjacentTo identifier vertex = 
@@ -34,7 +36,10 @@
         let rec updateGraph (vertex : Vertex) (graph : Graph) = 
             match Set.toList vertex.Edges with
             | (weight, otherVertexId) :: rest -> 
-                addEdgeToVertex otherVertexId (weight, vertex.Identifier) graph
+                (if graph.ContainsKey(otherVertexId) then
+                    addEdgeToVertex otherVertexId (weight, vertex.Identifier) graph
+                else
+                    graph)
                 |> updateGraph { vertex with Edges = vertex.Edges.Remove (weight, otherVertexId) }
             | [] -> graph
 

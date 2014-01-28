@@ -149,22 +149,27 @@
                                 stopSource.Cancel() 
                         }
                     )
+                rankCur + 1
             | Options ds -> 
-                ignore <| List.fold ( fun (r,c) t ->
+                let (r,_) = List.fold ( fun (r,c) t ->
                                         let iteStopSource = new CancellationTokenSource()
-                                        this.EvaluateDecision r c iteStopSource (s,t)
-                                        (r+1,iteStopSource.Token)
+                                        let nR = this.EvaluateDecision r c iteStopSource (s,t)
+                                        (nR,iteStopSource.Token)
                                         ) (rankCur,stopToken) ds
+                r
             | Condition (c,d) -> 
-                this.asyncCalculationAF runningCalcID ("Calc conditon") stopToken (
-                            async
-                                {
-                                    use! handler = Async.OnCancel(fun () -> stopSource.Cancel())
-                                    let (b,_) = c s
-                                    if b then
-                                        let source = new CancellationTokenSource()
-                                        this.EvaluateDecision rankCur stopSource.Token source (s,d)
-                                })
+                let (b,_) = c s
+                if b then
+                    let source = new CancellationTokenSource()
+                    this.EvaluateDecision (rankCur) stopSource.Token source (s,d)
+                else
+                    rankCur
+//                this.asyncCalculationAF runningCalcID ("Calc conditon") stopToken (
+//                            async
+//                                {
+//                                    use! handler = Async.OnCancel(fun () -> stopSource.Cancel())
+//                                    
+//                                })
                     
 
 
@@ -231,7 +236,7 @@
                         {
                             let ajob = foundJob.Value
                             lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob moveTo)
-                            this.asyncCalculation runningCalcID "Calc accept job" stopDeciders.Token (fun () -> this.EvaluteState())
+                            this.asyncCalculation runningCalcID "Calc accept job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
                         }
                 Async.StartImmediate update
 
