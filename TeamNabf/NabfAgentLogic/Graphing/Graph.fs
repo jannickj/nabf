@@ -61,7 +61,6 @@
             let updateVertex (cost, id) (graph : Graph) = 
                 Map.add id (removeEdgeFromVertex (cost, vertex.Identifier) graph.[id]) graph
             
-            printfn "edges: %A" <| Set.toList vertex.Edges
              
             vertex.Edges
             |> Set.fold (fun graph edge -> updateVertex edge graph) graph

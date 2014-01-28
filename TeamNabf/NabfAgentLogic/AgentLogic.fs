@@ -36,12 +36,23 @@ namespace NabfAgentLogic
                     else 
                         { state with OwnedVertices = ownedVertices }
                 | VertexProbed (name, value) ->
-                    { state with 
-                        World = addVertexValue name value state.World
-                    }
+                    if not (state.World.ContainsKey name) then
+                        logError ("missing in world: "+name)
+                        state
+                    else
+                        { state with 
+                            World = addVertexValue name value state.World
+                        }
                 | EdgeSeen (cost, node1, node2) ->
                     let edgeAlreadyExists = fun (cost', otherVertexId) -> cost' = None || otherVertexId = node2
-                    if (not <| Set.exists edgeAlreadyExists state.World.[node1].Edges) then
+                    if (not (state.World.ContainsKey node1)) || (not (state.World.ContainsKey node2)) then
+                        let error node =
+                            if not (state.World.ContainsKey node) then
+                                logError ("missing in world: " + node)
+                        error node1
+                        error node2                            
+                        state
+                    elif (not <| Set.exists edgeAlreadyExists state.World.[node1].Edges) then
                         { state with 
                             World = addEdge (cost, node1, node2) state.World 
                             NewEdges = (cost, node1, node2) :: state.NewEdges
@@ -125,7 +136,6 @@ namespace NabfAgentLogic
            
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            logError "HEJHEJHEJHEJHEJHEJHEJHEJHEJHEJHEJ"
             let state' = clearTempBeliefs state
             List.fold handlePercept state' percepts 
             |> updateTraversedEdgeCost state'

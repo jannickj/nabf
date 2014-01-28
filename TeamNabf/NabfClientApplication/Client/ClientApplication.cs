@@ -263,7 +263,7 @@ namespace NabfClientApplication.Client
             catch (Exception e)
             {
                 Console.WriteLine("Client failure: " + e.Message);
-                //Environment.Exit(1); 
+                Environment.Exit(1); 
             }
         }
 
