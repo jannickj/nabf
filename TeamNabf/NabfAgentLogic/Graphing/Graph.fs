@@ -59,9 +59,6 @@
 
         let addVertexValue vertex value (graph : Graph) =
             Map.add vertex { graph.[vertex] with Value = Some value } graph
-
-        let addEdgeCost ((value, vertex1, vertex2) : Edge) (graph : Graph) =
-            Map.empty<string,Vertex>
         
         let removeEdgeFromVertex edge vertex =
             { vertex with Edges = Set.remove edge vertex.Edges }
