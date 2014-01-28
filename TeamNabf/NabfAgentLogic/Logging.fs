@@ -17,6 +17,7 @@ module Logging =
 
     let logCritical = log DebugLevel.Critical
     let logError = log DebugLevel.Error
+    let logWarning = log DebugLevel.Warning
     let logInfo = log DebugLevel.Info
     let logAll = log DebugLevel.All
 

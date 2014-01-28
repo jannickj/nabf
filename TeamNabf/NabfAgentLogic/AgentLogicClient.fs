@@ -11,6 +11,7 @@
     open AgentTypes
     open Logging
     open System.Reflection
+    open System.Diagnostics
 
     type public AgentLogicClient(name,decisionTreeGenerator) = class 
         
@@ -74,7 +75,14 @@
                 let AsyncF f =
                     async
                         {
-                            Async.StartImmediate(f,stopToken)
+                            try
+                                logAll ("Starting: "+name)
+                                Async.StartImmediate(f,stopToken)
+                                logAll ("Finished: "+name)
+                            with e -> 
+                                let (trace:StackTrace) = new StackTrace(e)
+                                logError (name+" crashed: "+trace.GetFrame(0).ToString())
+                            
                             changeCals(-1)
                         }
                 changeCals(1)
@@ -104,16 +112,20 @@
                             let output = ref (false,Option.None)
                             let timer:float = 10.0
                             let success = Parallel.TryExecute<(bool*Option<Action>)>((fun () -> f s),timer,(fun () -> stopToken.IsCancellationRequested),output);
+                            
+                            
                             if success then
                                 lock decisionLock (fun () ->
                                     if dId = decisionId then
                                         let (b,a) = output.Value
                                         let (cR,cA) = decidedAction
+                                        logInfo (rankCur.ToString()+": "+f.ToString()+" -> "+b.ToString())
                                         if b && a.IsSome && cR > rankCur then
                                             decidedAction <- (rankCur,a.Value)
-                                            logInfo (f.ToString()+": "+cR.ToString())
+                                            
                                             stopSource.Cancel() 
                                     else
+                                        logWarning (rankCur.ToString()+": "+f.ToString()+" was cancelled")
                                         stopSource.Cancel()
                                     )
                             else
@@ -169,8 +181,18 @@
                     let action = buildIilSendMessage (this.simulationID,sharedPs)
                     SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
             this.asyncCalculation runningCalcID "generating shared percept" stopDeciders.Token generateSharedPercepts
-            let newstate = lock stateLock (fun () -> this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
-                                                     this.BeliefData)
+            
+            let newstate = lock stateLock (fun () -> 
+                            try
+                                this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
+                                this.BeliefData
+                            with e -> 
+                                let (trace:StackTrace) = new StackTrace(e)
+                                logError ("State Update Crash: "+trace.GetFrame(0).ToString())
+                                lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- this.awaitingPercepts@sharedPercepts)
+                                this.BeliefData    
+                                )
+
           
             
             lock decisionLock ( fun () ->
@@ -321,7 +343,7 @@
                                             let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         
                                             let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
-                                            logInfo ("Current running calculations: "+runningCalcs.ToString())
+                                            logAll ("Current running calculations: "+runningCalcs.ToString())
                                             if runningCalcs = 0 || (expired+int64(800)) > int64(totaltime) then
                                                 SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
                                                 awaitingDecision:=false

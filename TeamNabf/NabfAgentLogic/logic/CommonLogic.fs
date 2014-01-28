@@ -10,6 +10,7 @@ module CommonLogic =
     open ExplorerLogic
     open InspectorLogic
     open AgentLogicLib
+    open Logging
 
     let reactToEnemyAgent (s:State) =
         
@@ -26,7 +27,8 @@ module CommonLogic =
 
     let exploreLocalGraph (s:State) =
         let unexplored = (pathToNearestUnExplored s.Self s.World)
-      
+        logInfo <| sprintf "world : %A" s.World
+
 //        ignore <| match unexplored with
 //                    | Some (head :: _) -> printfn "Edges from first unexplored node: %A\n" s.World.[head]
 //                    | _ -> ()
