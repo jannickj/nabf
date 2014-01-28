@@ -96,7 +96,7 @@ namespace NabfClientApplication.Client
             lock (masterPackets)
             {
                 packets = this.masterPackets.ToArray();
-                this.marsPackets.Clear();
+                this.masterPackets.Clear();
             }
 
             foreach (var packet in packets)
@@ -263,7 +263,7 @@ namespace NabfClientApplication.Client
             catch (Exception e)
             {
                 Console.WriteLine("Client failure: " + e.Message);
-                //Environment.Exit(1); 
+                Environment.Exit(1); 
             }
         }
 

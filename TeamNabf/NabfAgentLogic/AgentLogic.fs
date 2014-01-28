@@ -9,11 +9,14 @@ namespace NabfAgentLogic
         open ExplorerLogic
         open IiLang.IiLangDefinitions
         open IiLang.IilTranslator
+        open Logging
+
+        let OurTeam = "Nabf"
         
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
             match percept with
-                | EnemySeen enemy   
+                | EnemySeen enemy when enemy.Name <> state.Self.Name
                     -> { state with 
                            EnemyData = enemy :: state.EnemyData
                            NearbyAgents = enemy :: state.NearbyAgents 
@@ -33,12 +36,23 @@ namespace NabfAgentLogic
                     else 
                         { state with OwnedVertices = ownedVertices }
                 | VertexProbed (name, value) ->
-                    { state with 
-                        World = addVertexValue name value state.World
-                    }
+                    if not (state.World.ContainsKey name) then
+                        logError ("missing in world: "+name)
+                        state
+                    else
+                        { state with 
+                            World = addVertexValue name value state.World
+                        }
                 | EdgeSeen (cost, node1, node2) ->
                     let edgeAlreadyExists = fun (cost', otherVertexId) -> cost' = None || otherVertexId = node2
-                    if (not <| Set.exists edgeAlreadyExists state.World.[node1].Edges) then
+                    if (not (state.World.ContainsKey node1)) || (not (state.World.ContainsKey node2)) then
+                        let error node =
+                            if not (state.World.ContainsKey node) then
+                                logError ("missing in world: " + node)
+                        error node1
+                        error node2                            
+                        state
+                    elif (not <| Set.exists edgeAlreadyExists state.World.[node1].Edges) then
                         { state with 
                             World = addEdge (cost, node1, node2) state.World 
                             NewEdges = (cost, node1, node2) :: state.NewEdges
@@ -55,12 +69,18 @@ namespace NabfAgentLogic
                     }
                 | SimulationStep step  -> { state with SimulationStep = step }
                 | ZoneScore score      -> { state with ThisZoneScore = score }
-                | Self self            -> { state with Self = self }
+                | Self self ->
+                    let newSelf = { self with 
+                        Name = state.Self.Name
+                        Team = state.Self.Team
+                        Role = state.Self.Role
+                    }
+                    { state with Self = newSelf }
                 | LastAction action    -> { state with LastAction = action }
                 | LastActionResult res -> { state with LastActionResult = res }
                 | _ -> state
         
-        let buildInitState (name ,simData:SimStartData) =
+        let buildInitState (name, simData:SimStartData) =
             {   World = Map.empty
             ;   Self =  {   Energy = Some 0
                         ;   MaxEnergy = Some 0
@@ -70,7 +90,7 @@ namespace NabfAgentLogic
                         ;   Node = ""
                         ;   Role = Some (simData.SimRole)
                         ;   Strength = Some 0
-                        ;   Team = ""
+                        ;   Team = OurTeam
                         ;   Status = Normal
                         ;   VisionRange = Some 0
                         }
@@ -114,15 +134,6 @@ namespace NabfAgentLogic
                 }
             | _ -> newState
 
-        let updateSelf oldState newState =
-            let newSelf = 
-                { newState.Self with 
-                    Team = oldState.Self.Team
-                    Name = oldState.Self.Name
-                    Role = oldState.Self.Role
-                }
-            { newState with Self = newSelf }
-
         let updateEdgeCosts (lastState:State) (state:State) =
             match (state.LastAction, state.LastActionResult) with
             | (Goto _, Successful) ->
@@ -136,13 +147,12 @@ namespace NabfAgentLogic
 
             let state2 = List.fold handlePercept state1 percepts
 
-            let state3 = updateSelf state state2
 
-            let state4 = updateEdgeCosts state state3
+            let state3 = updateEdgeCosts state state2
 
-            let state5 = if state4.Self.Role = Some Explorer then findNewZone state4 else state4
+            let state4 = if state3.Self.Role = Some Explorer then findNewZone state3 else state3
 
-            let state6 = if state5.Self.Role = Some Explorer then updateExploreZone state5 else state5
+            let state5 = if state4.Self.Role = Some Explorer then updateExploreZone state4 else state4
 
             state5
 
