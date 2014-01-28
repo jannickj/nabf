@@ -9,6 +9,7 @@ namespace NabfAgentLogic
         open ExplorerLogic
         open IiLang.IiLangDefinitions
         open IiLang.IilTranslator
+        open ExplorerLogic
         open Logging
 
         let OurTeam = "Nabf"
@@ -136,18 +137,15 @@ namespace NabfAgentLogic
            
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            let state1 = clearTempBeliefs state
+            let clearedState = clearTempBeliefs state
 
-            let state2 = List.fold handlePercept state1 percepts
+            let updatedState = 
+                List.fold handlePercept clearedState percepts
+                |> updateEdgeCosts state
 
-
-            let state3 = updateEdgeCosts state state2
-
-            let state4 = if state3.Self.Role = Some Explorer then findNewZone state3 else state3
-
-            let state5 = if state4.Self.Role = Some Explorer then updateExploreZone state4 else state4
-
-            state5
+            match updatedState.Self.Role.Value with
+            | Explorer -> updateStateExplorer updatedState
+            | _ -> updatedState
 
             
     
@@ -172,8 +170,26 @@ namespace NabfAgentLogic
         let selectSharedPercepts state (percepts:Percept list) =
             List.filter (shouldSharePercept state) percepts
         
-        let updateStateWhenGivenJob (state:State) (job:Job) (moveTo:VertexName) =
-            state
+        let updateStateWhenGivenJob (state:State) (((_,_,jobType,_),jobdata):Job) (moveTo:VertexName) : State =
+            match jobType with
+            | JobType.OccupyJob -> if (List.tryFind (fun g -> g = OccupyGoal(moveTo)) state.Goals).IsNone then {state with Goals = OccupyGoal(moveTo)::state.Goals} else state
+            | JobType.AttackJob -> if (List.tryFind (fun g -> g = AttackGoal(moveTo)) state.Goals).IsNone then {state with Goals = AttackGoal(moveTo)::state.Goals} else state
+            | JobType.RepairJob -> match jobdata with 
+                                   | RepairJob(vName,aName) ->
+                                       if (List.tryFind (fun g -> g = RepairGoal(moveTo,aName)) state.Goals).IsSome then state
+                                       elif (List.tryFind (fun g -> match g with 
+                                                                            | RepairGoal(_,aName) -> true
+                                                                            | _ -> false
+                                                                            ) state.Goals).IsSome
+                                       then
+                                           {state with Goals = RepairGoal(moveTo,aName)::(List.filter (fun g -> match g with
+                                                                                                                | RepairGoal(_,aName) -> false
+                                                                                                                | _ -> true) state.Goals)}
+                                       else
+                                           {state with Goals = RepairGoal(moveTo,aName)::state.Goals}
+
+            | JobType.DisruptJob -> if (List.tryFind (fun g -> g = AttackGoal(moveTo)) state.Goals).IsNone then {state with Goals = DisruptGoal(moveTo)::state.Goals} else state
+            | _ -> state
 
         let buildIilAction id (action:Action) =
             IiLang.IiLangDefinitions.buildIilAction (IiLang.IilTranslator.buildIilAction action id)
@@ -251,7 +267,12 @@ namespace NabfAgentLogic
                 | ((_,_,JobType.RepairJob,_),_) -> if state.Self.Role.Value = Repairer then (10,true) else (0,false)
                 | ((_,_,JobType.AttackJob,_),_) -> if state.Self.Role.Value = Saboteur then (10,true) else (0,false)
                 | ((_,_,JobType.DisruptJob,_),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
-                | ((_,_,JobType.OccupyJob,_),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
+                | ((_,_,JobType.OccupyJob,_),_) -> match state.Self.Role.Value with
+                                                   | Sentinel 
+                                                   | Inspector -> (10,true)
+                                                   | Repairer -> (5,true)
+                                                   | Explorer -> (3,true)
+                                                   | Saboteur -> (0,false)
                 | _                           -> (0,false)
             else
                 (0,false)
