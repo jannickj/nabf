@@ -191,33 +191,38 @@
                         }
                 Async.StartImmediate update
 
-            
-        member private this.removeUselessJobs() =
-            let knownjobs = lock knownJobsLock (fun () -> this.KnownJobs)
-            let removeJobFunc job =
-                let state = lock stateLock (fun () -> this.BeliefData)
-                let decide = shouldRemoveJob state job
-                let ((jobid,_,_,_),_) = job
-                if decide then
-                    let removejobAct = buildIilSendMessage(this.simulationID,(RemoveJob jobid.Value))
-                    SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(removejobAct))
-            this.asyncCalculationMany "remove job calc" removeJobFunc knownjobs stopDeciders.Token
-
         member private this.generateNewJobs() = 
+            let removeJob jobid =
+                let metaAction = RemoveJob jobid
+                let removejobMsg = buildIilSendMessage (this.simulationID,metaAction)
+                SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(removejobMsg))
+        
+            let createJob job =
+                let metaAction = 
+                    match job with
+                    | ((Some jobid,_,_,_),_) -> UpdateJob job
+                    | ((None,_,_,_),_) -> CreateJob job
+                let jobMsg = buildIilSendMessage (this.simulationID,metaAction)
+                SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(jobMsg))
+
             let jobTypes = Enum.GetValues(typeof<JobType>)
             let rec jobGenFunc jobtype state knownJobs =
-                let jobopt = generateJob jobtype state knownJobs
-                match jobopt with
-                | ([job],_) ->
-                    let metaAction = 
-                        match job with
-                        | ((Some jobid,_,_,_),_) -> UpdateJob job
-                        | ((None,_,_,_),_) -> CreateJob job
-                    let createjobMsg = buildIilSendMessage (this.simulationID,metaAction)
-                    SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(createjobMsg)) 
-                    jobGenFunc jobtype state (job::knownJobs)                            
-                | ([],[]) -> ()
-
+                let (created,removed) = generateJob jobtype state knownJobs
+                
+                List.iter removeJob removed
+                List.iter createJob created
+                if not (List.isEmpty created && List.isEmpty removed) then
+                    let removedKnown = List.filter (fun ((id,_,_,_),_) -> not (List.exists (fun jid -> if (id:Option<JobID>).IsSome then id.Value = jid else false) removed) ) knownJobs
+                    let createdKnown = List.filter (fun ((id,_,_,_),_) -> not (List.exists (fun cjob ->
+                                                (  match cjob with
+                                                     | (Some cjid,_,_,_),_ -> if (id:Option<JobID>).IsSome then id.Value = cjid else false
+                                                     | (None,_,_,_),_ -> false
+                                                )
+                                                ) created) ) removedKnown
+                
+                    jobGenFunc jobtype state (created@createdKnown)
+                else
+                    ()
             let jobTypeList = (List.ofSeq (jobTypes.Cast<JobType>())).Tail
             let joblist = lock knownJobsLock (fun () -> this.KnownJobs)
             let knownjobs jobtype =List.filter (fun ((_, _, jt,_), _) -> jt = jobtype) joblist
@@ -226,6 +231,7 @@
             this.asyncCalculationMany "calc generate job" 
                     (fun jobType -> ignore <| jobGenFunc jobType stateData (knownjobs jobType)) 
                     jobTypeList stopDeciders.Token
+        
         member private this.EvaluateJob  job =
             let jobs = lock knownJobsLock (fun () -> this.KnownJobs)
             let eval job () = 
