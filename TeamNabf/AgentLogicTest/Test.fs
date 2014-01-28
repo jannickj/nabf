@@ -169,8 +169,8 @@ type GraphTest() =
             let testEdge = (Some 1, "a", "b")
 
             let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList })
-                         ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
-                         ] |> Map.ofList
+                        ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                        ] |> Map.ofList
 
             let expected = [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 1, "b")] |> Set.ofList })
                            ; ("b", { Identifier = "b"; Value = None; Edges = [(Some 1, "a")] |> Set.ofList })
@@ -179,5 +179,27 @@ type GraphTest() =
             let actual = addEdgeCost testEdge graph
 
             Assert.AreEqual (expected, actual)
+
+
+        [<Test>]
+        member this.AddEdge_AddingEdgeWithOneVertexNotInTheGraph_UnknownVertexIncludedInTheGraph () =
+
+            let testEdge = (None, "a", "b")
+
+            let graph = [ ("a", { Identifier = "a"; Value = None; Edges = Set.empty }) ] |> Map.ofList
+
+            let expected = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList })
+                           ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                           ] |> Map.ofList
+            
+            let actual = addEdge testEdge graph
+
+            Assert.AreEqual (expected, actual)
+
+
+
+
+
+
 
 

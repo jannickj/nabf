@@ -41,8 +41,17 @@
         let addVertex graph vertex = 
             updateGraph vertex graph |> Map.add vertex.Identifier vertex
 
+        let addVertexById vertexId graph =
+            if Map.containsKey vertexId graph then
+                graph
+            else
+                Map.add vertexId {Identifier = vertexId; Value = None; Edges = Set.empty} graph
+
         let addEdge ((weight, vertexId1, vertexId2) : Edge) (graph : Graph) =
-            addEdgeToVertex vertexId1 (weight, vertexId2) graph 
+            let graph' = 
+                addVertexById vertexId1 graph 
+                |> addVertexById vertexId2
+            addEdgeToVertex vertexId1 (weight, vertexId2) graph'
             |> addEdgeToVertex vertexId2 (weight, vertexId1)
 
         let join (graph : Graph) (graph' : Graph) = 
