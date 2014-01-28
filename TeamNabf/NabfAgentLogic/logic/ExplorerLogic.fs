@@ -212,7 +212,9 @@ module ExplorerLogic =
 
     // If you are on a node with value 10, check if it is part of an occupy job, and if not, start exploring the area.
     let findNewZone (s:State) =
-        if s.NewZone.IsNone && s.World.[s.Self.Node].Value.Value = 10 
+        let hasNewZone = s.NewZone.IsNone
+        let node = s.World.[s.Self.Node].Value
+        if hasNewZone && node.IsSome && node.Value = 10 
             && not (zoneAlreadyFound (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
         then
             let rn = getRelevantNeighbours s
