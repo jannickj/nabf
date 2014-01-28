@@ -188,7 +188,8 @@
                                 this.BeliefData
                             with e -> 
                                 let (trace:StackTrace) = new StackTrace(e)
-                                logError ("State Update Crash: "+trace.GetFrame(0).ToString())
+                                let s = sprintf "%A" e.StackTrace
+                                logError ("State Update Crash: "+s)
                                 lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- this.awaitingPercepts@sharedPercepts)
                                 this.BeliefData    
                                 )

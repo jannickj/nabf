@@ -45,14 +45,7 @@ namespace NabfAgentLogic
                         }
                 | EdgeSeen (cost, node1, node2) ->
                     let edgeAlreadyExists = fun (cost', otherVertexId) -> cost' = None || otherVertexId = node2
-                    if (not (state.World.ContainsKey node1)) || (not (state.World.ContainsKey node2)) then
-                        let error node =
-                            if not (state.World.ContainsKey node) then
-                                logError ("missing in world: " + node)
-                        error node1
-                        error node2                            
-                        state
-                    elif (not <| Set.exists edgeAlreadyExists state.World.[node1].Edges) then
+                    if ( not <| ((Map.containsKey node1 state.World) && Set.exists edgeAlreadyExists state.World.[node1].Edges)) then
                         { state with 
                             World = addEdge (cost, node1, node2) state.World 
                             NewEdges = (cost, node1, node2) :: state.NewEdges
