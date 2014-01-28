@@ -58,7 +58,8 @@
             Map.empty<string, Vertex> : Graph
 
         let addVertexValue vertex value (graph : Graph) =
-            Map.add vertex { graph.[vertex] with Value = Some value } graph
+            addVertexById vertex graph
+            |> Map.add vertex { graph.[vertex] with Value = Some value }
         
         let removeEdgeFromVertex edge vertex =
             { vertex with Edges = Set.remove edge vertex.Edges }
