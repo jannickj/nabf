@@ -182,6 +182,8 @@ module ExplorerLogic =
 
     // If the explorer is on an unprobed vertex, probe it.
     let probeVertex (s:State) =
+        let rank = rankByType s
+        //Remember to fix with rank
         if s.World.[s.Self.Node].Value.IsNone then tryDo (Probe None) s else (false,None)
 
     //If the explorer is in the middle of finding a new zone to post, keep exploring it. Has lower priority than probe.
