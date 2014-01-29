@@ -6,11 +6,15 @@ namespace NabfAgentLogic
         open JSLibrary.IiLang.DataContainers
         open AgentTypes
         open DecisionTree
-        open ExplorerLogic
         open IiLang.IiLangDefinitions
         open IiLang.IilTranslator
-        open ExplorerLogic
         open Logging
+        open ExplorerLogic
+        open SaboteurLogic
+        open RepairerLogic
+        open InspectorLogic
+        open RepairerLogic
+        open SentinelLogic
 
         let OurTeam = "Nabf"
         
@@ -271,17 +275,26 @@ namespace NabfAgentLogic
         let decideJob (state:State) (job:Job) : Desirability * bool =
             if state.Goals.IsEmpty 
             then
-                match job with
-                | ((_,_,JobType.RepairJob,_),_) -> if state.Self.Role.Value = Repairer then (10,true) else (0,false)
-                | ((_,_,JobType.AttackJob,_),_) -> if state.Self.Role.Value = Saboteur then (10,true) else (0,false)
-                | ((_,_,JobType.DisruptJob,_),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
-                | ((_,_,JobType.OccupyJob,_),_) -> match state.Self.Role.Value with
-                                                   | Sentinel 
-                                                   | Inspector -> (10,true)
-                                                   | Repairer -> (5,true)
-                                                   | Explorer -> (3,true)
-                                                   | Saboteur -> (0,false)
-                | _                           -> (0,false)
+                
+                match state.Self.Role with
+                | Some Explorer -> decideJobExplore state job
+                | Some Inspector -> decideJobInspector state job
+                | Some Sentinel -> decideJobSentinel state job
+                | Some Repairer -> decideJobRepairer state job
+                | Some Saboteur -> decideJobSaboteur state job
+                | None -> (0,false)
+
+//                match job with
+//                | ((_,_,JobType.RepairJob,_),_) -> if state.Self.Role.Value = Repairer then (10,true) else (0,false)
+//                | ((_,_,JobType.AttackJob,_),_) -> if state.Self.Role.Value = Saboteur then (10,true) else (0,false)
+//                | ((_,_,JobType.DisruptJob,_),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
+//                | ((_,_,JobType.OccupyJob,_),_) -> match state.Self.Role.Value with
+//                                                   | Sentinel 
+//                                                   | Inspector -> (10,true)
+//                                                   | Repairer -> (5,true)
+//                                                   | Explorer -> (3,true)
+//                                                   | Saboteur -> (0,false)
+//                | _                           -> (0,false)
             else
                 (0,false)
 

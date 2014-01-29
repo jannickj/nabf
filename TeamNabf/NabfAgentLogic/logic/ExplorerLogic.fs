@@ -7,7 +7,8 @@ module ExplorerLogic =
     open Graphing.Graph
     open PathFinding
     open Logging
-    
+    open Constants
+
     type ZoneVertex = 
         {   
             Vertex          : Vertex
@@ -239,7 +240,7 @@ module ExplorerLogic =
     let findNewZone (s:State) =
         let hasNoNewZone = s.NewZone.IsNone
         let node = s.World.[s.Self.Node].Value
-        if hasNoNewZone && node.IsSome && node.Value = 10 
+        if hasNoNewZone && node.IsSome && node.Value >= ZONE_ORIGIN_VALUE 
             && not (zoneAlreadyFound (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
         then
             let newS = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) }
@@ -251,3 +252,11 @@ module ExplorerLogic =
         let s2 = findNewZone s
         updateExploreZone s2
    
+   /////////////////////////////////////
+   ///  DECIDE JOBS
+   /////////////////////////////////////
+
+    let decideJobExplore (s:State) (job:Job) =  
+        match job with
+        | ((_,_,JobType.OccupyJob,_),OccupyJob (vl,zone) ) -> desireFromPath s.Self s.World vl.Head EXPLORER_OCCUPYJOB_MOD
+        | _ -> (0,false)

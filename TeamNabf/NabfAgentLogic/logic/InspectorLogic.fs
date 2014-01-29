@@ -4,6 +4,7 @@ module InspectorLogic =
 
     open AgentTypes
     open AgentLogicLib
+    open Constants
 
     //Run away from enemy saboteurs, preferring to go to an unexplored vertex
     let inspectorReact (s:State) (agents:Agent list * Agent list) =
@@ -24,3 +25,13 @@ module InspectorLogic =
                 tryGo (s.World.[adjacentEnemies.Head.Node]) s
             else
                 (false,None)
+
+   /////////////////////////////////////
+   ///  DECIDE JOBS
+   /////////////////////////////////////
+
+    let decideJobInspector (s:State) (job:Job) =  
+        match job with
+        | ((_,_,JobType.OccupyJob,_),OccupyJob (vl,zone) ) -> desireFromPath s.Self s.World vl.Head INSPECTOR_OCCUPYJOB_MOD
+        | ((_,_,JobType.DisruptJob,_),DisruptJob (vn)) -> desireFromPath s.Self s.World vn INSPECTOR_DISRUPTJOB_MOD
+        | _ -> (0,false)
