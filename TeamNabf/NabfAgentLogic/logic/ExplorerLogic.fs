@@ -6,7 +6,7 @@ module ExplorerLogic =
     open AgentLogicLib
     open Graphing.Graph
     open PathFinding
-
+    open Logging
     
     type ZoneVertex = 
         {   
@@ -181,14 +181,20 @@ module ExplorerLogic =
 
     // If the explorer is on an unprobed vertex, probe it.
     let probeVertex (s:State) =
+        let rank = rankByType s
+        //Remember to fix with rank
         if s.World.[s.Self.Node].Value.IsNone then tryDo (Probe None) s else (false,None)
 
     //If the explorer is in the middle of finding a new zone to post, keep exploring it. Has lower priority than probe.
     let exploreNewZone (s:State) =
         match s.NewZoneFrontier with
-        | head :: tail -> 
-            let path = pathTo s.Self s.NewZoneFrontier.Head s.World
+        | head :: _ -> 
+            
+            let path = pathToNearest s.Self (fun v -> List.exists (fun zV -> zV = v.Identifier ) s.NewZoneFrontier) s.World
+                        //pathTo s.Self s.NewZoneFrontier.Head s.World
+            
             if path.IsSome && not path.Value.IsEmpty  then
+                logInfo ("Going to: "+(List.rev path.Value).Head)
                 tryGo (s.World.[path.Value.Head]) s
             else
                 (false,None)
@@ -239,7 +245,7 @@ module ExplorerLogic =
             && not (zoneAlreadyFound (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
         then
             let newS = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) }
-            {newS with NewZoneFrontier = getRelevantNeighbours newS s.Self.Node}
+            {newS with NewZoneFrontier = getRelevantNeighbours newS s.Self.Node }
         else
             s
 

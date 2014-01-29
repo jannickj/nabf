@@ -35,6 +35,11 @@ namespace NabfClientApplication
             string mars_server = args[marsinfo_pos];
             string username = args[marsinfo_pos+1];
             string password = args[marsinfo_pos+2];
+			string debug = null;
+			if (args.Length == marsinfo_pos + 4)
+				debug = args[marsinfo_pos + 3];
+
+			
 
             Console.WriteLine("Got: Server: " + mars_server + ", Username: " + username + ", Password: " + password);
 
@@ -57,6 +62,10 @@ namespace NabfClientApplication
             Console.WriteLine("Successfully connected to master server");
 
             AgentLogicFactory logicFactory = new AgentLogicFactory(username);
+
+			if (debug != null)
+				logicFactory.SetForcedMove(debug);
+
             ServerCommunication marsSerCom = new ServerCommunication(
                 new StreamReader(marsClient.GetStream()),
                 new StreamWriter(marsClient.GetStream()));

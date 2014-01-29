@@ -38,16 +38,17 @@ namespace NabfAgentLogic
                         { state with OwnedVertices = ownedVertices }
 
                 | VertexProbed (name, value) ->
-                    let newWorld =
-                        if not (state.World.ContainsKey name) then
-                            addVertex state.World { Identifier = name; Value = Some value; Edges = Set.empty }
-                        else 
-                            addVertexValue name value state.World
-                    { state with World = newWorld }
-
+                    { state with 
+                            World = addVertexValue name value state.World
+                    }
+                        
                 | EdgeSeen (cost, node1, node2) ->
-                    let edgeAlreadyExists = fun (cost', otherVertexId) -> cost' = None || otherVertexId = node2
-                    if ( not <| ((Map.containsKey node1 state.World) && Set.exists edgeAlreadyExists state.World.[node1].Edges)) then
+                    let edgeAlreadyExists = fun (cost':Option<_>, otherVertexId) -> cost'.IsSome && otherVertexId = node2
+
+                    let containNode = (Map.containsKey node1 state.World)
+                    //let edges = state.World.[node1].Edges
+                    //logInfo ("Contains Node: "+containNode.ToString())
+                    if ( not (containNode && (Set.exists edgeAlreadyExists state.World.[node1].Edges))) then
                         { state with 
                             World = addEdge (cost, node1, node2) state.World 
                             NewEdges = (cost, node1, node2) :: state.NewEdges
@@ -94,6 +95,7 @@ namespace NabfAgentLogic
             ;   SimulationStep = 0
             ;   NearbyAgents = List.Empty
             ;   OwnedVertices = Map.empty
+            ;   LastPosition = ""
             ;   NewVertices = []
             ;   NewEdges = []
             ;   LastStepScore = 0
@@ -136,7 +138,10 @@ namespace NabfAgentLogic
                 let state4 = updateTraversedEdgeCost lastState state
                 state4
             | _ -> updateTraversedEdgeCost lastState state
-           
+        
+        let updateLastPos (lastState:State) (state:State) =
+            { state with LastPosition = lastState.Self.Node }
+
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
             let clearedState = clearTempBeliefs state
@@ -144,6 +149,7 @@ namespace NabfAgentLogic
             let updatedState = 
                 List.fold handlePercept clearedState percepts
                 |> updateEdgeCosts state
+                |> updateLastPos state
 
             match updatedState.Self.Role.Value with
             | Explorer -> updateStateExplorer updatedState
