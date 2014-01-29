@@ -5,6 +5,7 @@ module RepairerLogic =
     open AgentTypes
     open AgentLogicLib
     open PathFinding
+    open Constants
 
     let repairerReact (s:State) (agents:Agent list * Agent list) =
         let potentialEnemySabs = List.filter (fun a -> (a.Role = Some Saboteur) || (a.Role = None)) (fst agents)
@@ -39,3 +40,14 @@ module RepairerLogic =
                 | Some vl -> tryGo s.World.[vl.Head] s
                 | None -> (false,None)
         | None -> (false,None)
+
+   /////////////////////////////////////
+   ///  DECIDE JOBS
+   /////////////////////////////////////
+
+    let decideJobRepairer (s:State) (job:Job) =  
+        match job with
+        | ((_,_,JobType.RepairJob,_),RepairJob (vn,an) ) -> desireFromPath s.Self s.World vn REPAIRER_REPAIRJOB_MOD
+        | ((_,_,JobType.OccupyJob,_),OccupyJob (vl,zone) ) -> desireFromPath s.Self s.World vl.Head REPAIRER_OCCUPYJOB_MOD
+        | ((_,_,JobType.DisruptJob,_),DisruptJob (vn)) -> desireFromPath s.Self s.World vn REPAIRER_DISRUPTJOB_MOD
+        | _ -> (0,false)

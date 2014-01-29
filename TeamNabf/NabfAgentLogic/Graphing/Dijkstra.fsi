@@ -9,4 +9,4 @@
             ; InitialCost   : 'a
             }
 
-        val dijkstra : Vertex -> 'a Problem -> Graph -> (string list) option
+        val dijkstra : Vertex -> 'a Problem -> Graph -> ('a * VertexName list) option

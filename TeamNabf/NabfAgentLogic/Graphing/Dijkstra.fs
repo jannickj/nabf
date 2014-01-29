@@ -58,14 +58,14 @@ namespace Graphing
 
                 match newFrontier with
                 | bestId :: _ when problem.GoalEvaluator graph.[bestId] ->
-                    Some <| constructPath bestId newVertexTree
+                    Some <| (newCostMap.[bestId], constructPath bestId newVertexTree)
                 | bestId :: rest ->
                     dijkstraHelper graph.[bestId] newExplored rest newVertexTree newCostMap
                 | [] -> 
                     None
 
             if problem.GoalEvaluator start then
-                Some []
+                Some (problem.InitialCost, [])
             else
                 let explored = Set.singleton start.Identifier
                 let frontier = List.empty

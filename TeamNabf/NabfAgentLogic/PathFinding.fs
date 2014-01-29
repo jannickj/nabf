@@ -55,13 +55,20 @@ namespace NabfAgentLogic
             ; CostEvaluator = fun _ currentCost -> currentCost + 1
             ; InitialCost   = 0
             }
+
+        let pathToNearestWithCost agent goalEvaluator (graph : Graph) =
+            match (agent.MaxEnergy, agent.Energy) with
+                | (Some maxEnergy, Some energy) -> 
+                    dijkstra graph.[agent.Node] (stepProblem maxEnergy energy goalEvaluator) graph 
+                | (_, _) -> 
+                    failwithf "agent %s has unknown energy and/or maxEnergy" agent.Name
         
         let pathToNearest agent goalEvaluator (graph : Graph) = 
-            match (agent.MaxEnergy, agent.Energy) with
-            | (Some maxEnergy, Some energy) -> 
-                dijkstra graph.[agent.Node] (stepProblem maxEnergy energy goalEvaluator) graph
-            | (_, _) -> 
-                failwithf "agent %s has unknown energy and/or maxEnergy" agent.Name
+            let pathAndCost = pathToNearestWithCost agent goalEvaluator graph
+            match pathAndCost with
+            | Some (_, path) -> Some path
+            | None -> None
+            
             
         let pathTo agent goal graph =
             pathToNearest agent (fun vertex -> vertex.Identifier = goal) graph
@@ -69,12 +76,15 @@ namespace NabfAgentLogic
         let distanceTo agent goalId (graph : Graph) =
             let path = dijkstra graph.[agent.Node] (rangeProblem goalId) graph
             match path with
-            | Some ls -> List.length ls
+            | Some (_, ls) -> List.length ls
             | None -> 0
 
         let pathToNearestUnProbed agent graph =
             let goalEvaluator vertex = vertex.Value = None
             pathToNearest agent goalEvaluator graph
+
+        let isUnexplored vertex = 
+            Set.forall (fun (cost,_) -> cost = None) vertex.Edges
 
         let pathToNearestUnExplored agent graph =
             let goalEvaluator vertex = 
@@ -82,5 +92,26 @@ namespace NabfAgentLogic
                 && vertex.Identifier <> agent.Node
             let path = pathToNearest agent goalEvaluator graph
             match path with
-            | Some [] -> None
-            | _ -> path
+            | Some [] -> None 
+            | path -> path
+
+        let pathsToNearestNUnexplored n agent graph =
+            let rec helper n lastSteps goalEvaluator =
+                match n with
+                | -1 -> []
+                | _ -> 
+                    let costAndPath = pathToNearestWithCost agent goalEvaluator graph
+                    match costAndPath with
+                    | Some (cost, path) -> 
+                        if Some cost.Steps = lastSteps || lastSteps = None then
+                            let newGoalEvaluator = (fun vertex -> (goalEvaluator vertex) && vertex.Identifier <> (List.rev >> List.head <| path))
+                            path :: helper (n - 1) (Some cost.Steps) newGoalEvaluator 
+                        else 
+                            []
+                    | None -> []
+
+            let goalEvaluator vertex = 
+                (isUnexplored vertex) && vertex.Identifier <> agent.Node
+
+            helper n None goalEvaluator
+            
