@@ -295,6 +295,7 @@ namespace NabfProject.NoticeBoardModel
                     else
                         agentArray = new NabfAgent[1];
                     agentArray[agentArray.Length - 1] = a;
+                    topDesires.Remove(desire);
                     topDesires.Add(desire, agentArray);
                     agents.Add(a);
                     if (topDesires.Last().Value != null)
