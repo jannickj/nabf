@@ -253,7 +253,29 @@ module DijkstraTest =
 
                 Assert.AreEqual (expected, actual)
 
+            [<Test>]
+            member this.PathsToNearestNUnexplored_3VerticesInSameRadius () =
+                (*
+                 *     *     *    
+                 *  C --- A --- B
+                 *        |
+                 *        | *
+                 *        |
+                 *        D
+                 *)
 
+                let graph = 
+                    [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b"); (None, "c"); (None, "d")] |> Set.ofList }) 
+                    ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                    ; ("c", { Identifier = "c"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                    ; ("d", { Identifier = "d"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                    ] |> Map.ofList
+
+                let expected = [["d"];["c"];["b"]]
+
+                let actual = pathsToNearestNUnexplored 3 testAgent graph
+
+                Assert.AreEqual (expected, actual)
 
 
 
