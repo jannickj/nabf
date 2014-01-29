@@ -111,12 +111,14 @@ module AgentTypes =
     type AgentsNeededForJob = int
 
     type JobHeader = Option<JobID> * JobValue * JobType * AgentsNeededForJob
-    type Goal =
+    type JobGoal =
         | OccupyGoal of VertexName
         | RepairGoal of VertexName * AgentName
         | DisruptGoal of VertexName
         | AttackGoal of VertexName
 
+    type Goal =
+        | JobGoal of JobGoal
 
     type Job = JobHeader * JobData
 

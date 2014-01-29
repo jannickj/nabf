@@ -15,7 +15,7 @@ module SentinelLogic =
         match g with
         | head :: tail -> 
             match head with
-            | OccupyGoal(v) -> Some v
+            | JobGoal(OccupyGoal(v)) -> Some v
             | _ -> findOccupyGoal tail
         | [] -> None
 
