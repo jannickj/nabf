@@ -58,7 +58,7 @@ namespace NabfProject.NoticeBoardModel
             else if (!(no is Notice))
                 throw new ArgumentException("Object : " + no.GetType().Name + " of ContentIsEqualTo is not of type Notice");
 
-			return this.Id == no.Id;
+			//return this.Id == no.Id;
 
             if (no.GetType() != this.GetType())
                 return false;
@@ -151,7 +151,13 @@ namespace NabfProject.NoticeBoardModel
         {
             return this is EmptyJob;
         }
-    }
+
+		public bool ContentIsSubsetOf(Notice n)
+		{
+			return false;
+			//throw new NotImplementedException();
+		}
+	}
     
     public class DisruptJob : Notice
     {

@@ -121,9 +121,22 @@ namespace NabfProject.NoticeBoardModel
             }
             if (n == null)
                 throw new ArgumentException("Input to CreateNotice, JoType : " + type.GetType().Name + " was not of appropriate type. It's type was: " + type.GetType());
+			bool isUnique = true;
+			foreach (var job in _availableJobs)
+			{
+				foreach (Notice not in job.Value)
+				{
+					if (not.ContentIsEqualTo(n) || not.ContentIsSubsetOf(n))
+						isUnique = false;
+				}
+			}
+
+			notice = n;
+
+			if (!isUnique)
+				return false;
 
             bool b = AddNotice(n);
-            notice = n;
 
             foreach (NabfAgent a in _sharingList)
                 a.Raise(new NewNoticeEvent(n));
