@@ -5,6 +5,7 @@ module DecisionTree =
     open AgentTypes
     open CommonLogic
 
+    open SharedLogic
     open Saboteur
     open Explorer
     open Inspector
@@ -34,6 +35,8 @@ module DecisionTree =
                 getRoleDecision
                 
                 Choice(reactToEnemyAgent)
+
+                Choice workOnOccupyGoal
 
                 Choice(exploreLocalGraph)
 

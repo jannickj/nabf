@@ -36,7 +36,7 @@ module SaboteurLogic =
         match g with
         | head :: tail -> 
             match head with
-            | AttackGoal(v) -> Some v
+            | JobGoal(AttackGoal(v)) -> Some v
             | _ -> findAttackGoal tail
         | [] -> None
 
