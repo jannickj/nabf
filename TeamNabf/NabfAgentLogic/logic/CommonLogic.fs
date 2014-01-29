@@ -26,13 +26,13 @@ module CommonLogic =
 
     let exploreLocalGraph (s:State) =
         let rank = rankByType s
-        //Fix with rank
-        let unexplored = (pathToNearestUnExplored s.Self s.World)
-        if unexplored = None 
+        let unexplored = (pathsToNearestNUnexplored rank s.Self s.World)
+        if unexplored = []
         then 
             (false,None) 
-        else            
-            tryGo s.World.[unexplored.Value.Head] s
+        else
+            let index = rank % unexplored.Length      
+            tryGo s.World.[unexplored.[index].Head] s
             
     let idle (s:State) = recharge
 

@@ -54,10 +54,10 @@
     <Compile Include="Logic\SentinelLogic.fs" />
     <Compile Include="Logic\RepairerLogic.fs" />
     <Compile Include="Logic\CommonLogic.fs" />
+    <Compile Include="DebuggingFeatures.fs" />
     <Compile Include="Explorer.fs" />
     <Compile Include="Inspector.fs" />
     <Compile Include="Repairer.fs" />
-    <Compile Include="DebuggingFeatures.fs" />
     <Compile Include="Saboteur.fs" />
     <Compile Include="Sentinel.fs" />
     <Compile Include="DecisionTree.fs" />
