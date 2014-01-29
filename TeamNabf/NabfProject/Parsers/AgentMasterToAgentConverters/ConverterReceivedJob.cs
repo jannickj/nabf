@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using JSLibrary.IiLang.DataContainers;
 using JSLibrary.IiLang.Parameters;
+using NabfProject.AI;
 
 namespace NabfProject.Parsers.AgentMasterToAgentConverters
 {
@@ -19,7 +20,12 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
             IilPerceptCollection ipc;
             //IilPercept percept = ((IilPerceptCollection)Parsers.ConvertToForeign(gobj.Notice)).Percepts[0];
 
-            int receiverIndex = gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver);
+            SortedList<long, NabfAgent> sl = new SortedList<long, NabfAgent>();
+
+            foreach (NabfAgent a in gobj.Notice.GetTopDesireAgents())
+                sl.Add(a.Id, a);
+
+            int receiverIndex = sl.IndexOfValue(gobj.Receiver); ; //gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver);
 
             ipc = new IilPerceptCollection
             (
