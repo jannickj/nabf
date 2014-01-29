@@ -17,14 +17,14 @@ module AgentLogicLib =
      
     let tryDo (action : Action) (s:State) =
         match action with
-        | Probe(o)  -> if s.Self.Energy.Value >= ProbeCost then (true,Some(Probe(o))) else recharge
+        | Probe(o)  -> if s.Self.Energy.Value >= ProbeCost then (true,Some(Probe(o))) else  recharge
         | Survey    -> if s.Self.Energy.Value >= SurveyCost then (true,Some(Survey)) else recharge
-        | Inspect(a)-> if s.Self.Energy.Value >= InspectCost then (true,Some(Inspect(a))) else recharge
+        | Inspect(a)-> if s.Self.Energy.Value >= InspectCost then (true,Some(Inspect(a))) else  recharge
         | Attack(a) -> if s.Self.Energy.Value >= AttackCost then (true,Some(Attack(a))) else recharge
         | Parry     -> if s.Self.Energy.Value >= ParryCost then (true,Some(Parry)) else recharge
         | Repair(a) -> if ((s.Self.Energy.Value >= RepairCost) && (s.Self.Health.Value > 0)) || (s.Self.Energy.Value >= RepairCostDisabled) then (true,Some(Repair(a))) else recharge
         | Buy(u)    -> if s.Self.Energy.Value > BuyCost then (true,Some(Buy(u))) else recharge
-        | _         -> (false,None)
+        | _         -> printfn "PHILIP'S FAIL STORE.COM"; (false,None)
 
     let tryGo (v:Vertex) (s:State) =
         let edges = Set.toList s.World.[s.Self.Node].Edges
@@ -32,18 +32,17 @@ module AgentLogicLib =
 
         if (fst edge) = None then 
             if s.Self.Energy < (Some 10) then 
-                printfn"\n\nTryGo 1: recharge \n" 
                 recharge 
             else 
-                printfn"\n\nTryGo 1: %A \n" (true,Some(Goto(v.Identifier)))
+                
                 (true,Some(Goto(v.Identifier)))
         else
             let value = (fst edge).Value
             if value > s.Self.Energy.Value then 
-                printfn"\n\nTryGo 2: recharge \n" 
+     
                 recharge 
             else 
-                printfn"\n\nTryGo 2: %A \n" (true,Some(Goto(v.Identifier)))
+        
                 (true,Some(Goto(v.Identifier)))
 
     let rec getSafeVertex (s:State) (l:Vertex list) (enemySabs:Agent list)=
@@ -58,8 +57,10 @@ module AgentLogicLib =
 
     let runAway (s:State) (enemySabs:Agent list)= 
         let neighbours = getNeighbours s.Self.Node s.World
-        let partition = List.partition (fun (v:Vertex) -> v.Edges.Count > 1) neighbours
-        let sortedNeighbours = List.append (fst partition) (snd partition)
+       
+        let partition = List.partition (fun (v:Vertex) ->   v.Identifier = s.LastPosition   ||     
+                                                            not <| Set.forall (fun (cost,_) -> cost = None) v.Edges) neighbours
+        let sortedNeighbours = List.append (snd partition) (fst partition)
         let v = getSafeVertex s sortedNeighbours enemySabs
         if not (v = None) 
         then 

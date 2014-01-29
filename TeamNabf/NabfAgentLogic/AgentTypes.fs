@@ -207,6 +207,7 @@ module AgentTypes =
             SimulationStep   : int;
             NearbyAgents     : Agent list
             OwnedVertices    : Map<VertexName, TeamName>
+            LastPosition     : VertexName
             NewVertices      : SeenVertex list
             NewEdges         : Edge list
             LastStepScore    : int

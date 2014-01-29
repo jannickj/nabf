@@ -9,11 +9,15 @@ namespace NabfAgentLogic
         open ExplorerLogic
         open IiLang.IiLangDefinitions
         open IiLang.IilTranslator
+        open ExplorerLogic
+        open Logging
+
+        let OurTeam = "Nabf"
         
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
             match percept with
-                | EnemySeen enemy   
+                | EnemySeen enemy when enemy.Name <> state.Self.Name
                     -> { state with 
                            EnemyData = enemy :: state.EnemyData
                            NearbyAgents = enemy :: state.NearbyAgents 
@@ -32,19 +36,26 @@ namespace NabfAgentLogic
                         }
                     else 
                         { state with OwnedVertices = ownedVertices }
+
                 | VertexProbed (name, value) ->
                     { state with 
-                        World = addVertexValue name value state.World
+                            World = addVertexValue name value state.World
                     }
+                        
                 | EdgeSeen (cost, node1, node2) ->
-                    let edgeAlreadyExists = fun (cost', otherVertexId) -> cost' = None || otherVertexId = node2
-                    if (not <| Set.exists edgeAlreadyExists state.World.[node1].Edges) then
+                    let edgeAlreadyExists = fun (cost':Option<_>, otherVertexId) -> cost'.IsSome && otherVertexId = node2
+
+                    let containNode = (Map.containsKey node1 state.World)
+                    //let edges = state.World.[node1].Edges
+                    //logInfo ("Contains Node: "+containNode.ToString())
+                    if ( not (containNode && (Set.exists edgeAlreadyExists state.World.[node1].Edges))) then
                         { state with 
                             World = addEdge (cost, node1, node2) state.World 
                             NewEdges = (cost, node1, node2) :: state.NewEdges
                         }
                     else
                         state
+
                 | Team team ->
                     { state with 
                         TeamZoneScore = team.ZoneScore
@@ -55,12 +66,18 @@ namespace NabfAgentLogic
                     }
                 | SimulationStep step  -> { state with SimulationStep = step }
                 | ZoneScore score      -> { state with ThisZoneScore = score }
-                | Self self            -> { state with Self = self }
+                | Self self ->
+                    let newSelf = { self with 
+                        Name = state.Self.Name
+                        Team = state.Self.Team
+                        Role = state.Self.Role
+                    }
+                    { state with Self = newSelf }
                 | LastAction action    -> { state with LastAction = action }
                 | LastActionResult res -> { state with LastActionResult = res }
                 | _ -> state
         
-        let buildInitState (name ,simData:SimStartData) =
+        let buildInitState (name, simData:SimStartData) =
             {   World = Map.empty
             ;   Self =  {   Energy = Some 0
                         ;   MaxEnergy = Some 0
@@ -70,7 +87,7 @@ namespace NabfAgentLogic
                         ;   Node = ""
                         ;   Role = Some (simData.SimRole)
                         ;   Strength = Some 0
-                        ;   Team = ""
+                        ;   Team = OurTeam
                         ;   Status = Normal
                         ;   VisionRange = Some 0
                         }
@@ -78,6 +95,7 @@ namespace NabfAgentLogic
             ;   SimulationStep = 0
             ;   NearbyAgents = List.Empty
             ;   OwnedVertices = Map.empty
+            ;   LastPosition = ""
             ;   NewVertices = []
             ;   NewEdges = []
             ;   LastStepScore = 0
@@ -114,34 +132,30 @@ namespace NabfAgentLogic
                 }
             | _ -> newState
 
-        let updateSelf oldState newState =
-            let newSelf = 
-                { newState.Self with 
-                    Team = oldState.Self.Team
-                    Name = oldState.Self.Name
-                    Role = oldState.Self.Role
-                }
-            { newState with Self = newSelf }
-           
+        let updateEdgeCosts (lastState:State) (state:State) =
+            match (state.LastAction, state.LastActionResult) with
+            | (Goto _, Successful) ->
+                let state4 = updateTraversedEdgeCost lastState state
+                state4
+            | _ -> updateTraversedEdgeCost lastState state
+        
+        let updateLastPos (lastState:State) (state:State) =
+            { state with LastPosition = lastState.Self.Node }
+
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
-            let state' = clearTempBeliefs state
+            let clearedState = clearTempBeliefs state
 
-            let state'' = List.fold handlePercept state' percepts
+            let updatedState = 
+                List.fold handlePercept clearedState percepts
+                |> updateEdgeCosts state
+                |> updateLastPos state
 
-            let state''' = updateSelf state state''
+            match updatedState.Self.Role.Value with
+            | Explorer -> updateStateExplorer updatedState
+            | _ -> updatedState
 
-            printfn "World size: %A" (state'''.World.Count)
-            //printfn "World: %A" (Map.toList <| state'''.World)
-
-            match (state'''.LastAction, state'''.LastActionResult) with
-            | (Goto _, Successful) ->
-                //printfn "coming from %s" state.Self.Node
-                //printfn "edges before: %A" (Set.toList <| state'''.World.[state'''.Self.Node].Edges)
-                let state'''' = updateTraversedEdgeCost state state'''
-                //printfn "edges after: %A" (Set.toList <| state''''.World.[state''''.Self.Node].Edges)
-                state''''
-            | _ -> updateTraversedEdgeCost state state'''
+            
     
         let shouldSharePercept (state:State) percept =
             match percept with
@@ -164,8 +178,26 @@ namespace NabfAgentLogic
         let selectSharedPercepts state (percepts:Percept list) =
             List.filter (shouldSharePercept state) percepts
         
-        let updateStateWhenGivenJob (state:State) (job:Job) (moveTo:VertexName) =
-            state
+        let updateStateWhenGivenJob (state:State) (((_,_,jobType,_),jobdata):Job) (moveTo:VertexName) : State =
+            match jobType with
+            | JobType.OccupyJob -> if (List.tryFind (fun g -> g = OccupyGoal(moveTo)) state.Goals).IsNone then {state with Goals = OccupyGoal(moveTo)::state.Goals} else state
+            | JobType.AttackJob -> if (List.tryFind (fun g -> g = AttackGoal(moveTo)) state.Goals).IsNone then {state with Goals = AttackGoal(moveTo)::state.Goals} else state
+            | JobType.RepairJob -> match jobdata with 
+                                   | RepairJob(vName,aName) ->
+                                       if (List.tryFind (fun g -> g = RepairGoal(moveTo,aName)) state.Goals).IsSome then state
+                                       elif (List.tryFind (fun g -> match g with 
+                                                                            | RepairGoal(_,aName) -> true
+                                                                            | _ -> false
+                                                                            ) state.Goals).IsSome
+                                       then
+                                           {state with Goals = RepairGoal(moveTo,aName)::(List.filter (fun g -> match g with
+                                                                                                                | RepairGoal(_,aName) -> false
+                                                                                                                | _ -> true) state.Goals)}
+                                       else
+                                           {state with Goals = RepairGoal(moveTo,aName)::state.Goals}
+
+            | JobType.DisruptJob -> if (List.tryFind (fun g -> g = AttackGoal(moveTo)) state.Goals).IsNone then {state with Goals = DisruptGoal(moveTo)::state.Goals} else state
+            | _ -> state
 
         let buildIilAction id (action:Action) =
             IiLang.IiLangDefinitions.buildIilAction (IiLang.IilTranslator.buildIilAction action id)
@@ -185,24 +217,24 @@ namespace NabfAgentLogic
         let generateOccupyJob (s:State) (knownJobs:Job list) =
             match s.Self.Role with
             | Some Explorer -> generateOccupyJobExplorer s knownJobs
-            | _ -> None
+            | _ -> ([],[])
 
         let rec tryFindRepairJob (s:State) (knownJobs:Job list) =
             match knownJobs with
             | (_ , rdata) :: tail -> if rdata = RepairJob(s.Self.Node,s.Self.Name) then Some knownJobs.Head else tryFindRepairJob s tail
             | [] -> None
 
-        let generateRepairJob (s:State) (knownJobs:Job list) : Option<Job> =
+        let generateRepairJob (s:State) (knownJobs:Job list) =
             if s.Self.Health.Value = 0 
             then
                 let j = tryFindRepairJob s knownJobs
                 match j with
-                | None -> Some ((None,5,JobType.RepairJob,1),RepairJob(s.Self.Node,s.Self.Name))
-                | Some ((id,d,_,an),_) -> Some ((id,d,JobType.RepairJob,an),RepairJob(s.Self.Node,s.Self.Name))
+                | None -> ([((None,5,JobType.RepairJob,1),RepairJob(s.Self.Node,s.Self.Name))],[])
+                | Some ((id,d,_,an),_) -> ([((id,d,JobType.RepairJob,an),RepairJob(s.Self.Node,s.Self.Name))],[])
             else
-                None
+                ([],[])
 
-        let generateDisruptJob (s:State) (knownJobs:Job list) = None
+        let generateDisruptJob (s:State) (knownJobs:Job list) = ([],[])
 
         let rec tryFindOccupyGoal (l:Goal list) =
             match l with
@@ -223,11 +255,12 @@ namespace NabfAgentLogic
                     | _ -> false ) knownJobs
             if (isOccupyingPosition s) && not attackJobFound 
             then 
-                Some ((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])
+                ([((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])],[])
             else 
-                None
+                ([],[])
 
-        let generateJob (jt:JobType) (s:State) (knownJobs:Job list) : option<Job> =
+        let generateJob (jt:JobType) (s:State) (knownJobs:Job list) : Job list * JobID list = 
+        //Returns a tuple of jobs to add and IDs of jobs to remove
             match jt with
             | JobType.OccupyJob     -> generateOccupyJob s knownJobs
             | JobType.RepairJob     -> generateRepairJob s knownJobs
@@ -242,7 +275,12 @@ namespace NabfAgentLogic
                 | ((_,_,JobType.RepairJob,_),_) -> if state.Self.Role.Value = Repairer then (10,true) else (0,false)
                 | ((_,_,JobType.AttackJob,_),_) -> if state.Self.Role.Value = Saboteur then (10,true) else (0,false)
                 | ((_,_,JobType.DisruptJob,_),_) -> if state.Self.Role.Value = Sentinel then (10,true) else (0,false)
-                | ((_,_,JobType.OccupyJob,_),_) -> (8,true)
+                | ((_,_,JobType.OccupyJob,_),_) -> match state.Self.Role.Value with
+                                                   | Sentinel 
+                                                   | Inspector -> (10,true)
+                                                   | Repairer -> (5,true)
+                                                   | Explorer -> (3,true)
+                                                   | Saboteur -> (0,false)
                 | _                           -> (0,false)
             else
                 (0,false)

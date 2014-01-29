@@ -9,5 +9,6 @@ module Repairer =
     let getRepairerTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                Choice(repairAgent)
+                Choice(repairNearbyAgent)
+                Choice(workOnRepairGoal)
             ]

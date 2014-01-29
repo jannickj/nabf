@@ -9,15 +9,18 @@
     open System.Threading;
     open System.Linq;
     open AgentTypes
+    open Logging
+    open System.Reflection
+    open System.Diagnostics
+    open DebuggingFeatures
+    
 
     type public AgentLogicClient(name,decisionTreeGenerator) = class 
         
         
         [<DefaultValue>] val mutable private BeliefData : State
         [<DefaultValue>] val mutable private KnownJobs : List<Job>
-        //[<DefaultValue>] val mutable private DesiredJobs : List<Job*Desirability>
-        //[<DefaultValue>] val mutable private possibleActions : List<Action>
-        //[<DefaultValue>] val mutable private undecidedDecisions : (DecisionRank*Decision<(State -> (bool*Option<Action>))>) list
+
         [<DefaultValue>] val mutable private awaitingPercepts : List<Percept>
         [<DefaultValue>] val mutable private simulationID : SimulationID
 
@@ -25,17 +28,19 @@
         let agentname = name
         let decisionTree = decisionTreeGenerator()
         let mutable simEnded = false
+        let mutable runningCalcID = 0
         let mutable runningCalc = 0
         let mutable decisionId = 0
-        //let mutable decidedAction = false
         let mutable decidedAction = (Int32.MaxValue,Action.Recharge)
-        //let mutable lastHighestDesire:Desirability = 0
+        let mutable runningCalcNames = []
         
-
+        new(name,moveTo) = AgentLogicClient(name,fun () -> moveToDTree moveTo)
         new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
+        
 
         //Parallel helpers
         let mutable stopDeciders = new CancellationTokenSource()
+
 
         let roundLock = new Object()
         let stateLock = new Object()
@@ -52,34 +57,74 @@
         let EvaluationStartedEvent = new Event<EventHandler, EventArgs>()
         let SimulationEndedEvent = new Event<EventHandler, EventArgs>()
 
+        
+
+        member private this.protectedExecute (name, action, returnedOnError) =
+            try
+                action()
+            with 
+            | :? ThreadAbortException as e -> raise e
+            | e -> 
+                let s = sprintf "%A" e.StackTrace
+                logError (name + " crashed with: "+e.Message+"\n"+s)
+                returnedOnError()
+
+
+        member private this.protectedExecute (name, action) = this.protectedExecute (name, action, (fun () -> ()))
+
         member public this.DecidedAction = decidedAction
 
-        member private this.asyncCalculation name stopToken func = this.asyncCalculationAF name stopToken  (async {  func() })
-                                                                            
-        member private this.asyncCalculationAF name (stopToken:CancellationToken) func =
+        member private this.asyncCalculation id name stopToken func = this.asyncCalculationAF id name stopToken  (async {  func() })
+        
+        let rec remove i l =
+            match i, l with
+            | 0, x::xs -> xs
+            | i, x::xs -> x::remove (i - 1) xs
+            | i, [] -> failwith "index out of range"
+                                                                  
+        member private this.asyncCalculationAF id name (stopToken:CancellationToken) func =
+            //logInfo ("Async call: "+name)
             if stopToken.IsCancellationRequested then
-                    lock runningCalcLock (fun () -> 
-                        printf "%s was cancelled before execution\n" name)
+                logError (name+" was cancelled before execution\n")
+                        
             else
                 let changeCals value = 
                     lock runningCalcLock (fun () -> 
-                    //Console.WriteLine(name+":"+runningCalc.ToString()+" change: "+value.ToString())
-                    if runningCalc = 0 then
-                        EvaluationStartedEvent.Trigger(this, new EventArgs())
-                    runningCalc <- runningCalc + value
-                    if runningCalc = 0 then
-                        EvaluationCompletedEvent.Trigger(this, new EventArgs())
+                    if id = runningCalcID then
+                        if runningCalc = 0 then
+                            EvaluationStartedEvent.Trigger(this, new EventArgs())
+                        runningCalc <- runningCalc + value
+                        if value > 0 then
+                            runningCalcNames <- name::runningCalcNames
+                        else
+                            runningCalcNames <- remove (List.findIndex (fun n -> n = name) runningCalcNames) runningCalcNames
+                        
+                        if runningCalc = 0 then
+                            EvaluationCompletedEvent.Trigger(this, new EventArgs())
                     )
                 let AsyncF f =
                     async
                         {
-                            Async.StartImmediate(f,stopToken)
-                            changeCals(-1)
+                            
+                            use! handler = Async.OnCancel(fun () -> ( logWarning (name+" was cancelled") ))
+                            let action() =
+                                changeCals(1)
+                                logAll("Starting: "+name)
+                                Async.StartImmediate(f,stopToken)
+                                logAll ("Finished: "+name)
+                                changeCals(-1)
+                            this.protectedExecute (name, action)
+                            
+                            
+                            
                         }
-                changeCals(1)
+                
 
                 Async.Start (AsyncF func,stopToken)
                 () 
+
+         member private this.asyncCalculationMany id name func values stopToken =
+            List.iter (fun v -> ignore <| (this.asyncCalculationAF id name stopToken (async { ignore <| func v }))) values
 
         member private this.EvaluateDecision    (rankCur:DecisionRank) 
                                                 (stopToken:CancellationToken) 
@@ -88,7 +133,7 @@
             match d with
             | Choice f -> 
                 
-                this.asyncCalculationAF ("Calc Choice") stopToken (
+                this.asyncCalculationAF runningCalcID ("Calc Choice "+f.ToString()) stopToken (
                     async
                         { 
                             
@@ -99,38 +144,53 @@
                             use! handler = Async.OnCancel(cancelFunc)
                             let output = ref (false,Option.None)
                             let timer:float = 10.0
-                            let success = Parallel.TryExecute<(bool*Option<Action>)>((fun () -> f s),timer,(fun () -> stopToken.IsCancellationRequested),output);
+                            let success = Parallel.TryExecute<(bool*Option<Action>)>
+                                                (   fun () -> this.protectedExecute ( f.ToString(), (fun () -> f s), (fun () -> (false,None)))
+                                                ,   timer
+                                                ,   (fun () -> stopToken.IsCancellationRequested)
+                                                ,   output
+                                                );
+                            
+                            
                             if success then
                                 lock decisionLock (fun () ->
                                     if dId = decisionId then
                                         let (b,a) = output.Value
                                         let (cR,cA) = decidedAction
+                                        logInfo (rankCur.ToString()+": "+f.ToString()+" -> "+b.ToString())
                                         if b && a.IsSome && cR > rankCur then
+                                            logInfo ("Chosen: "+f.ToString())
                                             decidedAction <- (rankCur,a.Value)
                                             stopSource.Cancel() 
                                     else
                                         stopSource.Cancel()
                                     )
                             else
+                                logWarning (rankCur.ToString()+": "+f.ToString()+" was cancelled")
                                 stopSource.Cancel() 
                         }
                     )
+                rankCur + 1
             | Options ds -> 
-                ignore <| List.fold ( fun (r,c) t ->
+                let (r,_) = List.fold ( fun (r,c) t ->
                                         let iteStopSource = new CancellationTokenSource()
-                                        this.EvaluateDecision r c iteStopSource (s,t)
-                                        (r+1,iteStopSource.Token)
+                                        let nR = this.EvaluateDecision r c iteStopSource (s,t)
+                                        (nR,iteStopSource.Token)
                                         ) (rankCur,stopToken) ds
+                r
             | Condition (c,d) -> 
-                this.asyncCalculationAF ("Calc conditon") stopToken (
-                            async
-                                {
-                                    use! handler = Async.OnCancel(fun () -> stopSource.Cancel())
-                                    let (b,_) = c s
-                                    if b then
-                                        let source = new CancellationTokenSource()
-                                        this.EvaluateDecision rankCur stopSource.Token source (s,d)
-                                })
+                let (b,_) = c s
+                if b then
+                    let source = new CancellationTokenSource()
+                    this.EvaluateDecision (rankCur) stopSource.Token source (s,d)
+                else
+                    rankCur
+//                this.asyncCalculationAF runningCalcID ("Calc conditon") stopToken (
+//                            async
+//                                {
+//                                    use! handler = Async.OnCancel(fun () -> stopSource.Cancel())
+//                                    
+//                                })
                     
 
 
@@ -140,15 +200,19 @@
 
         member public this.EvaluteState() =
             let s = lock stateLock (fun () -> this.BeliefData)
-            this.EvaluateDecision 0 stopDeciders.Token (new CancellationTokenSource()) (s,decisionTree)
+            ignore <| this.EvaluateDecision 0 stopDeciders.Token (new CancellationTokenSource()) (s,decisionTree)
             
 
-        member private this.asyncCalculationMany name func values stopToken =
-            List.iter (fun v -> ignore <| (this.asyncCalculationAF name stopToken (async { ignore <| func v }))) values
+       
 
         member private this.ReEvaluate percepts =
             stopDeciders.Cancel()
             stopDeciders <- new CancellationTokenSource()
+            lock runningCalcLock (fun () -> 
+                runningCalc <- 0
+                runningCalcID <- runningCalcID + 1
+                runningCalcNames <- []
+                )
             let sharedPercepts = lock awaitingPerceptsLock (fun () -> 
                                         let percepts = this.awaitingPercepts
                                         this.awaitingPercepts <- []
@@ -160,20 +224,27 @@
                     let sharedPs = ShareKnowledge sharedP
                     let action = buildIilSendMessage (this.simulationID,sharedPs)
                     SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
-            this.asyncCalculation "generating shared percept" stopDeciders.Token generateSharedPercepts
-            let newstate = lock stateLock (fun () -> this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
-                                                     this.BeliefData)
+            this.asyncCalculation runningCalcID "generating shared percept" stopDeciders.Token generateSharedPercepts
+            
+            let newstate = lock stateLock (fun () -> 
+                            let action() =
+                                this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
+                                this.BeliefData
+                            let onFail() =
+                                lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- this.awaitingPercepts@sharedPercepts)
+                                this.BeliefData
+                            this.protectedExecute("State Update",action,onFail)
+                            )
+
           
             
-            runningCalc <- 0
             lock decisionLock ( fun () ->
                                     decidedAction <- (Int32.MaxValue,Action.Recharge)
                                     decisionId <- (decisionId + 1)
                                 )
-            let start = DateTime.Now
+            
             this.EvaluteState()
-            let dif = DateTime.Now - start
-            Console.WriteLine("Evaluate state: "+dif.TotalMilliseconds.ToString());
+            
 
         let stopLogic () =
             stopDeciders.Cancel()
@@ -187,45 +258,52 @@
                         {
                             let ajob = foundJob.Value
                             lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob moveTo)
-                            this.asyncCalculation "Calc accept job" stopDeciders.Token (fun () -> this.EvaluteState())
+                            this.asyncCalculation runningCalcID "Calc accept job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
                         }
                 Async.StartImmediate update
 
-            
-        member private this.removeUselessJobs() =
-            let knownjobs = lock knownJobsLock (fun () -> this.KnownJobs)
-            let removeJobFunc job =
-                let state = lock stateLock (fun () -> this.BeliefData)
-                let decide = shouldRemoveJob state job
-                let ((jobid,_,_,_),_) = job
-                if decide then
-                    let removejobAct = buildIilSendMessage(this.simulationID,(RemoveJob jobid.Value))
-                    SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(removejobAct))
-            this.asyncCalculationMany "remove job calc" removeJobFunc knownjobs stopDeciders.Token
-
         member private this.generateNewJobs() = 
+            let removeJob jobid =
+                let metaAction = RemoveJob jobid
+                let removejobMsg = buildIilSendMessage (this.simulationID,metaAction)
+                SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(removejobMsg))
+        
+            let createJob job =
+                let metaAction = 
+                    match job with
+                    | ((Some jobid,_,_,_),_) -> UpdateJob job
+                    | ((None,_,_,_),_) -> CreateJob job
+                let jobMsg = buildIilSendMessage (this.simulationID,metaAction)
+                SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(jobMsg))
+
             let jobTypes = Enum.GetValues(typeof<JobType>)
             let rec jobGenFunc jobtype state knownJobs =
-                let jobopt = generateJob jobtype state knownJobs
-                match jobopt with
-                | Some job ->
-                    let metaAction = 
-                        match job with
-                        | ((Some jobid,_,_,_),_) -> UpdateJob job
-                        | ((None,_,_,_),_) -> CreateJob job
-                    let createjobMsg = buildIilSendMessage (this.simulationID,metaAction)
-                    SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(createjobMsg)) 
-                    jobGenFunc jobtype state (job::knownJobs)                            
-                | None -> ()
-
+                let (created,removed) = generateJob jobtype state knownJobs
+                
+                List.iter removeJob removed
+                List.iter createJob created
+                if not (List.isEmpty created && List.isEmpty removed) then
+                    let removedKnown = List.filter (fun ((id,_,_,_),_) -> not (List.exists (fun jid -> if (id:Option<JobID>).IsSome then id.Value = jid else false) removed) ) knownJobs
+                    let createdKnown = List.filter (fun ((id,_,_,_),_) -> not (List.exists (fun cjob ->
+                                                (  match cjob with
+                                                     | (Some cjid,_,_,_),_ -> if (id:Option<JobID>).IsSome then id.Value = cjid else false
+                                                     | (None,_,_,_),_ -> false
+                                                )
+                                                ) created) ) removedKnown
+                
+                    jobGenFunc jobtype state (created@createdKnown)
+                else
+                    //logInfo ("Generating job completed: "+jobtype.ToString())
+                    ()
             let jobTypeList = (List.ofSeq (jobTypes.Cast<JobType>())).Tail
             let joblist = lock knownJobsLock (fun () -> this.KnownJobs)
             let knownjobs jobtype =List.filter (fun ((_, _, jt,_), _) -> jt = jobtype) joblist
             let stateData = lock stateLock (fun () -> this.BeliefData)
-            //List.iter (fun jobType -> (this.asyncCalculation "job" stopDeciders.Token )) jobTypeList 
-            this.asyncCalculationMany "calc generate job" 
+
+            this.asyncCalculationMany runningCalcID "calc generate job" 
                     (fun jobType -> ignore <| jobGenFunc jobType stateData (knownjobs jobType)) 
                     jobTypeList stopDeciders.Token
+        
         member private this.EvaluateJob  job =
             let jobs = lock knownJobsLock (fun () -> this.KnownJobs)
             let eval job () = 
@@ -235,7 +313,7 @@
                     let ((jobid,_,_,_),_) = job
                     let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((jobid.Value),desire))
                     SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))  
-            this.asyncCalculation "evaluate job" stopDeciders.Token (eval job) 
+            this.asyncCalculation runningCalcID "evaluate job" stopDeciders.Token (eval job) 
 
         member private this.updateJob job =
             lock knownJobsLock (fun () -> 
@@ -257,9 +335,9 @@
             member this.HandlePercepts(iilpercepts) = 
                 if simEnded then
                     ()
-                let ServerMessage = (parseIilPercepts iilpercepts)
+                let ServerMessage = this.protectedExecute ("Parsing percepts",(fun () -> Some (parseIilPercepts iilpercepts)),(fun () -> None))
                 match ServerMessage with
-                | AgentServerMessage msg ->
+                | Some (AgentServerMessage msg) ->
                     match msg with
                     | AddedOrChangedJob job ->
                         this.updateJob job
@@ -269,7 +347,7 @@
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                     | RoundChanged id ->
                         lock roundLock (fun () -> currentRound <- id)
-                |  MarsServerMessage msg ->
+                | Some (MarsServerMessage msg) ->
                     match msg with
                     | SimulationEnd _ -> 
                         SimulationEndedEvent.Trigger(this, new EventArgs())
@@ -281,24 +359,15 @@
                         this.simulationID <- sData.SimId
                         let subscribeAction = buildIilSendMessage (this.simulationID, SimulationSubscribe)
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(subscribeAction))
-                        this.BeliefData <- buildInitState (agentname,sData)
+                        this.BeliefData <- buildInitState (agentname, sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
                         
-                        let left = new DateTime(int64(deadline)*int64(10000))
-                        let timeleft = left-DateTime.Now ;
-                        let a = int64(deadline)
-                        Console.WriteLine("Action request started timeleft "+a.ToString())
                         let round = lock roundLock (fun () -> currentRound <- 1+currentRound; currentRound)
                         let newRoundAct = buildIilSendMessage (this.simulationID, NewRound(round))
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(newRoundAct))
-                        let start = DateTime.Now
                         
                         this.ReEvaluate percepts
 
-                        let dif = DateTime.Now - start
-                        Console.WriteLine("Evaluate percepts: "+dif.TotalMilliseconds.ToString());
-
-                        let startAsyncTime = DateTime.Now
                         let knownJobs = lock knownJobsLock (fun () -> this.KnownJobs)
                         List.iter this.EvaluateJob knownJobs
                         this.generateNewJobs()
@@ -310,29 +379,26 @@
                                     let! token = Async.CancellationToken
                                     
                                     let awaitingDecision = ref true
-                                    //Thread.Sleep(800)
                                     while awaitingDecision.Value do 
                                         if token.IsCancellationRequested then
                                             awaitingDecision:=false
                                         else                                          
-                                            //Console.WriteLine(runningCalc);
-                                            
-                                            let dif = DateTime.Now - startAsyncTime
-                                            //Console.WriteLine("async load time: "+dif.TotalMilliseconds.ToString())
+                                            do! Async.Sleep(20)
                                             let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         
                                             let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
-                                            //Console.WriteLine(runningCalcs)
-
-                                            if runningCalcs <= 0 || (expired+int64(800)) > int64(totaltime) then
+                                            logAll ("Current running calculations: "+runningCalcs.ToString())
+                                            logAll ("Running: "+runningCalcNames.ToString())
+                                            if runningCalcs = 0 || (expired+int64(800)) > int64(totaltime) then
                                                 SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
                                                 awaitingDecision:=false
-                                            ignore <| Async.Sleep(100)
+                                            
                                 }
                         Async.Start ((forceDecision System.DateTime.Now.Ticks totalTime),stopDeciders.Token)
                         
                         ()
                     | ServerClosed -> ()
+                | None -> ()
            
             
 
