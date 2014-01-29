@@ -3,6 +3,7 @@ module AgentLogicLib =
 
     open Graphing.Graph
     open AgentTypes
+    open PathFinding
 
     let ProbeCost = 1
     let SurveyCost = 1
@@ -12,6 +13,15 @@ module AgentLogicLib =
     let RepairCost = 2
     let RepairCostDisabled = 3
     let BuyCost = 2
+
+    let desirabilityForDecreasingValue value = (10000/(value+1))
+
+    let desireFromPath agent graph node increaser = 
+        let inc = if increaser < 0 then 0 else increaser
+        let p = pathTo agent node graph
+        match p with
+        | Some road -> ((desirabilityForDecreasingValue ((List.length road) + inc)),true)
+        | None -> (0,false)
 
     let recharge = (true,Some(Recharge))
      

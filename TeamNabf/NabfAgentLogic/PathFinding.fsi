@@ -19,3 +19,4 @@ namespace NabfAgentLogic
         val distanceTo : Agent -> string -> Graph -> int
         val pathToNearestUnProbed : Agent -> Graph -> (string list) option
         val pathToNearestUnExplored : Agent -> Graph -> (string list) option
+        val pathsToNearestNUnexplored : int -> Agent -> Graph -> VertexName list list
