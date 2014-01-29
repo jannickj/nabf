@@ -82,6 +82,26 @@ namespace NabfTest
         }
 
         [Test]
+        public void ApplyToNotice_DuplicateDesirability_Success()
+        {
+            Notice n;
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2
+                , new List<NodeKnowledge>() { new NodeKnowledge("") }, new List<NodeKnowledge>() { new NodeKnowledge("") }, "", 99, out n);
+
+            NabfAgent agent1 = new NabfAgent("1"), agent2 = new NabfAgent("2"), agent3 = new NabfAgent("3");
+
+            nb.ApplyToNotice(n, 1, agent1);
+            nb.ApplyToNotice(n, 2, agent2);
+            nb.ApplyToNotice(n, 2, agent3);
+
+
+            nb.FindJobsForAgents();
+
+            Assert.AreEqual(agent2.Name, n.GetTopDesireAgents()[0].Name);
+            Assert.AreEqual(agent3.Name, n.GetTopDesireAgents()[1].Name);
+        }
+
+        [Test]
         public void AddNotices_NoDuplicateListNoneEmpty_Success()
         {
             List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };
