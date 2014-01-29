@@ -90,7 +90,7 @@ namespace NabfTest
 
             NabfAgent agent1 = new NabfAgent("1"), agent2 = new NabfAgent("2"), agent3 = new NabfAgent("3");
 
-            nb.ApplyToNotice(n, 1, agent1);
+            //nb.ApplyToNotice(n, 1, agent1);
             nb.ApplyToNotice(n, 2, agent2);
             nb.ApplyToNotice(n, 2, agent3);
 
