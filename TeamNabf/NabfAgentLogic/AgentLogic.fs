@@ -201,8 +201,8 @@ namespace NabfAgentLogic
                                                                             ) state.Goals).IsSome
                                        then
                                            {state with Goals = JobGoal(RepairGoal(moveTo,aName))::(List.filter (fun g -> match g with
-                                                                                                                | JobGoal(RepairGoal(_,aName)) -> false
-                                                                                                                | _ -> true) state.Goals)}
+                                                                                                                         | JobGoal(RepairGoal(_,aName)) -> false
+                                                                                                                         | _ -> true) state.Goals)}
                                        else
                                            {state with Goals = JobGoal(RepairGoal(moveTo,aName))::state.Goals}
 
@@ -263,11 +263,15 @@ namespace NabfAgentLogic
                     match jobdata with 
                     | AttackJob verts -> List.exists ((=) s.Self.Node) verts
                     | _ -> false ) knownJobs
-            if (isOccupyingPosition s) && not attackJobFound 
-            then 
-                ([((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])],[])
-            else 
-                ([],[])
+            let addJobs = if (isOccupyingPosition s) && not attackJobFound 
+                          then 
+                              [((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])]
+                          else 
+                              []
+            let removeJobs = if s.Self.Role = Some Saboteur (*and other stuff*) then [] else [] 
+            (addJobs,removeJobs)
+
+            
 
         let generateJob (jt:JobType) (s:State) (knownJobs:Job list) : Job list * JobID list = 
         //Returns a tuple of jobs to add and IDs of jobs to remove
