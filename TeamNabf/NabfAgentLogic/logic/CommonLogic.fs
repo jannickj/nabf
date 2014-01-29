@@ -28,6 +28,7 @@ module CommonLogic =
         let rank = rankByType s
         //Fix with rank
         let unexplored = (pathToNearestUnExplored s.Self s.World)
+        logInfo (sprintf "path to unexplored: %A" unexplored)
         if unexplored = None 
         then 
             (false,None) 

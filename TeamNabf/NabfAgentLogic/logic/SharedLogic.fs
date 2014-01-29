@@ -7,7 +7,7 @@ module SharedLogic =
     
     let workOnOccupyGoal (state : State) = 
         let occupyChooser = function
-                            | OccupyGoal vertex -> Some vertex
+                            | JobGoal (OccupyGoal vertex) -> Some vertex
                             | _ -> None
 
         let occupyVertices = List.choose occupyChooser state.Goals
