@@ -36,6 +36,7 @@ module AgentLogicLib =
         | Buy(u)    -> if s.Self.Energy.Value > BuyCost then (true,Some(Buy(u))) else recharge
         | _         -> printfn "PHILIP'S FAIL STORE.COM"; (false,None)
 
+    //Only meant for moving to adjacent nodes
     let tryGo (v:Vertex) (s:State) =
         let edges = Set.toList s.World.[s.Self.Node].Edges
         let edge = List.find (fun (_,id) -> id = v.Identifier) edges
