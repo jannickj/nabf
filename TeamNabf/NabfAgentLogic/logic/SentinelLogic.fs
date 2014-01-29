@@ -5,6 +5,7 @@ module SentinelLogic =
     open AgentTypes
     open AgentLogicLib
     open PathFinding
+    open Constants
 
     let sentinelReact (s:State) (agents:Agent list * Agent list) =
         let potentialEnemySabs = List.filter (fun a -> (a.Role = Some Saboteur || a.Role = None)) (fst agents)
@@ -27,4 +28,12 @@ module SentinelLogic =
             | None -> (false,None)
         | None -> (false,None)
 
-    
+   /////////////////////////////////////
+   ///  DECIDE JOBS
+   /////////////////////////////////////
+
+    let decideJobSentinel (s:State) (job:Job) =  
+        match job with
+        | ((_,_,JobType.OccupyJob,_),OccupyJob (vl,zone) ) -> desireFromPath s.Self s.World vl.Head SENTINEL_OCCUPYJOB_MOD
+        | ((_,_,JobType.DisruptJob,_),DisruptJob (vn)) -> desireFromPath s.Self s.World vn SENTINEL_DISRUPTJOB_MOD
+        | _ -> (0,false)
