@@ -58,6 +58,8 @@ namespace NabfProject.NoticeBoardModel
             else if (!(no is Notice))
                 throw new ArgumentException("Object : " + no.GetType().Name + " of ContentIsEqualTo is not of type Notice");
 
+			return this.Id == no.Id;
+
             if (no.GetType() != this.GetType())
                 return false;
             else if (this is RepairJob)
