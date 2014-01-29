@@ -29,5 +29,11 @@ namespace NabfProject.Actions
 
             simMan.ApplyToNotice(SimId, NoticeId, Desired, this.Source);
         }
+
+		public override string ToString()
+		{
+			SimulationManager simMan = ((NabfModel)this.Engine).SimulationManager;
+			return "Apply to "+NoticeId+" at round: "+simMan.CurrentRoundNumber+" desire: "+this.Desired;
+		}
     }
 }

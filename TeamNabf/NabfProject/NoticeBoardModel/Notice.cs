@@ -79,8 +79,11 @@ namespace NabfProject.NoticeBoardModel
 
         public void Apply(int desirability, NabfAgent a)
         {
-            _agentsToDesirability.Add(a, desirability);
-            _agentsApplied.Add(a);
+			if (!_agentsApplied.Contains(a))
+			{
+				_agentsToDesirability.Add(a, desirability);
+				_agentsApplied.Add(a);
+			}
         }
         public void UnApply(NabfAgent a, NoticeBoard nb)
         {
@@ -89,20 +92,20 @@ namespace NabfProject.NoticeBoardModel
             _agentsToDesirability.Remove(a);
             _agentsApplied.Remove(a);
             bool b = _topDesireAgents.Remove(a);
-            int lowestDesire;
-            SortedList<int, NabfAgent[]> topDesires;
+            bool success;
+			int avg;
             List<NabfAgent> agentsToAdd;
             if (b)
             {
-                lowestDesire = nb.FindTopDesiresForNotice(this, out topDesires, out agentsToAdd);
-                if (lowestDesire != -1)
+                success = nb.TryFindTopDesiresForNotice(this, out avg, out agentsToAdd);
+                if (success)
                 {
                     b = nb.RemoveJob(this);
                     if (b)
                     {
                         _topDesireAgents.Clear();
                         _topDesireAgents.AddRange(agentsToAdd);
-                        HighestAverageDesirabilityForNotice = topDesires.Keys.Sum() / topDesires.Keys.Count;
+						HighestAverageDesirabilityForNotice = avg;
                         nb.AddJob(this);
                     }
                 }
@@ -152,10 +155,9 @@ namespace NabfProject.NoticeBoardModel
             return this is EmptyJob;
         }
 
-		public bool ContentIsSubsetOf(Notice n)
+		public virtual bool ContentIsSubsetOf(Notice n)
 		{
-			return false;
-			//throw new NotImplementedException();
+			return this.WhichNodes.Intersect(n.WhichNodes).Count() > 0;
 		}
 	}
     
@@ -169,6 +171,8 @@ namespace NabfProject.NoticeBoardModel
             WhichNodes = whichNodes;
             Value = value;
         }
+
+		
     }
 
     public class AttackJob : Notice
@@ -181,6 +185,7 @@ namespace NabfProject.NoticeBoardModel
             WhichNodes = whichNodes;
             Value = value;
         }
+		
     }
 
     public class OccupyJob : Notice
@@ -195,6 +200,16 @@ namespace NabfProject.NoticeBoardModel
             ZoneNodes = zoneNodes;
             Value = value;
         }
+
+		public override bool ContentIsSubsetOf(Notice n)
+		{
+			if (n is OccupyJob)
+			{
+				var on = ((OccupyJob)n);
+				return this.ZoneNodes.Intersect(on.ZoneNodes).Count() > 0;
+			}
+			return false;
+		}
     }
 
     public class RepairJob : Notice
@@ -209,6 +224,8 @@ namespace NabfProject.NoticeBoardModel
             AgentToRepair = agentToRepair;
             Value = value;
         }
+
+		
     }
 
     public class EmptyJob : Notice

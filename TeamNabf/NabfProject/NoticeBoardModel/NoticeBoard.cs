@@ -284,53 +284,47 @@ namespace NabfProject.NoticeBoardModel
                 UnApplyToNotice(n, a);
         }
 
-        public int FindTopDesiresForNotice(Notice n, out SortedList<int, NabfAgent[]> topDesires, out List<NabfAgent> agents)
+        public  bool TryFindTopDesiresForNotice(Notice n, out int averageDesire, out List<NabfAgent> agents)
         {
-            int desire = 0, lowestDesire = -(n.GetAgentsApplied().Count + 1);
+			var applied = n.GetAgentsApplied();
 
-            agents = new List<NabfAgent>();
-            topDesires = new SortedList<int, NabfAgent[]>(new InvertedComparer<int>());
-            for (int i = 0; i < n.AgentsNeeded; i++)
-            {
-                topDesires.Add(lowestDesire--, null);
-            }
-            desire = 0;
-            lowestDesire = -1;
-            NabfAgent[] agentArray;
+			if (applied.Count >= n.AgentsNeeded)
+			{
 
-            foreach (NabfAgent a in n.GetAgentsApplied())
-            {
-                n.TryGetValueAgentToDesirabilityMap(a, out desire);
-                if (desire > lowestDesire)
-                {
-                    if (topDesires.ContainsKey(desire))
-                    {
-                        agentArray = new NabfAgent[topDesires[desire].Count() + 1];
-                        int i = 0;
-                        foreach(NabfAgent age in topDesires[desire]) //(int i = 0; i < agentArray.Length; i++)
-                        {
-                            agentArray[i] = age;
-                            i++;
-                        }
-                    }
-                    else
-                        agentArray = new NabfAgent[1];
-                    agentArray[agentArray.Length - 1] = a;
-                    topDesires.Remove(desire);
-                    topDesires.Add(desire, agentArray);
-                    agents.Add(a);
-                    if (topDesires.Last().Value != null)
-                    {
-                        foreach (NabfAgent agent in topDesires.Last().Value)
-                            agents.Remove(agent);
-                    }
-                    //agents.Remove(topDesires.Last().Value);
-                    topDesires.RemoveAt(n.AgentsNeeded - 1);
-                    lowestDesire = topDesires.Keys.Min();// topDesires[].//[n.AgentsNeeded - 2];
-                }
-            }
+				Func<NabfAgent, int> desireOfAgent = an =>
+					{
+						int desire;
+						n.TryGetValueAgentToDesirabilityMap(an, out desire);
+						return desire;
+					};
 
-            return lowestDesire;
+				var sortedagents = new SortedList<int, List<NabfAgent>>();
+
+				Action<NabfAgent> addAgent = na =>
+						{
+							int desire = desireOfAgent(na);
+							List<NabfAgent> desiredAgents;
+							if(sortedagents.ContainsKey(desire))
+								desiredAgents = sortedagents[desire];
+							else
+							{
+								desiredAgents = new List<NabfAgent>();
+								sortedagents[desire] = desiredAgents;
+							}
+							desiredAgents.Add(na);
+						};
+				foreach(var agent in applied)
+				{
+					addAgent(agent);
+				}
+
+				agents = sortedagents.Reverse().SelectMany(kv => kv.Value).Take(n.AgentsNeeded).ToList();
+				averageDesire = agents.Sum(na => desireOfAgent(na)) / n.AgentsNeeded;
+				return true;
+			}
+			agents = null;
+			averageDesire = 0;
+			return false;
         }
 
         public void FindJobsForAgents()
@@ -395,15 +389,15 @@ namespace NabfProject.NoticeBoardModel
         {
             DictionaryList<int, Notice> dl = new DictionaryList<int, Notice>();
             List<NabfAgent> agents;
-            SortedList<int, NabfAgent[]> topDesires;
-            int lowestDesire;
+			bool success;
+			int avg;
 
             foreach (Notice n in _availableJobs.SelectMany(kvp => kvp.Value))
             {
-                lowestDesire = FindTopDesiresForNotice(n, out topDesires, out agents);
-                if (lowestDesire != -1)
+                success = TryFindTopDesiresForNotice(n, out avg, out agents);
+                if (success)
                 {
-                    n.HighestAverageDesirabilityForNotice = topDesires.Keys.Sum() / topDesires.Keys.Count;
+					n.HighestAverageDesirabilityForNotice = avg;
                     dl.Add(n.HighestAverageDesirabilityForNotice, n);
                     n.AddRangeToTopDesireAgents(agents);
                 }

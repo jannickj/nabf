@@ -81,29 +81,29 @@ namespace NabfServerApplication
                 Console.SetCursorPosition(0, start * 2 + agentoffset);
                 Console.Write("Agent: "+agent.Name);
                 consolepos.Add(agent, start);
-                agent.Register(new Trigger<ActionStartingEvent<AddKnowledgeAction>>(evt => ReceivedMessage(evt.Action)));
+                //agent.Register(new Trigger<ActionStartingEvent<AddKnowledgeAction>>(evt => ReceivedMessage(evt.Action)));
                 agent.Register(new Trigger<ActionStartingEvent<ApplyNoticeAction>>(evt => ReceivedMessage(evt.Action)));
-                agent.Register(new Trigger<ActionStartingEvent<ChangeNoticeAction>>(evt => ReceivedMessage(evt.Action)));
-                agent.Register(new Trigger<ActionStartingEvent<CreateNoticeAction>>(evt => ReceivedMessage(evt.Action)));
-                agent.Register(new Trigger<ActionStartingEvent<DeleteNoticeAction>>(evt => ReceivedMessage(evt.Action)));
-                agent.Register(new Trigger<ActionStartingEvent<NewRoundAction>>(evt => ReceivedMessage(evt.Action)));
-                agent.Register(new Trigger<ActionStartingEvent<SubscribeSimulationAction>>(evt => ReceivedMessage(evt.Action)));
-                agent.Register(new Trigger<ActionStartingEvent<AgentCrashed>>(evt =>
-                    {
-                        var message = "Crashed! (" + evt.Action.Exception.Message.Substring(0, 20) + "...)";
-                        Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset);
-                        Console.Write("Received: " + message + "\t\t");
+                //agent.Register(new Trigger<ActionStartingEvent<ChangeNoticeAction>>(evt => ReceivedMessage(evt.Action)));
+                //agent.Register(new Trigger<ActionStartingEvent<CreateNoticeAction>>(evt => ReceivedMessage(evt.Action)));
+                //agent.Register(new Trigger<ActionStartingEvent<DeleteNoticeAction>>(evt => ReceivedMessage(evt.Action)));
+                //agent.Register(new Trigger<ActionStartingEvent<NewRoundAction>>(evt => ReceivedMessage(evt.Action)));
+                //agent.Register(new Trigger<ActionStartingEvent<SubscribeSimulationAction>>(evt => ReceivedMessage(evt.Action)));
+				//agent.Register(new Trigger<ActionStartingEvent<AgentCrashed>>(evt =>
+				//	{
+				//		var message = "Crashed! (" + evt.Action.Exception.Message.Substring(0, 20) + "...)";
+				//		Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset);
+				//		Console.Write("Received: " + message + "\t\t");
 
-                        Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset+1);
-                        Console.Write("Sent: " + message + "\t\t");
-                    }));
+				//		Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset+1);
+				//		Console.Write("Sent: " + message + "\t\t");
+				//	}));
 
                 //agent.Register(new Trigger<NewKnowledgeEvent>(evt => SendMessage(agent, evt)));
-                agent.Register(new Trigger<NewNoticeEvent>(evt => SendMessage(agent, evt)));
-                agent.Register(new Trigger<NoticeRemovedEvent>(evt => SendMessage(agent, evt)));
-                agent.Register(new Trigger<NoticeUpdatedEvent>(evt => SendMessage(agent, evt)));
+               // agent.Register(new Trigger<NewNoticeEvent>(evt => SendMessage(agent, evt)));
+                //agent.Register(new Trigger<NoticeRemovedEvent>(evt => SendMessage(agent, evt)));
+                //agent.Register(new Trigger<NoticeUpdatedEvent>(evt => SendMessage(agent, evt)));
                 agent.Register(new Trigger<ReceivedJobEvent>(evt => SendMessage(agent, evt)));
-                agent.Register(new Trigger<SimulationSubscribedEvent>(evt => SendMessage(agent, evt)));
+                //agent.Register(new Trigger<SimulationSubscribedEvent>(evt => SendMessage(agent, evt)));
 
                 agent.Register(new Trigger<ActionStartingEvent<NewRoundAction>>(evt =>
                 {

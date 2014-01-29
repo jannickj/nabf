@@ -18,10 +18,17 @@ namespace NabfProject.SimManager
         private Dictionary<int, SimulationData> _simDataStorage = new Dictionary<int, SimulationData>();
         private SimulationFactory _factory;
         private int _currentID = -1;
-        private int _currentRoundNumber = -1;
+		private int _currentRoundNumber = -1;
+
         private bool _applicationClosed = false;
         private bool _jobsFoundForThisRound = false;
         private int _numberOfAgentsFinishedApplying = 0;
+
+
+		public int CurrentRoundNumber
+		{
+			get { return _currentRoundNumber; }
+		}
 
         public SimulationManager(SimulationFactory sf, int timeBeforeApplyCloses = _standardTimeBeforeApplyCloses)
         {
@@ -103,8 +110,7 @@ namespace NabfProject.SimManager
 
             //send out all knowledge to agent
             agent.Raise(new SimulationSubscribedEvent(simID));
-            try { this.EventManager.Raise(new RoundChangedEvent(_currentRoundNumber)); }
-            catch { }
+			agent.Raise(new RoundChangedEvent(_currentRoundNumber));
             km.SendOutAllKnowledgeToAgent(agent);
             nb.SendOutAllNoticesToAgent(agent);
         }
@@ -219,8 +225,8 @@ namespace NabfProject.SimManager
             TryGetNoticeBoard(simID, out nb);
             foreach(NabfAgent a in nb.GetSubscribedAgents())
                 nb.UnApplyFromAll(a);
-            try { this.EventManager.Raise(new RoundChangedEvent(_currentRoundNumber)); }
-            catch { }
+			//try { this.EventManager.Raise(new RoundChangedEvent(_currentRoundNumber)); }
+			//catch { }
             _applicationClosed = false;
             _jobsFoundForThisRound = false;
             _numberOfAgentsFinishedApplying = 0;

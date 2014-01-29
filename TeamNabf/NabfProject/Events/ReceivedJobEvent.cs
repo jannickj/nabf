@@ -18,5 +18,10 @@ namespace NabfProject.Events
             Notice = n;
             Receiver = agent;
         }
+
+		public override string ToString()
+		{
+			return "Recieved job: " + Notice.GetType().Name+" "+Notice.Id;
+		}
     }
 }

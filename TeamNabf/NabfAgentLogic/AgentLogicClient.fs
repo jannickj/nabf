@@ -256,6 +256,7 @@
                 let update = 
                     async
                         {
+                            
                             let ajob = foundJob.Value
                             lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob moveTo)
                             this.asyncCalculation runningCalcID "Calc accept job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
@@ -311,6 +312,7 @@
                 let (desire,wantJob) = decideJob stateData job
                 if wantJob then
                     let ((jobid,_,_,_),_) = job
+                    logInfo ("Job wanted "+job.ToString())
                     let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((jobid.Value),desire))
                     SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))  
             this.asyncCalculation runningCalcID "evaluate job" stopDeciders.Token (eval job) 
@@ -346,6 +348,7 @@
                     | SharedPercepts percepts ->
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                     | RoundChanged id ->
+                        logInfo("Round update: "+id.ToString())
                         lock roundLock (fun () -> currentRound <- id)
                 | Some (MarsServerMessage msg) ->
                     match msg with
@@ -361,8 +364,10 @@
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(subscribeAction))
                         this.BeliefData <- buildInitState (agentname, sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
-                        
                         let round = lock roundLock (fun () -> currentRound <- 1+currentRound; currentRound)
+                        //let round = lock roundLock (fun () -> currentRound)
+                        logInfo("Current Round: " + round.ToString());
+                        
                         let newRoundAct = buildIilSendMessage (this.simulationID, NewRound(round))
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(newRoundAct))
                         
