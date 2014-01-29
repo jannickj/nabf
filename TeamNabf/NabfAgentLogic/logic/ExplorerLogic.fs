@@ -6,7 +6,7 @@ module ExplorerLogic =
     open AgentLogicLib
     open Graphing.Graph
     open PathFinding
-
+    open Logging
     
     type ZoneVertex = 
         {   
@@ -34,8 +34,8 @@ module ExplorerLogic =
         | _ -> failwithf "Incorrect input passed to zoneAlreadyFound"
 
     //Get all neighbours that are not already in the zone
-    let getRelevantNeighbours (s:State) =
-        let neighbours = List.map (fun v -> v.Identifier) (getNeighbours s.Self.Node s.World)
+    let getRelevantNeighbours (s:State) (vn:VertexName) =
+        let neighbours = List.map (fun v -> v.Identifier) (getNeighbours vn s.World)
         let neighboursNotInFrontier = List.filter (fun st -> (List.tryFind (fun (st2:VertexName) -> st2 = st) s.NewZoneFrontier).IsNone) neighbours
         List.filter (fun v -> not (Map.containsKey v (fst s.NewZone.Value))) neighboursNotInFrontier
 
@@ -151,9 +151,10 @@ module ExplorerLogic =
 
     //Check if you need to make a new occupy job based on NewZone
     let generateOccupyJobExplorer (s:State) (knownJobs:Job list) =
-        let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
+        
         match s.NewZone with
         | Some (g,true) -> 
+            let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
             let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
             if (List.tryFind (fun (_,JobData.OccupyJob(_,verts)) ->  (listEquals verts zone)) overlapping ).IsSome then ([],[]) //If the job is already in the job list
             elif overlapping = [] //Nothing is overlapping
@@ -185,7 +186,16 @@ module ExplorerLogic =
     //If the explorer is in the middle of finding a new zone to post, keep exploring it. Has lower priority than probe.
     let exploreNewZone (s:State) =
         match s.NewZoneFrontier with
-        | head :: tail -> tryGo s.World.[s.NewZoneFrontier.Head] s
+        | head :: _ -> 
+            
+            let path = pathToNearest s.Self (fun v -> List.exists (fun zV -> zV = v.Identifier ) s.NewZoneFrontier) s.World
+                        //pathTo s.Self s.NewZoneFrontier.Head s.World
+            
+            if path.IsSome && not path.Value.IsEmpty  then
+                logInfo ("Going to: "+(List.rev path.Value).Head)
+                tryGo (s.World.[path.Value.Head]) s
+            else
+                (false,None)
         | [] -> (false,None)
 
 
@@ -193,22 +203,37 @@ module ExplorerLogic =
     // Functions for updating the state //
     //////////////////////////////////////
 
+    let partitionFrontier (s:State) = List.partition (fun vn -> s.World.ContainsKey vn && s.World.[vn].Value.IsSome) s.NewZoneFrontier
+        
+    let partitionExploredVertices (s:State) (f:VertexName list) = List.partition (fun vn -> s.World.ContainsKey vn && s.World.[vn].Value.IsSome && s.World.[vn].Value.Value > 5) f
+
+    let rec listUnion l1 l2 = 
+        match l1 with
+        | [] -> l2
+        | head :: tail -> if (List.tryFind (fun e -> e = head) l2).IsNone then listUnion tail (head::l2) else listUnion tail l2
+
+    let rec addToGraph (s:State) l g = 
+        match l with
+        | [] -> g
+        | head :: tail -> addToGraph s tail (addVertex g s.World.[head])
+
+    let rec verticesToAdd (s:State) (l:VertexName list) =
+        match l with
+        | [] -> []
+        | head :: tail -> listUnion (getRelevantNeighbours s head) (verticesToAdd s tail)
+
     // If you are in the middle of exploring a zone, update NewZone and NewZoneFrontier
     let updateExploreZone (s:State) = 
         match s.NewZone with
-        | Some (_,false) -> if (not s.NewZoneFrontier.IsEmpty) && (s.World.[s.Self.Node].Value.IsSome) && (s.World.[s.Self.Node].Value.Value > 5) && (Map.tryFind s.Self.Node (fst s.NewZone.Value)).IsNone
-                            then
-                                //rn is neighbours + frontier - this node
-                                let rn = List.append s.NewZoneFrontier.Tail (getRelevantNeighbours s)
-                                {s with NewZone = Some (addVertex (fst s.NewZone.Value) s.World.[s.Self.Node],false)
-                                        NewZoneFrontier = rn}
-                            elif s.NewZoneFrontier.IsEmpty
-                            then
-                                let zone = fst s.NewZone.Value
-                                {s with NewZone = Some (zone,true)}
-                            else
-                                s
-        | _ -> s
+        | Some (_,false) ->
+            let pFrontier = partitionFrontier s
+            let pExplored = partitionExploredVertices s (fst pFrontier)
+            let newVertices = verticesToAdd s (fst pExplored)
+            let newFrontier = listUnion (snd pFrontier) newVertices
+            match newFrontier with
+            | [] -> {s with NewZone = Some ((addToGraph s (fst pExplored) (fst s.NewZone.Value)),true); NewZoneFrontier = []}
+            | _  -> {s with NewZone = Some ((addToGraph s (fst pExplored) (fst s.NewZone.Value)),false); NewZoneFrontier = newFrontier}
+        | _ -> {s with NewZone = None}
 
     // If you are on a node with value 10, check if it is part of an occupy job, and if not, start exploring the area.
     let findNewZone (s:State) =
@@ -218,7 +243,7 @@ module ExplorerLogic =
             && not (zoneAlreadyFound (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
         then
             let newS = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) }
-            {newS with NewZoneFrontier = getRelevantNeighbours newS}
+            {newS with NewZoneFrontier = getRelevantNeighbours newS s.Self.Node }
         else
             s
 

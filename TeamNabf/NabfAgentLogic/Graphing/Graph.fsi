@@ -23,3 +23,4 @@ namespace Graphing
         val addVertexValue : string -> int -> Graph -> Graph
         val removeVertex : Vertex -> Graph -> Graph
         val join : Graph -> Graph -> Graph
+        val addVertexById : string -> Graph -> Graph

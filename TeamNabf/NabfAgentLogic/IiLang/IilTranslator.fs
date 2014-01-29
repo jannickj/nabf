@@ -5,6 +5,9 @@ namespace NabfAgentLogic.IiLang
         open NabfAgentLogic.AgentTypes
 
         exception InvalidIilException of string * (Element list)
+            with 
+                override this.Message = 
+                            sprintf "(%A %A)" this.Data0 (this.Data1.ToString())
 
         let deriveStatusFromHealth health =
             if health = 0 then 
@@ -368,7 +371,7 @@ namespace NabfAgentLogic.IiLang
             | Repair a -> Action ("repair", [Numeral id; Identifier a])
             | Survey -> Action ("survey", [Numeral id])
 
-        let vertexToIdentifer vlist = List.map (fun v -> Identifier v) vlist
+        let vertexToIdentifer vlist = List.map (fun v -> Function ("nodeKnowledge", [Identifier v; Numeral 0.0])) vlist
 
         let buildIilJobData simid job = 
             let ((id,value,jt,aNeeded),jdata) = job

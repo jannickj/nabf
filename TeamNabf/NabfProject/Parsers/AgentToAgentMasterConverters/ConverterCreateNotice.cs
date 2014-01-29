@@ -45,11 +45,11 @@ namespace NabfProject.Parsers.AgentToAgentMasterConverters
             switch (jobType)
             {
                 case NoticeBoard.JobType.Occupy:
-                    zone = ((IilFunction)bonusfunc.Parameters[3]).Parameters
+                    zone = ((IilFunction)bonusfunc.Parameters[5]).Parameters
                         .Select(k => (NodeKnowledge)MasterDataParser.ConvertToKnown(k)).ToList();
                     break;
                 case NoticeBoard.JobType.Repair:
-                    agentToRepair = ((IilIdentifier)((IilFunction)gobj.Parameters[0]).Parameters[0]).Value;
+                    agentToRepair = ((IilIdentifier)bonusfunc.Parameters[5]).Value;
                     break;
             }
 
