@@ -88,7 +88,7 @@ namespace NabfTest
             nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2
                 , new List<NodeKnowledge>() { new NodeKnowledge("") }, new List<NodeKnowledge>() { new NodeKnowledge("") }, "", 99, out n);
 
-            NabfAgent agent1 = new NabfAgent("1"), agent2 = new NabfAgent("2"), agent3 = new NabfAgent("3");
+            NabfAgent agent1 = new NabfAgent("Nabf1"), agent2 = new NabfAgent("2nabf"), agent3 = new NabfAgent("nabf30"), agent4 = new NabfAgent("nabf");
 
             //nb.ApplyToNotice(n, 1, agent1);
             nb.ApplyToNotice(n, 2, agent2);
