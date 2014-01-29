@@ -88,7 +88,7 @@ namespace NabfProject.NoticeBoardModel
             _agentsApplied.Remove(a);
             bool b = _topDesireAgents.Remove(a);
             int lowestDesire;
-            SortedList<int, NabfAgent> topDesires;
+            SortedList<int, NabfAgent[]> topDesires;
             List<NabfAgent> agentsToAdd;
             if (b)
             {

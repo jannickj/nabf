@@ -271,29 +271,40 @@ namespace NabfProject.NoticeBoardModel
                 UnApplyToNotice(n, a);
         }
 
-        public int FindTopDesiresForNotice(Notice n, out SortedList<int, NabfAgent> topDesires, out List<NabfAgent> agents)
+        public int FindTopDesiresForNotice(Notice n, out SortedList<int, NabfAgent[]> topDesires, out List<NabfAgent> agents)
         {
             int desire = 0, lowestDesire = -(n.GetAgentsApplied().Count + 1);
 
             agents = new List<NabfAgent>();
-            topDesires = new SortedList<int, NabfAgent>(new InvertedComparer<int>());
-            for (int i = 0; i < n.AgentsNeeded; i++)
+            topDesires = new SortedList<int, NabfAgent[]>(new InvertedComparer<int>());
+            for (int i = 0; i < n.AgentsNeeded - 1; i++)
             {
                 topDesires.Add(lowestDesire--, null);
             }
             desire = 0;
             lowestDesire = -1;
+            NabfAgent[] agentArray;
 
             foreach (NabfAgent a in n.GetAgentsApplied())
             {
                 n.TryGetValueAgentToDesirabilityMap(a, out desire);
                 if (desire > lowestDesire)
                 {
-                    topDesires.Add(desire, a);
+                    if (topDesires.ContainsKey(desire))
+                        agentArray = new NabfAgent[topDesires[desire].Count() + 1];
+                    else
+                        agentArray = new NabfAgent[1];
+                    agentArray[agentArray.Length - 1] = a;
+                    topDesires.Add(desire, agentArray);
                     agents.Add(a);
-                    agents.Remove(topDesires.Last().Value);
-                    topDesires.RemoveAt(n.AgentsNeeded);
-                    lowestDesire = topDesires.Keys[n.AgentsNeeded - 1];
+                    if (topDesires.Last().Value != null)
+                    {
+                        foreach (NabfAgent agent in topDesires.Last().Value)
+                            agents.Remove(agent);
+                    }
+                    //agents.Remove(topDesires.Last().Value);
+                    topDesires.RemoveAt(n.AgentsNeeded - 1);
+                    lowestDesire = topDesires.Keys[n.AgentsNeeded - 2];
                 }
             }
 
@@ -362,7 +373,7 @@ namespace NabfProject.NoticeBoardModel
         {
             DictionaryList<int, Notice> dl = new DictionaryList<int, Notice>();
             List<NabfAgent> agents;
-            SortedList<int, NabfAgent> topDesires;
+            SortedList<int, NabfAgent[]> topDesires;
             int lowestDesire;
 
             foreach (Notice n in _availableJobs.SelectMany(kvp => kvp.Value))
