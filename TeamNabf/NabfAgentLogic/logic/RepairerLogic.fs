@@ -24,7 +24,7 @@ module RepairerLogic =
         match g with
         | head :: tail -> 
             match head with
-            | RepairGoal(v,a) -> Some (v,a)
+            | JobGoal(RepairGoal(v,a)) -> Some (v,a)
             | _ -> findRepairGoal tail
         | [] -> None
 
