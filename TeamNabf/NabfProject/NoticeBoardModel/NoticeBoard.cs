@@ -419,6 +419,10 @@ namespace NabfProject.NoticeBoardModel
         {
             return _sharingList.Count;
         }
+        public ICollection<NabfAgent> GetSubscribedAgents()
+        {
+            return _sharingList.ToList();
+        }
 
         public bool AgentIsSubscribed(NabfAgent agent)
         {

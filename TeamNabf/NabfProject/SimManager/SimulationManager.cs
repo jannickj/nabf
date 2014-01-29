@@ -215,6 +215,10 @@ namespace NabfProject.SimManager
                 return false;
 
             _currentRoundNumber++;
+            NoticeBoard nb;
+            TryGetNoticeBoard(simID, out nb);
+            foreach(NabfAgent a in nb.GetSubscribedAgents())
+                nb.UnApplyFromAll(a);
             try { this.EventManager.Raise(new RoundChangedEvent(_currentRoundNumber)); }
             catch { }
             _applicationClosed = false;
