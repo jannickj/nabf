@@ -277,7 +277,7 @@ namespace NabfProject.NoticeBoardModel
 
             agents = new List<NabfAgent>();
             topDesires = new SortedList<int, NabfAgent[]>(new InvertedComparer<int>());
-            for (int i = 0; i < n.AgentsNeeded - 1; i++)
+            for (int i = 0; i < n.AgentsNeeded; i++)
             {
                 topDesires.Add(lowestDesire--, null);
             }
@@ -291,7 +291,15 @@ namespace NabfProject.NoticeBoardModel
                 if (desire > lowestDesire)
                 {
                     if (topDesires.ContainsKey(desire))
+                    {
                         agentArray = new NabfAgent[topDesires[desire].Count() + 1];
+                        int i = 0;
+                        foreach(NabfAgent age in topDesires[desire]) //(int i = 0; i < agentArray.Length; i++)
+                        {
+                            agentArray[i] = age;
+                            i++;
+                        }
+                    }
                     else
                         agentArray = new NabfAgent[1];
                     agentArray[agentArray.Length - 1] = a;
@@ -305,7 +313,7 @@ namespace NabfProject.NoticeBoardModel
                     }
                     //agents.Remove(topDesires.Last().Value);
                     topDesires.RemoveAt(n.AgentsNeeded - 1);
-                    lowestDesire = topDesires.Keys[n.AgentsNeeded - 2];
+                    lowestDesire = topDesires.Keys.Min();// topDesires[].//[n.AgentsNeeded - 2];
                 }
             }
 
