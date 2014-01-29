@@ -32,8 +32,9 @@ module CommonLogic =
         if unexplored = None 
         then 
             (false,None) 
-        else            
-            tryGo s.World.[unexplored.Value.Head] s
+        else
+            let index = rank % unexplored.Length      
+            tryGo s.World.[unexplored.[index].Head] s
             
     let idle (s:State) = recharge
 
