@@ -15,7 +15,12 @@ namespace NabfProject.KnowledgeManagerModel
         private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
         //private Dictionary<Knowledge, bool> _knowledgeBase = new Dictionary<Knowledge, bool>();
-        private HashSet<Knowledge> _knowledgeBase = new HashSet<Knowledge>(); 
+		private HashSet<Knowledge> _knowledgeBase = new HashSet<Knowledge>();
+
+		public Knowledge[] KnowledgeBase
+		{
+			get { return _knowledgeBase.ToArray(); }
+		} 
 
         //private DictionaryList<Knowledge, NabfAgent> _knowledgeToAgent = new DictionaryList<Knowledge, NabfAgent>();
         //private DictionaryList<NabfAgent, Knowledge> _agentToKnowledge = new DictionaryList<NabfAgent, Knowledge>();
