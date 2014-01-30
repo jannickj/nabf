@@ -24,7 +24,6 @@
         [<DefaultValue>] val mutable private awaitingPercepts : List<Percept>
         [<DefaultValue>] val mutable private simulationID : SimulationID
 
-        let mutable currentRound = 0
         let agentname = name
         let decisionTree = decisionTreeGenerator()
         let mutable simEnded = false
@@ -34,6 +33,9 @@
         let mutable decidedAction = (Int32.MaxValue,Action.Recharge)
         let mutable runningCalcNames = []
         
+        let mutable recievedJobFromServer = false
+        let mutable jobDecideCalcs  = 0
+
         new(name,moveTo) = AgentLogicClient(name,fun () -> moveToDTree moveTo)
         new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
         
@@ -42,7 +44,6 @@
         let mutable stopDeciders = new CancellationTokenSource()
 
 
-        let roundLock = new Object()
         let stateLock = new Object()
         let decisionLock = new Object()
         let runningCalcLock = new Object()
@@ -199,6 +200,9 @@
             
 
         member public this.EvaluteState() =
+            lock decisionLock ( fun () ->
+                                    decidedAction <- (Int32.MaxValue,Action.Recharge)
+                                )
             let s = lock stateLock (fun () -> this.BeliefData)
             ignore <| this.EvaluateDecision 0 stopDeciders.Token (new CancellationTokenSource()) (s,decisionTree)
             
@@ -213,6 +217,7 @@
                 runningCalcID <- runningCalcID + 1
                 runningCalcNames <- []
                 )
+            recievedJobFromServer <- false
             let sharedPercepts = lock awaitingPerceptsLock (fun () -> 
                                         let percepts = this.awaitingPercepts
                                         this.awaitingPercepts <- []
@@ -236,10 +241,10 @@
                             this.protectedExecute("State Update",action,onFail)
                             )
 
-          
+            let newRoundAct = buildIilSendMessage (this.simulationID, NewRound(this.BeliefData.SimulationStep))
+            SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(newRoundAct))
             
             lock decisionLock ( fun () ->
-                                    decidedAction <- (Int32.MaxValue,Action.Recharge)
                                     decisionId <- (decisionId + 1)
                                 )
             
@@ -262,6 +267,9 @@
                             this.asyncCalculation runningCalcID "Calc accept job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
                         }
                 Async.StartImmediate update
+            else
+                lock stateLock (fun () ->this.BeliefData <- updateStateWhenLostJob this.BeliefData)
+                this.asyncCalculation runningCalcID "Calc lost job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
 
         member private this.generateNewJobs() = 
             let removeJob jobid =
@@ -307,15 +315,29 @@
         
         member private this.EvaluateJob  job =
             let jobs = lock knownJobsLock (fun () -> this.KnownJobs)
-            let eval job () = 
+            let eval id job () = 
+                let changeCals value = 
+                    lock runningCalcLock (fun () -> 
+                        if id = runningCalcID then
+                            jobDecideCalcs <- jobDecideCalcs + value
+                            //logInfo ("Job Calcs: "+jobDecideCalcs.ToString())
+                            if jobDecideCalcs = 0 then
+                                logInfo "Sending empty job"
+                                let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((-1),0))
+                                SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))
+                             )
+                changeCals (1)
                 let stateData = lock stateLock (fun () -> this.BeliefData)
                 let (desire,wantJob) = decideJob stateData job
                 if wantJob then
                     let ((jobid,_,_,_),_) = job
-                    logInfo ("Job wanted "+job.ToString())
+                    //logInfo ("Job wanted "+job.ToString())
                     let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((jobid.Value),desire))
                     SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))  
-            this.asyncCalculation runningCalcID "evaluate job" stopDeciders.Token (eval job) 
+                changeCals (-1)
+
+            let calcID = lock runningCalcLock ( fun () -> runningCalcID)
+            this.asyncCalculation calcID "evaluate job" stopDeciders.Token (eval calcID job) 
 
         member private this.updateJob job =
             lock knownJobsLock (fun () -> 
@@ -344,12 +366,14 @@
                     | AddedOrChangedJob job ->
                         this.updateJob job
                     | AcceptedJob (id,vn) ->
+                        logInfo ("Recieved Job: "+id.ToString())
+                        
                         this.CalculateAcceptedJob (Some id) vn
+                        recievedJobFromServer <- true
                     | SharedPercepts percepts ->
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                     | RoundChanged id ->
-                        logInfo("Round update: "+id.ToString())
-                        lock roundLock (fun () -> currentRound <- id)
+                        ()
                 | Some (MarsServerMessage msg) ->
                     match msg with
                     | SimulationEnd _ -> 
@@ -364,17 +388,16 @@
                         SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(subscribeAction))
                         this.BeliefData <- buildInitState (agentname, sData)
                     | ActionRequest ((deadline, actionTime, id), percepts) ->
-                        let round = lock roundLock (fun () -> currentRound <- 1+currentRound; currentRound)
-                        //let round = lock roundLock (fun () -> currentRound)
-                        logInfo("Current Round: " + round.ToString());
-                        
-                        let newRoundAct = buildIilSendMessage (this.simulationID, NewRound(round))
-                        SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(newRoundAct))
                         
                         this.ReEvaluate percepts
 
                         let knownJobs = lock knownJobsLock (fun () -> this.KnownJobs)
-                        List.iter this.EvaluateJob knownJobs
+                        if List.isEmpty knownJobs then
+                            let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((-1),(-1)))
+                            SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))
+                        else
+                            List.iter this.EvaluateJob knownJobs
+
                         this.generateNewJobs()
                         let totalTime = deadline - actionTime
                         let forceDecision start totaltime =
@@ -394,9 +417,10 @@
                                             let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
                                             logAll ("Current running calculations: "+runningCalcs.ToString())
                                             logAll ("Running: "+runningCalcNames.ToString())
-                                            if runningCalcs = 0 || (expired+int64(800)) > int64(totaltime) then
+                                            if (runningCalcs = 0 && recievedJobFromServer) || (expired+int64(800)) > int64(totaltime) then
                                                 SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
                                                 awaitingDecision:=false
+                                                
                                             
                                 }
                         Async.Start ((forceDecision System.DateTime.Now.Ticks totalTime),stopDeciders.Token)

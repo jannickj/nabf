@@ -231,7 +231,7 @@ namespace NabfProject.NoticeBoardModel
     public class EmptyJob : Notice
     {
         public EmptyJob()
-            : base(-404)
+            : base(-1)
         {
             WhichNodes = new List<NodeKnowledge>();
             AgentsNeeded = 0;

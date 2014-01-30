@@ -26,12 +26,15 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
                 sl.Add(a.Id, a);
 
             int receiverIndex = sl.IndexOfValue(gobj.Receiver); ; //gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver);
+            string gotoNode = "emptyjob";
+            if (gobj.Notice.WhichNodes.Count != 0)
+                gotoNode = gobj.Notice.WhichNodes[receiverIndex].Name;
 
             ipc = new IilPerceptCollection
             (
                 new IilPercept("receivedJob"),
                 new IilPercept("noticeId", new IilNumeral(gobj.Notice.Id)),
-                new IilPercept("whichNodeNameToGoTo", new IilIdentifier(gobj.Notice.WhichNodes[receiverIndex].Name))
+                new IilPercept("whichNodeNameToGoTo", new IilIdentifier(gotoNode))
                 //percept
             );
 

@@ -14,7 +14,7 @@ module AgentLogicLib =
     let RepairCostDisabled = 3
     let BuyCost = 2
 
-    let desirabilityForDecreasingValue value = (10000/(value+1))
+    let desirabilityForDecreasingValue value = (1000000/(value+1))
 
     let desireFromPath agent graph node increaser = 
         let inc = if increaser < 0 then 0 else increaser
