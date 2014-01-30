@@ -72,9 +72,9 @@ namespace NabfAgentLogic
                 | ZoneScore score      -> { state with ThisZoneScore = score }
                 | Self self ->
                     let newSelf = { self with 
-                        Name = state.Self.Name
-                        Team = state.Self.Team
-                        Role = state.Self.Role
+                                     Name = state.Self.Name
+                                     Team = state.Self.Team
+                                     Role = state.Self.Role
                     }
                     { state with Self = newSelf }
                 | LastAction action    -> { state with LastAction = action }
@@ -208,10 +208,11 @@ namespace NabfAgentLogic
                                                                             ) state.Goals).IsSome
                                        then
                                            {state with Goals = JobGoal(RepairGoal(moveTo,aName))::(List.filter (fun g -> match g with
-                                                                                                                | JobGoal(RepairGoal(_,aName)) -> false
-                                                                                                                | _ -> true) state.Goals)}
+                                                                                                                         | JobGoal(RepairGoal(_,aName)) -> false
+                                                                                                                         | _ -> true) state.Goals)}
                                        else
                                            {state with Goals = JobGoal(RepairGoal(moveTo,aName))::state.Goals}
+                                    | _ -> failwithf "Inconsistent job passed to UpdateStateWhenGivenJob"
 
             | JobType.DisruptJob -> if (List.tryFind (fun g -> g = JobGoal(DisruptGoal(moveTo))) state.Goals).IsNone then {state with Goals = JobGoal(DisruptGoal(moveTo))::state.Goals} else state
             | _ -> state
@@ -255,26 +256,45 @@ namespace NabfAgentLogic
 
         let rec tryFindOccupyGoal (l:Goal list) =
             match l with
-            | JobGoal(AttackGoal(v)) :: tail -> Some(AttackGoal(v))
+            | JobGoal(OccupyGoal(v)) :: tail -> Some(OccupyGoal(v))
             | head :: tail -> tryFindOccupyGoal tail
             | [] -> None
 
         let isOccupyingPosition (s:State) =
             let g = tryFindOccupyGoal s.Goals
             match g with
-            | Some(AttackGoal(v)) -> if s.Self.Node = v then true else false 
+            | Some(OccupyGoal(v)) -> if s.Self.Node = v then true else false 
             | _ -> false
+
+        //Try to find an attack goal which is still present in the list of jobs. Returns an option with the id of the job.
+        let tryFindNewAttackGoal (s:State) (knownJobs:Job list) = 
+            let goal = List.tryFind (fun g -> match g with |JobGoal(AttackGoal(v)) -> true | _ -> false) s.Goals
+            let vert = if goal.IsNone then None else
+                            match goal.Value with
+                            | JobGoal(AttackGoal(v)) -> Some v
+                            | _ -> None
+            if vert.IsNone then None else
+                let name = vert.Value
+                let job = List.tryFind (fun j -> match j with | (_,JobData.AttackJob([name])) -> true | _ -> false) knownJobs
+                match job with
+                | Some ((Some id,_,_,_),_) -> Some id
+                | _ -> None
 
         let generateAttackJob (s:State) (knownJobs:Job list) = 
             let attackJobFound = List.exists (fun (_, jobdata) -> 
                     match jobdata with 
                     | AttackJob verts -> List.exists ((=) s.Self.Node) verts
                     | _ -> false ) knownJobs
-            if (isOccupyingPosition s) && not attackJobFound 
-            then 
-                ([((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])],[])
-            else 
-                ([],[])
+            let addJobs = if (isOccupyingPosition s) && not attackJobFound 
+                          then 
+                              [((None,-1,JobType.AttackJob,1),AttackJob [s.Self.Node])]
+                          else 
+                              []
+            let attackJobID = tryFindNewAttackGoal s knownJobs
+            let removeJobs = if s.Self.Role = Some Saboteur && attackJobID.IsSome then [attackJobID.Value] else [] 
+            (addJobs,removeJobs)
+
+            
 
         let generateJob (jt:JobType) (s:State) (knownJobs:Job list) : Job list * JobID list = 
         //Returns a tuple of jobs to add and IDs of jobs to remove
