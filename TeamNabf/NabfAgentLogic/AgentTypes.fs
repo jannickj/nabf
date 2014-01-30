@@ -118,7 +118,8 @@ module AgentTypes =
         | AttackGoal of VertexName
 
     type Goal =
-        | JobGoal of JobGoal
+        | JobGoal  of JobGoal
+        | KiteGoal of Agent list
 
     type Job = JobHeader * JobData
 
