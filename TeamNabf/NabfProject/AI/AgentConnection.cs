@@ -41,7 +41,7 @@ namespace NabfProject.AI
             this.Agent.Register(new Trigger<NoticeRemovedEvent>(evt => receivedEvent(evt)));
             this.Agent.Register(new Trigger<NoticeUpdatedEvent>(evt => receivedEvent(evt)));
             this.Agent.Register(new Trigger<ReceivedJobEvent>(evt => receivedEvent(evt)));
-            this.Agent.EventManager.Register(new Trigger<RoundChangedEvent>(evt => receivedEvent(evt)));
+            this.Agent.Register(new Trigger<RoundChangedEvent>(evt => receivedEvent(evt)));
             this.Agent.Register(new Trigger<SimulationSubscribedEvent>(simSubscribedEvent));
 
 			this.masterToAgentParser = masterToAgentParser;

@@ -13,13 +13,18 @@ namespace NabfProject.Actions
     public class ApplyNoticeAction : EntityXmasAction<NabfAgent>
     {
         private int SimId;
-        private Int64 NoticeId;
+        private Int64 noticeId;
         private int Desired;
+
+        public Int64 NoticeId
+        {
+            get { return noticeId; }
+        }
 
         public ApplyNoticeAction(int simID, Int64 noticeId, int desired)
         {
             SimId = simID;
-            NoticeId = noticeId;
+            this.noticeId = noticeId;
             Desired = desired;
         }
 
@@ -29,5 +34,11 @@ namespace NabfProject.Actions
 
             simMan.ApplyToNotice(SimId, NoticeId, Desired, this.Source);
         }
+
+		public override string ToString()
+		{
+			SimulationManager simMan = ((NabfModel)this.Engine).SimulationManager;
+			return "Apply to "+NoticeId+" at round: "+simMan.CurrentRoundNumber+" desire: "+this.Desired;
+		}
     }
 }

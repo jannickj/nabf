@@ -166,10 +166,10 @@ namespace NabfAgentLogic.IiLang
         let parseIilSurveyedEdge iilData =
             match iilData with
             | Function ("surveyedEdge",
-                [ Function ("node1", [Identifier node1])
-                ; Function ("node2", [Identifier node2])
-                ; Function ("weight", [Numeral weight])
-                ]) -> (Some (int weight), node1, node2) : Edge
+                        [ Function ("node1", [Identifier node1])
+                        ; Function ("node2", [Identifier node2])
+                        ; Function ("weight", [Numeral weight])
+                        ]) -> (Some (int weight), node1, node2) : Edge
             | _ -> raise <| InvalidIilException ("surveyedEdge", [iilData])
 
         let parseIilAchievement achievement =
@@ -208,9 +208,9 @@ namespace NabfAgentLogic.IiLang
         let parseIilVisibleEdge visibleEdge =
             match visibleEdge with
             | Function ("visibleEdge", 
-                [ Function ("node1", [Identifier node1])
-                ; Function ("node2", [Identifier node2])
-                ]) -> (None, node1, node2) : Edge
+                        [ Function ("node1", [Identifier node1])
+                        ; Function ("node2", [Identifier node2])
+                        ]) -> (None, node1, node2) : Edge
             | _ -> raise <| InvalidIilException ("visibleEdge", [visibleEdge])
 
         let parseIilStatus status =
@@ -222,22 +222,22 @@ namespace NabfAgentLogic.IiLang
         let parseIilVisibleEntity visibleEntity =
             match visibleEntity with
             | Function ("visibleEntity", 
-                [ Function ("name", [Identifier name])
-                ; Function ("team", [Identifier team])
-                ; Function ("node", [Identifier node])
-                ; Function ("status", [status])
-                ]) -> { Energy = None
-                      ; Health = None
-                      ; MaxEnergy = None
-                      ; MaxHealth = None
-                      ; Name = name
-                      ; Node = node
-                      ; Role = None
-                      ; Strength = None
-                      ; Team = team
-                      ; VisionRange = None
-                      ; Status = parseIilStatus status
-                      }
+                        [ Function ("name", [Identifier name])
+                        ; Function ("team", [Identifier team])
+                        ; Function ("node", [Identifier node])
+                        ; Function ("status", [status])
+                        ]) -> { Energy = None
+                              ; Health = None
+                              ; MaxEnergy = None
+                              ; MaxHealth = None
+                              ; Name = name
+                              ; Node = node
+                              ; Role = None
+                              ; Strength = None
+                              ; Team = team
+                              ; VisionRange = None
+                              ; Status = parseIilStatus status
+                              }
             | _ -> raise <| InvalidIilException ("visibleEntity", [visibleEntity])
         
         let parseIilTeamName teamName =

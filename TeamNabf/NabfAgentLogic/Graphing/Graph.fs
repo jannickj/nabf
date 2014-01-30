@@ -31,8 +31,8 @@
             let vertex = graph.[vertexId]
             let updatedVertex = 
                 { vertex with Edges = 
-                    Set.filter (fun (_, id) -> id <> otherVertexId) vertex.Edges
-                    |> Set.add (value, otherVertexId) 
+                              Set.filter (fun (_, id) -> id <> otherVertexId) vertex.Edges
+                              |> Set.add (value, otherVertexId) 
                 } 
             Map.add vertex.Identifier updatedVertex graph
 

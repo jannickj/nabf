@@ -56,5 +56,35 @@ namespace NabfProject.KnowledgeManagerModel
         {
             return "nodeKnowledge";
         }
+
+        public override bool Equals(object other)
+        {
+            if (other == null)
+                throw new ArgumentException("Input of Equals of " + this.GetType().Name + " is null");
+            else if (!(other is Knowledge))
+                throw new ArgumentException("Object : " + other.GetType().Name + " of Equals is not implementing interface Knowledge");
+
+            if (other.GetType() != this.GetType())
+                return false;
+
+            NodeKnowledge nk = (NodeKnowledge)other;
+
+            return nk.Name == this.Name;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
+
+        //public static bool operator ==(NodeKnowledge k1, NodeKnowledge k2)
+        //{
+        //    return k1.Equals(k2);
+        //}
+
+        //public static bool operator !=(NodeKnowledge k1, NodeKnowledge k2)
+        //{
+        //    return !(k1 == k2);
+        //}
     }
 }

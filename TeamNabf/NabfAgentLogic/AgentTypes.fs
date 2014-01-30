@@ -105,7 +105,7 @@ module AgentTypes =
         | OccupyJob of VertexName list * VertexName list
         | RepairJob of VertexName * AgentName
         | DisruptJob of VertexName
-        | AttackJob of VertexName list
+        | AttackJob of VertexName list //Change to single vertex?
         | EmptyJob
     
     type AgentsNeededForJob = int
@@ -123,8 +123,6 @@ module AgentTypes =
 
     type Job = JobHeader * JobData
 
-    
-    
 
     let levelToPoints start level =
         start * (pown 2 level)
