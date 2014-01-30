@@ -39,7 +39,7 @@ namespace NabfProject.AI
         public void ReadXml(System.Xml.XmlReader reader)
         {
             reader.MoveToContent();
-            if(!reader.IsStartElement())
+            if (!reader.IsStartElement())
                 reader.ReadEndElement();
             this.ReadNode(reader);
             reader.ReadStartElement(NodeName);
@@ -51,7 +51,8 @@ namespace NabfProject.AI
         {
             writer.WriteStartElement(NodeName);
 			if (this.UseSeralizerOnMsg)
-				serializer.Serialize(writer, message);
+//				serializer.Serialize(writer, message);
+				message.WriteXml (writer);
 			else
 			{
 				BeforeWriteMessage(writer);

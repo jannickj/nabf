@@ -8,6 +8,7 @@ using NabfProject.AI;
 using System.Reflection;
 using JSLibrary.Data;
 using NabfProject.KnowledgeManagerModel;
+using NabfProject.Events;
 
 namespace NabfTest
 {

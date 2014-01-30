@@ -7,6 +7,7 @@ using JSLibrary.IiLang;
 using JSLibrary.IiLang.Parameters;
 using NabfProject;
 using NabfProject.AI;
+using NabfProject.Events;
 
 namespace NabfProject.KnowledgeManagerModel
 {
@@ -63,6 +64,15 @@ namespace NabfProject.KnowledgeManagerModel
             }
             //SendKnowledgeToSubscribedAgents();            
         }
+        
+        public void SendOutAllKnowledgeToAgent(NabfAgent agent)
+        {
+            foreach (Knowledge k in _knowledgeBase)
+            {
+                agent.Raise(new NewKnowledgeEvent(k));
+            }
+        }
+
 
         //private void SendKnowledgeToSubscribedAgents()
         //{
@@ -74,5 +84,7 @@ namespace NabfProject.KnowledgeManagerModel
 
         //    }
         //}
+
+        
     }
 }

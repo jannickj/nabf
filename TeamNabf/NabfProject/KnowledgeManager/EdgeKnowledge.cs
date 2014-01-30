@@ -47,5 +47,10 @@ namespace NabfProject.KnowledgeManagerModel
             else
                 throw new ArgumentException("Object : " + other.GetType().Name + " of CompareTo is not of type EdgeKnowledge");
         }
+
+        public string GetTypeToString()
+        {
+            return "edgeKnowledge";
+        }
     }
 }

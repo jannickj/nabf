@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace NabfProject.KnowledgeManager
+namespace NabfProject.KnowledgeManagerModel
 {
     public class RoleKnowledge : Knowledge
     {
@@ -46,6 +46,11 @@ namespace NabfProject.KnowledgeManager
                     return 0;
             else
                 throw new ArgumentException("Object : " + other.GetType().Name + " of CompareTo is not of type EdgeKnowledge");
+        }
+
+        public string GetTypeToString()
+        {
+            return "roleKnowledge";
         }
     }
 }

@@ -3,7 +3,7 @@ namespace AgentLogicTest
 open System
 open NUnit.Framework
 open NabfAgentLogic.AgentLogic
-open Graph
+open Graphing.Graph
 
 [<TestFixture>]
 type GraphTest() = 
@@ -73,7 +73,7 @@ type GraphTest() =
                            ; ("b", {Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
                            ] |> Map.ofList
              
-            let actual = addEdge initialGraph testEdge
+            let actual = addEdge testEdge initialGraph
             Assert.AreEqual (expected, actual)
 
         [<Test>]
@@ -132,3 +132,74 @@ type GraphTest() =
             let actualGraph = join graph1 graph2
 
             Assert.AreEqual(expectedGraph,actualGraph)
+
+        [<Test>]
+        member this.RemoveVertex_CompleteGraphWithThreeVertices_CompleteGraphWithTwoVertices () =
+            (*
+             *    A       A
+             *   /|   -        =    
+             *  B-C               B-C
+             *)
+
+            let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b"); (None, "c")] |> Set.ofList })
+                        ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a"); (None, "c")] |> Set.ofList })
+                        ; ("c", { Identifier = "c"; Value = None; Edges = [(None, "a"); (None, "b")] |> Set.ofList })
+                        ] |> Map.ofList
+
+            let expected = [ ("b", { Identifier = "b"; Value = None; Edges = [(None, "c")] |> Set.ofList })
+                           ; ("c", { Identifier = "c"; Value = None; Edges = [(None, "b")] |> Set.ofList })
+                           ] |> Map.ofList
+            
+            let actual = removeVertex graph.["a"] graph
+
+            printfn "actual: %A" <| Map.toList actual
+
+            Assert.AreEqual (expected, actual)
+
+        [<Test>]
+        member this.AddCostToEdge_GraphWithEdgeWithUnknownCost_GraphWithEdgeWithKnownCost () =
+            (*
+             *   A        A
+             *   |        | 
+             *   | *  ~>  | 1
+             *   |        |
+             *   B        B
+             *)
+
+            let testEdge = (Some 1, "a", "b")
+
+            let graph = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList })
+                        ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                        ] |> Map.ofList
+
+            let expected = [ ("a", { Identifier = "a"; Value = None; Edges = [(Some 1, "b")] |> Set.ofList })
+                           ; ("b", { Identifier = "b"; Value = None; Edges = [(Some 1, "a")] |> Set.ofList })
+                           ] |> Map.ofList
+
+            let actual = addEdge testEdge graph
+
+            Assert.AreEqual (expected, actual)
+
+
+        [<Test>]
+        member this.AddEdge_AddingEdgeWithOneVertexNotInTheGraph_UnknownVertexIncludedInTheGraph () =
+
+            let testEdge = (None, "a", "b")
+
+            let graph = [ ("a", { Identifier = "a"; Value = None; Edges = Set.empty }) ] |> Map.ofList
+
+            let expected = [ ("a", { Identifier = "a"; Value = None; Edges = [(None, "b")] |> Set.ofList })
+                           ; ("b", { Identifier = "b"; Value = None; Edges = [(None, "a")] |> Set.ofList })
+                           ] |> Map.ofList
+            
+            let actual = addEdge testEdge graph
+
+            Assert.AreEqual (expected, actual)
+
+
+
+
+
+
+
+

@@ -1,4 +1,5 @@
-﻿using NabfProject.ServerMessages;
+﻿using NabfProject.Library;
+using NabfProject.ServerMessages;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +18,8 @@ namespace NabfProject.AI
         private int bufferSize = 4096;
         private byte[] buffer;
         private MemoryStream store = new MemoryStream();
+        StreamSplitter streamSplitter;
+        Stream debugStream;
 
         //public void SendMessage(ServerMessages.SendMessage message)
         //{
@@ -48,17 +51,19 @@ namespace NabfProject.AI
             MemoryStream memstream = new MemoryStream();
             MemoryStream tempStream = new MemoryStream();
             Stream stream = sreader.BaseStream;
+            debugStream = new MemoryStream();
+            streamSplitter = new StreamSplitter(stream, debugStream);
             buffer = new byte[bufferSize];
             int bytesRead = -1;
             int data = -1;
             bool remainingDataInBuffer = false;
-            int i = -1;
             int storeIterator = -1;
             int bufferIterator = -1;
             bool remainingDataStored = false;
             bool messageStored = store.Length != 0;
             bool incompleteMessageInStore = true;
             bool incompleteMessageInBuffer = true;
+            bool debug = false;
 
 
 
@@ -121,6 +126,23 @@ namespace NabfProject.AI
             //        memstream.WriteByte((byte)data);
             //} while (true);
 
+            if (debug)
+            {
+                string agent = "Nabf1";
+                FileStream fs = new FileStream("Debug/debugXmlMessages"+agent+".txt", FileMode.Append);
+                                
+                byte[] buf = new byte[8192];
+                debugStream.Position = 0;
+
+                for (; ; )
+                {
+                    int numRead = debugStream.Read(buf, 0, buf.Length);
+                    if (numRead == 0)
+                        break;
+                    fs.Write(buf, 0, numRead);
+                }
+                fs.Close();
+            }
 
             memstream.Position = 0;
             this.ChangeReader(XmlReader.Create(memstream, new XmlReaderSettings() { ConformanceLevel = ConformanceLevel.Fragment }));
@@ -171,8 +193,17 @@ namespace NabfProject.AI
         {
             //Read from stream to buffer
             buffer = new byte[bufferSize];
-            bytesRead = stream.Read(buffer, 0, buffer.Length);
+            bytesRead = streamSplitter.Read(buffer, 0, buffer.Length);
 
+            double time = (DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds - 3600000;
+            char[] timeS = time.ToString().ToCharArray();
+            for (int i = 0; i < timeS.Length; i++)
+            {
+                var digit = Convert.ToByte(timeS[i]);
+
+                debugStream.WriteByte(digit);
+            }
+            
             if (bytesRead == 0)
                 throw new Exception("Would block if TCP");
         }

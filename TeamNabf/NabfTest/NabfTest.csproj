@@ -11,6 +11,8 @@
     <AssemblyName>NabfTest</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <ProductVersion>12.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,10 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework, Version=2.6.2.12296, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\referenceddlls\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -41,6 +39,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\referenceddlls\nunit.framework.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="KnowledgeManagerTest.cs" />
@@ -49,6 +50,7 @@
     <Compile Include="MarsToAgentParserTest.cs" />
     <Compile Include="NoticeBoardTest.cs" />
     <Compile Include="ExampleTest.cs" />
+    <Compile Include="Scenarios\AgentToServerCommunicationTest.cs" />
     <Compile Include="ServerCommunicationTest.cs" />
     <Compile Include="XmlPacketTransmitterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -57,36 +59,36 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
-      <Project>{02121c4a-b1fb-46b8-bde8-c5c6ca28c036}</Project>
+      <Project>{02121C4A-B1FB-46B8-BDE8-C5C6CA28C036}</Project>
       <Name>JSLibrary</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineController\XmasEngineController.csproj">
-      <Project>{0fae1368-42fc-48f7-a82b-58cf276188c1}</Project>
+      <Project>{0FAE1368-42FC-48F7-A82B-58CF276188C1}</Project>
       <Name>XmasEngineController</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineExtensions\XmasEngineExtensions.csproj">
-      <Project>{f0965ebc-feaf-4445-a43b-998d0a8d249d}</Project>
+      <Project>{F0965EBC-FEAF-4445-A43B-998D0A8D249D}</Project>
       <Name>XmasEngineExtensions</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineModel\XmasEngineModel.csproj">
-      <Project>{70abbb17-6a3c-429c-b27e-0f56aacb9f69}</Project>
+      <Project>{70ABBB17-6A3C-429C-B27E-0F56AACB9F69}</Project>
       <Name>XmasEngineModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineView\XmasEngineView.csproj">
-      <Project>{99f1f1f4-2df4-4c9e-8a33-5cd538d2c002}</Project>
+      <Project>{99F1F1F4-2DF4-4C9E-8A33-5CD538D2C002}</Project>
       <Name>XmasEngineView</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngine\XmasEngine.csproj">
-      <Project>{935b3fa0-d1de-4395-a69c-8f64159791f9}</Project>
+      <Project>{935B3FA0-D1DE-4395-A69C-8F64159791F9}</Project>
       <Name>XmasEngine</Name>
     </ProjectReference>
-    <ProjectReference Include="..\NabfAgentLogic\NabfAgentLogic.fsproj">
-      <Project>{039ee1f6-4fd5-4dc7-97ed-4d3e5e8b9c20}</Project>
-      <Name>NabfAgentLogic</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NabfProject\NabfProject.csproj">
-      <Project>{926590fe-c08e-4f55-8646-cece975b6d74}</Project>
+      <Project>{926590FE-C08E-4F55-8646-CECE975B6D74}</Project>
       <Name>NabfProject</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NabfAgentLogic\NabfAgentLogic.fsproj">
+      <Project>{039EE1F6-4FD5-4DC7-97ED-4D3E5E8B9C20}</Project>
+      <Name>NabfAgentLogic</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

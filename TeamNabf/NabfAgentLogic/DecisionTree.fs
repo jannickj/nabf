@@ -5,6 +5,7 @@ module DecisionTree =
     open AgentTypes
     open CommonLogic
 
+    open SharedLogic
     open Saboteur
     open Explorer
     open Inspector
@@ -31,9 +32,14 @@ module DecisionTree =
     let getTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                Choice(reactToEnemyAgent)
 
+                Choice workOnOccupyGoal
+                
                 getRoleDecision
+                
+                //Choice(reactToEnemyAgent)
+
+                
 
                 Choice(exploreLocalGraph)
 

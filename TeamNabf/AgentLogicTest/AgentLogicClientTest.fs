@@ -31,7 +31,7 @@
                             Choice(optionB)
                         ]
             
-            let client = new AgentLogicClient(fun () -> tree)
+            let client = new AgentLogicClient("",fun () -> tree)
             let iclient = client :> IAgentLogic 
             client.EvaluteState()
             ignore <| waiter.WaitOne(1000)
@@ -44,12 +44,15 @@
         member this.EvaluateState_twoDecisions_CancelsSecond() = 
             let bLocked = ref false
             let lockReleased = ref false
+            let waiter = new AutoResetEvent(false)
             let locker = new Object()
             let optionA state =
-                Thread.Sleep 10
+                Thread.Sleep 100
                 (true,Some Action.Recharge)
             let optionB state =
-                lock locker (fun () -> bLocked := true; while true do () )
+                lock locker (fun () ->  ignore <| waiter.Set()
+                                        bLocked := true
+                                        while true do () )
                 (true,Some Action.Parry)
             
             let tree= Options 
@@ -57,11 +60,11 @@
                             Choice(optionA)
                             Choice(optionB)
                         ]
-            let client = new AgentLogicClient(fun () -> tree)
+            let client = new AgentLogicClient("",fun () -> tree)
             client.EvaluteState()
             
             
-            Thread.Sleep(10)
+            ignore <| waiter.WaitOne()
             lock locker (fun () -> lockReleased := bLocked.Value)
             let (d,a) = client.DecidedAction
             Assert.IsTrue ((lockReleased.Value) && bLocked.Value)

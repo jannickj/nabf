@@ -13,7 +13,11 @@ namespace NabfProject.Parsers.MarsToAgentConverters
     {
         public override IilPercept BeginConversionToForeign(TeamMessage gobj)
         {
-            var achies = gobj.Achievements.AchievementList.OfType<AchievementMessage>().Select(a => new IilIdentifier(a.Name)).ToArray();
+            IilIdentifier[] achies;
+            if (gobj.Achievements != null)
+                achies = gobj.Achievements.AchievementList.OfType<AchievementMessage>().Select(a => new IilIdentifier(a.Name)).ToArray();
+            else
+                achies = new IilIdentifier[0];
             return new IilPercept("team", new IilFunction("lastStepScore", new IilNumeral(gobj.LastStepScore))
                 , new IilFunction("money", new IilNumeral(gobj.Money))
                 , new IilFunction("score", new IilNumeral(gobj.Score))

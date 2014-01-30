@@ -7,5 +7,8 @@ namespace NabfProject.KnowledgeManagerModel
 {
     public interface Knowledge : IEquatable<Knowledge>, IComparable<Knowledge>
     {
+        string GetTypeToString();
+
+        
     }
 }

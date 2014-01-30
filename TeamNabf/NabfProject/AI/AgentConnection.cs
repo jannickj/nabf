@@ -12,38 +12,89 @@ using JSLibrary.ParallelLib;
 using System.Threading;
 using NabfProject.Events;
 using System.Xml.Linq;
+using NabfProject.Parsers;
+using NabfProject.Actions;
 
 namespace NabfProject.AI
 {
 	public class AgentConnection : AgentController
 	{
-
+        private bool disconnected = false;
+        private object simLock = new object();
+        private bool simulationSubscribed = false;
         private ConcurrentQueue<IilPerceptCollection> packets = new ConcurrentQueue<IilPerceptCollection>();
         private AutoResetEvent packetadded = new AutoResetEvent(false);
 		private XmlPacketTransmitter<IilAction, IilPerceptCollection> transmitter;
+        private AgentMasterToAgentParser masterToAgentParser;
+        private AgentToAgentMasterParser agentToMasterParser;
 
-		public AgentConnection(Agent agent, XmlPacketTransmitter<IilAction, IilPerceptCollection> transmitter)
+		public AgentConnection  (   Agent agent
+                                ,   XmlPacketTransmitter<IilAction, IilPerceptCollection> transmitter
+                                ,   AgentMasterToAgentParser masterToAgentParser
+                                ,   AgentToAgentMasterParser agentToMasterParser
+                                )
 			: base(agent)
 		{
 			this.transmitter = transmitter;
-			this.Agent.Register(new Trigger<AgentReceivedPerceptsEvent>(receivedPercepts));
-            
+            this.Agent.Register(new Trigger<NewKnowledgeEvent>(evt => receivedEvent(evt)));
+            this.Agent.Register(new Trigger<NewNoticeEvent>(evt => receivedEvent(evt)));
+            this.Agent.Register(new Trigger<NoticeRemovedEvent>(evt => receivedEvent(evt)));
+            this.Agent.Register(new Trigger<NoticeUpdatedEvent>(evt => receivedEvent(evt)));
+            this.Agent.Register(new Trigger<ReceivedJobEvent>(evt => receivedEvent(evt)));
+            this.Agent.Register(new Trigger<RoundChangedEvent>(evt => receivedEvent(evt)));
+            this.Agent.Register(new Trigger<SimulationSubscribedEvent>(simSubscribedEvent));
+
+			this.masterToAgentParser = masterToAgentParser;
+            this.agentToMasterParser = agentToMasterParser;
 		}
 
 
 		public override void Start()
 		{
-            new Thread(new ThreadStart(() => { while (true) updateSend();})).Start();
-            while (true)
-            {
-                updateReceive();
-            }
+            var senderThread  = new Thread(new ThreadStart(() => this.Updater(updateSend)));
+            var updaterThread = new Thread(new ThreadStart(() =>  this.Updater(updateReceive)));
+
+            senderThread.Name = "Agent " + this.Agent.Name + ": Sender Thread";
+            updaterThread.Name = "Agent " + this.Agent.Name + ": Updater Thread";
+
+            senderThread.Start();
+            updaterThread.Start();
 		}
+
+        private void Updater(Action action)
+        {
+            try
+            {
+                while (true)
+                {
+                    if (disconnected)
+                        throw new Exception("Connection closed");
+                    action();
+                }
+            }
+            catch (Exception e)
+            {
+                lock (simLock)
+                    this.disconnected = true;
+
+                this.Agent.QueueAction(new AgentCrashed(e));
+            }
+        }
 
         private void updateReceive()
         {
-            
-            var action = transmitter.DeserializePacket();
+
+            var action = transmitter.DeserializeMessage();
+            var agent = (NabfAgent)this.Agent;
+            var xaction = agentToMasterParser.ConvertToForeign(action);
+            if (xaction is SubscribeSimulationAction)
+                lock (simLock)
+                    this.simulationSubscribed = false;
+            bool noaction = false;
+            lock (simLock)
+                noaction = disconnected;
+            if(!noaction)
+                agent.QueueAction(xaction);
         }
 
         private void updateSend()
@@ -61,10 +112,26 @@ namespace NabfProject.AI
             } while (hasPacket);
         }
 
-        private void receivedPercepts(AgentReceivedPerceptsEvent evt)
+        private void simSubscribedEvent(SimulationSubscribedEvent evt)
         {
-            this.packets.Enqueue(evt.Percepts);
+            lock (simLock)
+                this.simulationSubscribed = true;
+        }
+
+        private void receivedEvent(XmasEvent evt)
+        {
+            var packet = this.masterToAgentParser.ConvertToForeign(evt);
+
+            lock (simLock)
+                if (simulationSubscribed && !disconnected)
+                    addPacket(packet);
+        }
+
+        private void addPacket(IilPerceptCollection packet)
+        {
+            this.packets.Enqueue(packet);
             this.packetadded.Set();
         }
+
 	}
 }

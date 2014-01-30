@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using JSLibrary.Data;
 using NabfProject.AI;
+using NabfProject.Events;
+using NabfProject.KnowledgeManagerModel;
 
 namespace NabfProject.NoticeBoardModel
 {
@@ -15,13 +17,33 @@ namespace NabfProject.NoticeBoardModel
         private Dictionary<Int64, Notice> _idToNotice = new Dictionary<Int64, Notice>();
         private DictionaryList<NabfAgent, Notice> _agentToNotice = new DictionaryList<NabfAgent, Notice>();
         private Int64 _freeID = 0;
+        private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
-        public enum JobType { Disrupt, Occupy, Attack, Repair }
-
-        public event EventHandler<NoticeIsReadyToBeExecutedEventArgs> NoticeIsReadyToBeExecutedEvent;
-
+        public enum JobType { Empty = 0, Occupy = 1, Repair = 2, Disrupt = 3, Attack = 4 }
+        
         public NoticeBoard()
         {
+        }
+
+        public bool TryGetNoticeFromId(Int64 noticeId, out Notice notice)
+        {
+            bool b = _idToNotice.TryGetValue(noticeId, out notice);
+            if (b == false)
+                return false;
+
+            return true;
+        }
+
+        public bool Subscribe(NabfAgent agent)
+        {
+            if (_sharingList.Contains(agent))
+                return false;
+            _sharingList.Add(agent);
+            return true;
+        }
+        public bool Unsubscribe(NabfAgent agent)
+        {
+            return _sharingList.Remove(agent);
         }
 
         public SortedList<int, Notice[]> GetJobs()
@@ -68,7 +90,7 @@ namespace NabfProject.NoticeBoardModel
                 return false;
         }
 
-        public void ResetNoticeBoard()
+        private void ResetNoticeBoard()
         {
             _availableJobs.Clear();
             _jobs.Clear();
@@ -77,7 +99,7 @@ namespace NabfProject.NoticeBoardModel
             _freeID = 0;
         }
 
-        public Notice CreateNotice(JobType type, int agentsNeeded, List<Node> whichNodes)
+        public bool CreateAndAddNotice(JobType type, int agentsNeeded, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, string agentToRepair, int value, out Notice notice)
         {
             Notice n = null;
             Int64 id = _freeID;
@@ -85,25 +107,44 @@ namespace NabfProject.NoticeBoardModel
             switch (type)
             {
                 case JobType.Attack:
-                    n = new AttackJob(agentsNeeded, whichNodes, id);
+                    n = new AttackJob(agentsNeeded, whichNodes, value, id);
                     break;
                 case JobType.Disrupt:
-                    n = new DisruptJob(agentsNeeded, whichNodes, id);
+                    n = new DisruptJob(agentsNeeded, whichNodes, value, id);
                     break;
                 case JobType.Occupy:
-                    n = new OccupyJob(agentsNeeded, whichNodes, id);
+                    n = new OccupyJob(agentsNeeded, whichNodes, zoneNodes, value, id);
                     break;
                 case JobType.Repair:
-                    n = new RepairJob(whichNodes, id);
+                    n = new RepairJob(whichNodes, agentToRepair, value, id);
                     break;
             }
             if (n == null)
                 throw new ArgumentException("Input to CreateNotice, JoType : " + type.GetType().Name + " was not of appropriate type. It's type was: " + type.GetType());
-            
-            return n;
+			bool isUnique = true;
+			foreach (var job in _availableJobs)
+			{
+				foreach (Notice not in job.Value)
+				{
+					if (not.ContentIsEqualTo(n) || not.ContentIsSubsetOf(n))
+						isUnique = false;
+				}
+			}
+
+			notice = n;
+
+			if (!isUnique)
+				return false;
+
+            bool b = AddNotice(n);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NewNoticeEvent(n));
+
+            return b;
         }
 
-        public bool AddNotice(Notice no)
+        private bool AddNotice(Notice no)
         {
             if (AvailableJobsContainsContentEqual(no))
                 return false;
@@ -127,6 +168,14 @@ namespace NabfProject.NoticeBoardModel
             return _availableJobs.Get(ofType).Count;
         }
 
+        public bool RemoveNotice(Int64 id)
+        {
+            Notice notice;
+            bool b = _idToNotice.TryGetValue(id, out notice);
+            if (b == false)
+                return false;
+            return RemoveNotice(notice);
+        }
         public bool RemoveNotice(Notice no)
         {
             if (!AvailableJobsContainsContentEqual(no))
@@ -136,10 +185,14 @@ namespace NabfProject.NoticeBoardModel
                 UnApplyToNotice(no, a);
             _idToNotice.Remove(no.Id);
             _availableJobs.Remove(NoticeToJobType(no), no);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NoticeRemovedEvent(no));
+
             return true;
         }
 
-        public bool UpdateNotice(Int64 id, List<Node> whichNodes, int agentsNeeded)
+        public bool UpdateNotice(Int64 id, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, int agentsNeeded, int value, string agentToRepair)
         {
             Notice no;
             bool b = _idToNotice.TryGetValue(id, out no);
@@ -147,16 +200,18 @@ namespace NabfProject.NoticeBoardModel
             if (b == false)
                 return false;
 
-            no.UpdateNotice(whichNodes, agentsNeeded);
+            no.UpdateNotice(whichNodes, zoneNodes, agentsNeeded, value, agentToRepair);
+
+            foreach (NabfAgent a in _sharingList)
+                a.Raise(new NoticeUpdatedEvent(id, no));
 
             return true;
         }
 
-        public JobType NoticeToJobType(Notice no)
+        public static JobType NoticeToJobType(Notice no)
         {
             if (no == null)
                 throw new ArgumentNullException("Input to method NoticeToType was null.");
-
 
             if (no is DisruptJob)
                 return JobType.Disrupt;
@@ -166,6 +221,8 @@ namespace NabfProject.NoticeBoardModel
                 return JobType.Occupy;
             else if (no is RepairJob)
                 return JobType.Repair;
+            else if (no is EmptyJob)
+                return JobType.Empty;
             else
                 throw new ArgumentException("Input to NoticeToJobtype, object : " + no.GetType().Name + " was not of appropriate type. It's type was: " + no.GetType());
         }
@@ -221,33 +278,53 @@ namespace NabfProject.NoticeBoardModel
             }
         }
 
-        public int FindTopDesiresForNotice(Notice n, out SortedList<int, NabfAgent> topDesires, out List<NabfAgent> agents)
+        public void UnApplyFromAll(NabfAgent a)
         {
-            int desire = 0, lowestDesire = -(n.GetAgentsApplied().Count + 1);
+            foreach (Notice n in _agentToNotice[a])
+                UnApplyToNotice(n, a);
+        }
 
-            agents = new List<NabfAgent>();
-            topDesires = new SortedList<int, NabfAgent>(new InvertedComparer<int>());
-            for (int i = 0; i < n.AgentsNeeded; i++)
-            {
-                topDesires.Add(lowestDesire--, null);
-            }
-            desire = 0;
-            lowestDesire = -1;
+        public  bool TryFindTopDesiresForNotice(Notice n, out int averageDesire, out List<NabfAgent> agents)
+        {
+			var applied = n.GetAgentsApplied();
 
-            foreach (NabfAgent a in n.GetAgentsApplied())
-            {
-                n.TryGetValueAgentToDesirabilityMap(a, out desire);
-                if (desire > lowestDesire)
-                {
-                    topDesires.Add(desire, a);
-                    agents.Add(a);
-                    agents.Remove(topDesires.Last().Value);
-                    topDesires.RemoveAt(n.AgentsNeeded);
-                    lowestDesire = topDesires.Keys[n.AgentsNeeded - 1];
-                }
-            }
+			if (applied.Count >= n.AgentsNeeded)
+			{
 
-            return lowestDesire;
+				Func<NabfAgent, int> desireOfAgent = an =>
+					{
+						int desire;
+						n.TryGetValueAgentToDesirabilityMap(an, out desire);
+						return desire;
+					};
+
+				var sortedagents = new SortedList<int, List<NabfAgent>>();
+
+				Action<NabfAgent> addAgent = na =>
+						{
+							int desire = desireOfAgent(na);
+							List<NabfAgent> desiredAgents;
+							if(sortedagents.ContainsKey(desire))
+								desiredAgents = sortedagents[desire];
+							else
+							{
+								desiredAgents = new List<NabfAgent>();
+								sortedagents[desire] = desiredAgents;
+							}
+							desiredAgents.Add(na);
+						};
+				foreach(var agent in applied)
+				{
+					addAgent(agent);
+				}
+
+				agents = sortedagents.Reverse().SelectMany(kv => kv.Value).Take(n.AgentsNeeded).ToList();
+				averageDesire = agents.Sum(na => desireOfAgent(na)) / n.AgentsNeeded;
+				return true;
+			}
+			agents = null;
+			averageDesire = 0;
+			return false;
         }
 
         public void FindJobsForAgents()
@@ -259,6 +336,8 @@ namespace NabfProject.NoticeBoardModel
                 _jobs.Add(jobs.Keys[i], jobs.Values[i]);
             }
 
+            List<NabfAgent> agentsWhoReceivedJob = new List<NabfAgent>();
+
             Notice notice;
             bool QueueNotEmpty = true;
             while (QueueNotEmpty)
@@ -266,7 +345,17 @@ namespace NabfProject.NoticeBoardModel
                 notice = PopFromJobsList();
                 QueueNotEmpty = (notice != null);
                 if (notice != null && notice.AgentsNeeded <= notice.GetTopDesireAgents().Count)
+                {
+                    agentsWhoReceivedJob.AddRange(notice.GetTopDesireAgents());
                     RaiseEventForNotice(notice);
+                }
+            }
+            Notice n;
+            foreach (NabfAgent agent in _sharingList.Except(agentsWhoReceivedJob))
+            {
+                n = new EmptyJob();
+                n.AddToTopDesireAgents(agent);
+                RaiseEventForNotice(n);
             }
         }
 
@@ -300,15 +389,15 @@ namespace NabfProject.NoticeBoardModel
         {
             DictionaryList<int, Notice> dl = new DictionaryList<int, Notice>();
             List<NabfAgent> agents;
-            SortedList<int, NabfAgent> topDesires;
-            int lowestDesire;
+			bool success;
+			int avg;
 
             foreach (Notice n in _availableJobs.SelectMany(kvp => kvp.Value))
             {
-                lowestDesire = FindTopDesiresForNotice(n, out topDesires, out agents);
-                if (lowestDesire != -1)
+                success = TryFindTopDesiresForNotice(n, out avg, out agents);
+                if (success)
                 {
-                    n.HighestAverageDesirabilityForNotice = topDesires.Keys.Sum() / topDesires.Keys.Count;
+					n.HighestAverageDesirabilityForNotice = avg;
                     dl.Add(n.HighestAverageDesirabilityForNotice, n);
                     n.AddRangeToTopDesireAgents(agents);
                 }
@@ -323,14 +412,15 @@ namespace NabfProject.NoticeBoardModel
 
         private bool RaiseEventForNotice(Notice n) 
         {
-            NoticeIsReadyToBeExecutedEventArgs args = new NoticeIsReadyToBeExecutedEventArgs();
-            args.Agents = n.GetTopDesireAgents();
-            args.Notice = n;
+            //NoticeIsReadyToBeExecutedEventArgs args = new NoticeIsReadyToBeExecutedEventArgs();
+            //args.Agents = n.GetTopDesireAgents();
+            //args.Notice = n;
 
-            if (NoticeIsReadyToBeExecutedEvent != null)
-                NoticeIsReadyToBeExecutedEvent(this, args);
+            //if (NoticeIsReadyToBeExecutedEvent != null)
+            //    NoticeIsReadyToBeExecutedEvent(this, args);
             foreach (NabfAgent a in n.GetTopDesireAgents())
-            { 
+            {
+                a.Raise(new ReceivedJobEvent(n, a));
                 foreach (Notice no in _agentToNotice[a])
                 {
                     if (no.ContentIsEqualTo(n))
@@ -340,11 +430,30 @@ namespace NabfProject.NoticeBoardModel
             }
             return true;
         }
+
+        public int GetSubscribedAgentsCount()
+        {
+            return _sharingList.Count;
+        }
+        public ICollection<NabfAgent> GetSubscribedAgents()
+        {
+            return _sharingList.ToList();
+        }
+
+        public bool AgentIsSubscribed(NabfAgent agent)
+        {
+            return _sharingList.Contains(agent);
+        }
+
+        public void SendOutAllNoticesToAgent(NabfAgent agent)
+        {
+            foreach (KeyValuePair<JobType, Notice[]> kvp in _availableJobs)
+            {
+                foreach (Notice n in kvp.Value)
+                    agent.Raise(new NewNoticeEvent(n));                    
+            }
+        }
     }
 
-    public class NoticeIsReadyToBeExecutedEventArgs : EventArgs
-    {
-        public Notice Notice { get; set; }
-        public List<NabfAgent> Agents = new List<NabfAgent>();
-    }
+    
 }

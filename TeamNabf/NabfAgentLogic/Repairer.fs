@@ -3,15 +3,12 @@
 module Repairer =
 
     open AgentTypes
+    open AgentLogicLib
+    open RepairerLogic
 
     let getRepairerTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                
-            ]
-
-    let repairerReact =
-        Options
-            [
-                
+                Choice(repairNearbyAgent)
+                Choice(workOnRepairGoal)
             ]

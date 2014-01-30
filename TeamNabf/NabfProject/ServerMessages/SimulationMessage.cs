@@ -26,6 +26,11 @@ namespace NabfProject.ServerMessages
 
             step = Convert.ToInt32(reader["step"]);
             messageName = reader.LocalName;
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                reader.MoveToContent();
+            }
         }
     }
 }

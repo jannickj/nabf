@@ -3,15 +3,11 @@
 module Inspector =
 
     open AgentTypes
+    open AgentLogicLib
+    open InspectorLogic
 
     let getInspectorTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                
-            ]
-
-    let inspectorReact =
-        Options
-            [
-                
+                Choice(inspect)
             ]

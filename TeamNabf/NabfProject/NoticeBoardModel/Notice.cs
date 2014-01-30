@@ -4,14 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NabfProject.AI;
+using NabfProject.KnowledgeManagerModel;
 
 namespace NabfProject.NoticeBoardModel
 {
     public abstract class Notice : IEquatable<Notice>, IComparable
     {
-        public List<Node> WhichNodes { get; protected set; }
+        public List<NodeKnowledge> WhichNodes { get; protected set; }
         public int AgentsNeeded { get; protected set; }
         public Int64 Id { get; private set; }
+        public int Value { get; protected set; }
 
         private int _highestAverageDesirabilityForNotice = -1;
         public int HighestAverageDesirabilityForNotice { get { return _highestAverageDesirabilityForNotice; } set { _highestAverageDesirabilityForNotice = value; } }
@@ -56,19 +58,32 @@ namespace NabfProject.NoticeBoardModel
             else if (!(no is Notice))
                 throw new ArgumentException("Object : " + no.GetType().Name + " of ContentIsEqualTo is not of type Notice");
 
+			//return this.Id == no.Id;
+
             if (no.GetType() != this.GetType())
                 return false;
-            else
-                if (no.WhichNodes.Except<Node>(this.WhichNodes).Count() != 0)
+            else if (this is RepairJob)
+            {
+                if (((RepairJob)this).AgentToRepair != ((RepairJob)no).AgentToRepair)
                     return false;
+            }
+            else if (this is OccupyJob)
+                if (((OccupyJob)no).ZoneNodes.Except<NodeKnowledge>(((OccupyJob)this).ZoneNodes).Count() != 0)
+                    return false;
+            
+            if (no.WhichNodes.Except<NodeKnowledge>(this.WhichNodes).Count() != 0)
+                return false;
 
-            return no.AgentsNeeded == this.AgentsNeeded;
+            return no.AgentsNeeded == this.AgentsNeeded && no.Value == this.Value ;
         }
 
         public void Apply(int desirability, NabfAgent a)
         {
-            _agentsToDesirability.Add(a, desirability);
-            _agentsApplied.Add(a);
+			if (!_agentsApplied.Contains(a))
+			{
+				_agentsToDesirability.Add(a, desirability);
+				_agentsApplied.Add(a);
+			}
         }
         public void UnApply(NabfAgent a, NoticeBoard nb)
         {
@@ -77,20 +92,20 @@ namespace NabfProject.NoticeBoardModel
             _agentsToDesirability.Remove(a);
             _agentsApplied.Remove(a);
             bool b = _topDesireAgents.Remove(a);
-            int lowestDesire;
-            SortedList<int, NabfAgent> topDesires;
+            bool success;
+			int avg;
             List<NabfAgent> agentsToAdd;
             if (b)
             {
-                lowestDesire = nb.FindTopDesiresForNotice(this, out topDesires, out agentsToAdd);
-                if (lowestDesire != -1)
+                success = nb.TryFindTopDesiresForNotice(this, out avg, out agentsToAdd);
+                if (success)
                 {
                     b = nb.RemoveJob(this);
                     if (b)
                     {
                         _topDesireAgents.Clear();
                         _topDesireAgents.AddRange(agentsToAdd);
-                        HighestAverageDesirabilityForNotice = topDesires.Keys.Sum() / topDesires.Keys.Count;
+						HighestAverageDesirabilityForNotice = avg;
                         nb.AddJob(this);
                     }
                 }
@@ -99,10 +114,16 @@ namespace NabfProject.NoticeBoardModel
             }
         }
 
-        public void UpdateNotice(List<Node> whichNodes, int agentsNeeded)
+        public void UpdateNotice(List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, int agentsNeeded, int value, string agentToRepair)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = agentsNeeded;
+            Value = value;
+
+            if (this is RepairJob)
+                ((RepairJob)this).AgentToRepair = agentToRepair;
+            else if (this is OccupyJob)
+                    ((OccupyJob)this).ZoneNodes = zoneNodes;
         }
 
         bool IEquatable<Notice>.Equals(Notice other)
@@ -128,54 +149,95 @@ namespace NabfProject.NoticeBoardModel
             else
                 throw new ArgumentException("Object : " + obj.GetType().Name + " of CompareTo is not of type Notice");
         }
-    }
+
+        public bool IsEmpty()
+        {
+            return this is EmptyJob;
+        }
+
+		public virtual bool ContentIsSubsetOf(Notice n)
+		{
+			return this.WhichNodes.Intersect(n.WhichNodes).Count() > 0;
+		}
+	}
     
     public class DisruptJob : Notice
     {
 
-        public DisruptJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
+        public DisruptJob(int agentsNeeded, List<NodeKnowledge> whichNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
+            Value = value;
         }
+
+		
     }
 
     public class AttackJob : Notice
     {
 
-        public AttackJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
+        public AttackJob(int agentsNeeded, List<NodeKnowledge> whichNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
+            Value = value;
         }
+		
     }
 
     public class OccupyJob : Notice
     {
+        public List<NodeKnowledge> ZoneNodes { get; set; }
 
-        public OccupyJob(int agentsNeeded, List<Node> whichNodes, Int64 id)
+        public OccupyJob(int agentsNeeded, List<NodeKnowledge> whichNodes, List<NodeKnowledge> zoneNodes, int value, Int64 id)
             : base(id)
         {
             AgentsNeeded = agentsNeeded;
             WhichNodes = whichNodes;
+            ZoneNodes = zoneNodes;
+            Value = value;
         }
+
+		public override bool ContentIsSubsetOf(Notice n)
+		{
+			if (n is OccupyJob)
+			{
+				var on = ((OccupyJob)n);
+				return this.ZoneNodes.Intersect(on.ZoneNodes).Count() > 0;
+			}
+			return false;
+		}
     }
 
     public class RepairJob : Notice
     {
+        public string AgentToRepair { get; set; }
 
-        public RepairJob(List<Node> whichNodes, Int64 id)
+        public RepairJob(List<NodeKnowledge> whichNodes, string agentToRepair, int value, Int64 id)
             : base(id)
         {
             WhichNodes = whichNodes;
             AgentsNeeded = 1;
+            AgentToRepair = agentToRepair;
+            Value = value;
+        }
+
+		
+    }
+
+    public class EmptyJob : Notice
+    {
+        public EmptyJob()
+            : base(-1)
+        {
+            WhichNodes = new List<NodeKnowledge>();
+            AgentsNeeded = 0;
+            Value = 0;
         }
     }
 
-    public class Node
-    {
-    }
 
 }

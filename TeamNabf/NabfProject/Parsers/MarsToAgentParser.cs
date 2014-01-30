@@ -25,6 +25,9 @@ namespace NabfProject.Parsers
             this.AddConverter(new ConvertVisibleEdgesToPercept());
             this.AddConverter(new ConvertVisibleEntitiesToPercept());
             this.AddConverter(new ConvertVisibleVerticesToPercept());
+            this.AddConverter(new ConvertSimStartToIilPerceptCollection());
+            this.AddConverter(new ConvertSimEndToIilPerceptCollection());
+            this.AddConverter(new ConvertByeMessageToIilPerceptCollection());
 		}
 
 		private object fetchId(object message)

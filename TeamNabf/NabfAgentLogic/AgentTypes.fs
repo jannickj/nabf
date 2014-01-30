@@ -2,119 +2,230 @@
 
 module AgentTypes =
 
-    open System
+    open Graphing.Graph
 
-    open Graph
-          
+    type TeamName = string
+    type AgentName = string
 
-            type Decision<'a> =
-                | Condition of 'a * Decision<'a>
-                | Choice of 'a
-                | Options of Decision<'a> list
+    type Decision<'a> =
+        | Condition of 'a * Decision<'a>
+        | Choice of 'a
+        | Options of Decision<'a> list
 
-           
+    type Upgrade =
+        | Battery
+        | Sensor
+        | Shield
+        | SabotageDevice
 
-            type Upgrade =
-                | Battery
-                | Sensor
-                | Shield
-                | SabotageDevice
+    type ActionResult =
+        | Successful
+        | Failed
+        | FailedResources
+        | FailedAttacked
+        | FailedParried
+        | FailedUnreachable
+        | FailedOutOfRange
+        | FailedInRange
+        | FailedWrongParam 
+        | FailedRole
+        | FailedStatus
+        | FailedLimit
+        | FailedRandom
 
-            type AgentRole =
-                | Saboteur
-                | Explorer
-                | Repairer
-                | Inspector
-                | Sentinel
+    type AgentRole =
+        | Saboteur
+        | Explorer
+        | Repairer
+        | Inspector
+        | Sentinel
 
-            type Agent =
-                { 
-                Energy      : int; 
-                Health      : int; 
-                MaxEnergy   : int; 
-                MaxHealth   : int; 
-                Name        : string; 
-                Node        : string; 
-                Role        : Option<AgentRole>; 
-                Strength    : int; 
-                Team        : string; 
-                VisionRange : int; 
-                Position    : string
-                }
+    type Level = int
 
-            type Action =
-                | Skip
-                | Recharge
-                | Goto      of Vertex
-                | Probe     of Option<Vertex>
-                | Survey    
-                | Inspect   of Agent
-                | Attack    of Agent
-                | Parry
-                | Repair    of Agent
-                | Buy       of Upgrade
+    type Achievement =
+        | ConqueredZone      of Level
+        | ProbedVertices     of Level
+        | SurveyedEdges      of Level
+        | InspectedVehicles  of Level
+        | Attacked           of Level
+        | Parried            of Level
+    
+    type EntityStatus =
+        | Normal
+        | Disabled
 
-            type JobID = int
-            type JobValue = int
-            type Desirability = int
-            type AgentID = string
+    type Agent =
+        { Energy      : Option<int>
+        ; Health      : Option<int>
+        ; MaxEnergy   : Option<int>
+        ; MaxHealth   : Option<int>
+        ; Name        : string
+        ; Node        : string
+        ; Role        : Option<AgentRole>
+        ; Strength    : Option<int>
+        ; Team        : string
+        ; VisionRange : Option<int>
+        ; Status      : EntityStatus
+        }
 
-            type JobType = 
-                | OccupyJob = 1
-                | RepairJob = 2
-                | DisruptJob = 3
-                | AttackJob = 4
+    type TeamState =
+        { LastStepScore : int
+        ; Money         : int
+        ; Score         : int
+        ; ZoneScore     : int
+        ; Achievements  : Achievement list
+        }
 
-            type JobData =
-                | OccupyJob of Vertex list
-                | RepairJob of Vertex * AgentID
-                | DisruptJob of Vertex
-                | AttackJob of Vertex list
+    type Action =
+        | Skip
+        | Recharge
+        | Goto      of VertexName
+        | Probe     of Option<VertexName>
+        | Survey    
+        | Inspect   of Option<AgentName>
+        | Attack    of AgentName
+        | Parry
+        | Repair    of AgentName
+        | Buy       of Upgrade
 
-            type JobHeader = JobID * JobValue * JobType
+    
 
-            type Job = JobHeader * JobData
+    type JobID = int
+    type JobValue = int
+    type Desirability = int
 
-            type Percept =
-                | EnemySeen      of Agent
-                | VertexSeen     of Graph.Vertex
-                | EdgeSeen       of Graph.Edge
-                | Achievement    of string
-                | SimulationStep of int
+    type JobType = 
+        | EmptyJob = 0
+        | OccupyJob = 1
+        | RepairJob = 2
+        | DisruptJob = 3
+        | AttackJob = 4
 
-            type Deadline = int
-            type CurrentTime = int
-            type Rank = int
-            type Score = int
-            type ActionID = int
-            
+    type JobData =
+        | OccupyJob of VertexName list * VertexName list
+        | RepairJob of VertexName * AgentName
+        | DisruptJob of VertexName
+        | AttackJob of VertexName list
+        | EmptyJob
+    
+    type AgentsNeededForJob = int
 
-            type AgentServerMessage =
-                | NewJobs of Job List
-                | AcceptedJob of JobID
-                | SharedPercepts of Percept list
+    type JobHeader = Option<JobID> * JobValue * JobType * AgentsNeededForJob
+    type JobGoal =
+        | OccupyGoal of VertexName
+        | RepairGoal of VertexName * AgentName
+        | DisruptGoal of VertexName
+        | AttackGoal of VertexName
 
-            type MarsServerMessage =  
-                | ActionRequest of  Deadline*CurrentTime*ActionID*(Percept list)
-                | SimulationStart
-                | SimulationEnd of Rank*Score
-                | ServerClosed
+    type Goal =
+        | JobGoal of JobGoal
 
-            type ServerMessage = 
-                | AgentServerMsg of AgentServerMessage
-                | MarsServerMsg of MarsServerMessage
+    type Job = JobHeader * JobData
 
+    
+    
 
-            type State =
-                { 
-                    World          : Graph; 
-                    Self           : Agent; 
-                    EnemyData      : Agent list; 
-                    Achievements   : Set<string>; 
-                    SimulationStep : int;
-                    NearbyAgents   : Agent list
-                }
+    let levelToPoints start level =
+        start * (pown 2 level)
 
-            type OptionFunc = State -> (bool*Option<Action>)
+    let achievementPoints achievement =
+        levelToPoints <||
+            match achievement with
+            | ConqueredZone l     -> (l, 10)
+            | ProbedVertices l    -> (l, 5)
+            | SurveyedEdges l     -> (l, 10)
+            | InspectedVehicles l -> (l, 5)
+            | Attacked l          -> (l, 5)
+            | Parried  l          -> (l, 5)
 
-            type DecisionRank = int
+    type SeenVertex = VertexName * TeamName option
+    type AgentRolePercept = AgentName * AgentRole * int
+
+    type Percept =
+        | EnemySeen         of Agent
+        | VertexSeen        of SeenVertex
+        | VertexProbed      of VertexName * int
+        | EdgeSeen          of Edge
+        | SimulationStep    of int
+        | MaxEnergyDisabled of int
+        | LastAction        of Action
+        | LastActionResult  of ActionResult
+        | ZoneScore         of int
+        | Team              of TeamState
+        | Self              of Agent
+        | AgentRolePercept  of AgentRolePercept
+        
+
+    type SimulationID = int
+
+    type MetaAction =
+        | CreateJob of Job
+        | RemoveJob of JobID
+        | UpdateJob of Job
+        | ApplyJob of JobID*Desirability
+        | SimulationSubscribe
+        | ShareKnowledge of Percept list
+        | NewRound of int
+    
+    type SendMessage = SimulationID * MetaAction
+
+    type Deadline = uint32
+    type CurrentTime = uint32
+    type Rank = int
+    type Score = int
+    type ActionID = int
+    type ActionRequestData = Deadline * CurrentTime * ActionID
+    
+    type SimStartData =
+        { SimId          :   int
+        ; SimEdges       :   int
+        ; SimVertices    :   int
+        ; SimRole        :   AgentRole
+//        ; SimTotalSteps  :   int
+        }
+
+    type AgentServerMessage =
+        | AddedOrChangedJob of Job
+        | RemovedJob of Job
+        | AcceptedJob of JobID*VertexName
+        | SharedPercepts of Percept list
+        | RoundChanged of int
+
+    type MarsServerMessage =  
+        | ActionRequest of ActionRequestData * Percept list
+        | SimulationStart of SimStartData
+        | SimulationEnd of Rank * Score
+        | ServerClosed
+
+    type ServerMessage = 
+        | AgentServerMessage of AgentServerMessage
+        | MarsServerMessage of MarsServerMessage
+
+    type State =
+        { 
+            World            : Graph; 
+            Self             : Agent; 
+            EnemyData        : Agent list; 
+            SimulationStep   : int;
+            NearbyAgents     : Agent list
+            OwnedVertices    : Map<VertexName, TeamName>
+            LastPosition     : VertexName
+            NewVertices      : SeenVertex list
+            NewEdges         : Edge list
+            LastStepScore    : int
+            Money            : int
+            Score            : int
+            ThisZoneScore    : int
+            Achievements     : Achievement list
+            LastActionResult : ActionResult
+            LastAction       : Action
+            TeamZoneScore    : int
+            NewZone          : Option<Graph * bool>
+            NewZoneFrontier  : VertexName list
+            Goals            : Goal list
+            Jobs             : Job list
+        }
+
+    type OptionFunc = State -> (bool*Option<Action>)
+
+    type DecisionRank = int

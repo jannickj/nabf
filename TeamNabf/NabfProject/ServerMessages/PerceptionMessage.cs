@@ -37,8 +37,6 @@ namespace NabfProject.ServerMessages
                 var message = ServerMessageFactory.Instance.ConstructMessage(reader.LocalName);
                 message.ReadXml(reader);
                 elements.Add(message);
-                reader.Read();
-                reader.MoveToContent();
             } 
             reader.ReadEndElement();
 
