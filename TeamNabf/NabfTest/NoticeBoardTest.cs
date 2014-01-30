@@ -82,6 +82,51 @@ namespace NabfTest
         }
 
         [Test]
+        public void ApplyToNotice_DuplicateDesirability_Success()
+        {
+            Notice n;
+            nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2
+                , new List<NodeKnowledge>() { new NodeKnowledge("") }, new List<NodeKnowledge>() { new NodeKnowledge("") }, "", 99, out n);
+
+            NabfAgent agent1 = new NabfAgent("Nabf1"), agent2 = new NabfAgent("2nabf"), agent3 = new NabfAgent("nabf30"), agent4 = new NabfAgent("nabf");
+
+            //nb.ApplyToNotice(n, 1, agent1);
+            nb.ApplyToNotice(n, 2, agent2);
+            nb.ApplyToNotice(n, 2, agent3);
+
+
+            nb.FindJobsForAgents();
+
+            Assert.AreEqual(agent2.Name, n.GetTopDesireAgents()[0].Name);
+            Assert.AreEqual(agent3.Name, n.GetTopDesireAgents()[1].Name);
+        }
+
+        //[Test]
+        //public void meh_meh_meh()
+        //{
+        //    //Notice n;
+        //    //nb.CreateAndAddNotice(NoticeBoard.JobType.Disrupt, 2
+        //    //    , new List<NodeKnowledge>() { new NodeKnowledge("") }, new List<NodeKnowledge>() { new NodeKnowledge("") }, "", 99, out n);
+
+        //    //NabfAgent agent1 = new NabfAgent("Nabf1"), agent2 = new NabfAgent("2nabf"), agent3 = new NabfAgent("nabf30"), agent4 = new NabfAgent("nabf");
+
+        //    ////nb.ApplyToNotice(n, 1, agent1);
+        //    //nb.ApplyToNotice(n, 2, agent2);
+        //    //nb.ApplyToNotice(n, 2, agent3);
+
+        //    NodeKnowledge nk1 = new NodeKnowledge("q");
+        //    NodeKnowledge nk2 = new NodeKnowledge("q");
+
+        //    List<NodeKnowledge> nks1 = new List<NodeKnowledge>() { nk1 };
+        //    List<NodeKnowledge> nks2 = new List<NodeKnowledge>() { nk2 };
+
+        //    var qq = nks1.Except(nks2);
+
+        //    Assert.AreEqual(0, qq.Count());
+
+        //}
+
+        [Test]
         public void AddNotices_NoDuplicateListNoneEmpty_Success()
         {
             List<NodeKnowledge> testNodes = new List<NodeKnowledge>() { new NodeKnowledge("n1"), new NodeKnowledge("n2") };

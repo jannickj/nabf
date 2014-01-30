@@ -182,6 +182,13 @@ namespace NabfAgentLogic
         let selectSharedPercepts state (percepts:Percept list) =
             List.filter (shouldSharePercept state) percepts
         
+        let updateStateWhenLostJob (state:State) =
+            let filteredGoals = List.filter (fun g -> 
+                                                match g with
+                                                | JobGoal _ -> false
+                                                | _ -> true) state.Goals
+            { state with Goals = filteredGoals }
+
         let updateStateWhenGivenJob (initstate:State) (((_,_,jobType,_),jobdata):Job) (moveTo:VertexName) : State =
             let filteredGoals = List.filter (fun g -> 
                                                 match g with

@@ -32,11 +32,14 @@ module DecisionTree =
     let getTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                getRoleDecision
-                
-                Choice(reactToEnemyAgent)
 
                 Choice workOnOccupyGoal
+                
+                getRoleDecision
+                
+                //Choice(reactToEnemyAgent)
+
+                
 
                 Choice(exploreLocalGraph)
 

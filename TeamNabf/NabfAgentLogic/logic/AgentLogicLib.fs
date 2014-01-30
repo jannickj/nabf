@@ -14,7 +14,7 @@ module AgentLogicLib =
     let RepairCostDisabled = 3
     let BuyCost = 2
 
-    let desirabilityForDecreasingValue value = (10000/(value+1))
+    let desirabilityForDecreasingValue value = (1000000/(value+1))
 
     let desireFromPath agent graph node increaser = 
         let inc = if increaser < 0 then 0 else increaser
@@ -36,6 +36,7 @@ module AgentLogicLib =
         | Buy(u)    -> if s.Self.Energy.Value > BuyCost then (true,Some(Buy(u))) else recharge
         | _         -> printfn "PHILIP'S FAIL STORE.COM"; (false,None)
 
+    //Only meant for moving to adjacent nodes
     let tryGo (v:Vertex) (s:State) =
         let edges = Set.toList s.World.[s.Self.Node].Edges
         let edge = List.find (fun (_,id) -> id = v.Identifier) edges

@@ -121,9 +121,22 @@ namespace NabfProject.NoticeBoardModel
             }
             if (n == null)
                 throw new ArgumentException("Input to CreateNotice, JoType : " + type.GetType().Name + " was not of appropriate type. It's type was: " + type.GetType());
+			bool isUnique = true;
+			foreach (var job in _availableJobs)
+			{
+				foreach (Notice not in job.Value)
+				{
+					if (not.ContentIsEqualTo(n) || not.ContentIsSubsetOf(n))
+						isUnique = false;
+				}
+			}
+
+			notice = n;
+
+			if (!isUnique)
+				return false;
 
             bool b = AddNotice(n);
-            notice = n;
 
             foreach (NabfAgent a in _sharingList)
                 a.Raise(new NewNoticeEvent(n));
@@ -271,33 +284,47 @@ namespace NabfProject.NoticeBoardModel
                 UnApplyToNotice(n, a);
         }
 
-        public int FindTopDesiresForNotice(Notice n, out SortedList<int, NabfAgent> topDesires, out List<NabfAgent> agents)
+        public  bool TryFindTopDesiresForNotice(Notice n, out int averageDesire, out List<NabfAgent> agents)
         {
-            int desire = 0, lowestDesire = -(n.GetAgentsApplied().Count + 1);
+			var applied = n.GetAgentsApplied();
 
-            agents = new List<NabfAgent>();
-            topDesires = new SortedList<int, NabfAgent>(new InvertedComparer<int>());
-            for (int i = 0; i < n.AgentsNeeded; i++)
-            {
-                topDesires.Add(lowestDesire--, null);
-            }
-            desire = 0;
-            lowestDesire = -1;
+			if (applied.Count >= n.AgentsNeeded)
+			{
 
-            foreach (NabfAgent a in n.GetAgentsApplied())
-            {
-                n.TryGetValueAgentToDesirabilityMap(a, out desire);
-                if (desire > lowestDesire)
-                {
-                    topDesires.Add(desire, a);
-                    agents.Add(a);
-                    agents.Remove(topDesires.Last().Value);
-                    topDesires.RemoveAt(n.AgentsNeeded);
-                    lowestDesire = topDesires.Keys[n.AgentsNeeded - 1];
-                }
-            }
+				Func<NabfAgent, int> desireOfAgent = an =>
+					{
+						int desire;
+						n.TryGetValueAgentToDesirabilityMap(an, out desire);
+						return desire;
+					};
 
-            return lowestDesire;
+				var sortedagents = new SortedList<int, List<NabfAgent>>();
+
+				Action<NabfAgent> addAgent = na =>
+						{
+							int desire = desireOfAgent(na);
+							List<NabfAgent> desiredAgents;
+							if(sortedagents.ContainsKey(desire))
+								desiredAgents = sortedagents[desire];
+							else
+							{
+								desiredAgents = new List<NabfAgent>();
+								sortedagents[desire] = desiredAgents;
+							}
+							desiredAgents.Add(na);
+						};
+				foreach(var agent in applied)
+				{
+					addAgent(agent);
+				}
+
+				agents = sortedagents.Reverse().SelectMany(kv => kv.Value).Take(n.AgentsNeeded).ToList();
+				averageDesire = agents.Sum(na => desireOfAgent(na)) / n.AgentsNeeded;
+				return true;
+			}
+			agents = null;
+			averageDesire = 0;
+			return false;
         }
 
         public void FindJobsForAgents()
@@ -362,15 +389,15 @@ namespace NabfProject.NoticeBoardModel
         {
             DictionaryList<int, Notice> dl = new DictionaryList<int, Notice>();
             List<NabfAgent> agents;
-            SortedList<int, NabfAgent> topDesires;
-            int lowestDesire;
+			bool success;
+			int avg;
 
             foreach (Notice n in _availableJobs.SelectMany(kvp => kvp.Value))
             {
-                lowestDesire = FindTopDesiresForNotice(n, out topDesires, out agents);
-                if (lowestDesire != -1)
+                success = TryFindTopDesiresForNotice(n, out avg, out agents);
+                if (success)
                 {
-                    n.HighestAverageDesirabilityForNotice = topDesires.Keys.Sum() / topDesires.Keys.Count;
+					n.HighestAverageDesirabilityForNotice = avg;
                     dl.Add(n.HighestAverageDesirabilityForNotice, n);
                     n.AddRangeToTopDesireAgents(agents);
                 }
@@ -407,6 +434,10 @@ namespace NabfProject.NoticeBoardModel
         public int GetSubscribedAgentsCount()
         {
             return _sharingList.Count;
+        }
+        public ICollection<NabfAgent> GetSubscribedAgents()
+        {
+            return _sharingList.ToList();
         }
 
         public bool AgentIsSubscribed(NabfAgent agent)
