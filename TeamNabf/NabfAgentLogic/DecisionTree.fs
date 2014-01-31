@@ -13,7 +13,12 @@ module DecisionTree =
     open Repairer
 
     let isRole (r:Option<AgentRole>)(s:State) = (s.Self.Role = r,None)
-            
+
+    let isWorkingOnOccupyGoal state = 
+        match List.tryFind (function | JobGoal (OccupyGoal _) -> true | _ -> false) state.Goals with
+        | Some _ -> (true, None)
+        | None _ -> (false, None)
+
     let getRoleDecision : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
@@ -32,14 +37,14 @@ module DecisionTree =
     let getTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
+                getRoleDecision
+
+                Condition (isWorkingOnOccupyGoal,
+                    Options [ Choice workOnKiteGoal ])
 
                 Choice workOnOccupyGoal
-                
-                getRoleDecision
-                
-                //Choice(reactToEnemyAgent)
 
-                
+                //Choice(reactToEnemyAgent)
 
                 Choice(exploreLocalGraph)
 

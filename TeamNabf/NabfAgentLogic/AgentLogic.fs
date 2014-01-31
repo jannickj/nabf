@@ -15,6 +15,7 @@ namespace NabfAgentLogic
         open InspectorLogic
         open RepairerLogic
         open SentinelLogic
+        open AgentLogicLib
 
         let OurTeam = "Nabf"
         
@@ -146,6 +147,24 @@ namespace NabfAgentLogic
         let updateLastPos (lastState:State) (state:State) =
             { state with LastPosition = lastState.Self.Node }
 
+        let updateKiteGoal state =
+            let kiteGoals, otherGoals = List.partition (function | KiteGoal _ -> true | _ -> false) state.Goals
+
+            let prevKiteGoal = 
+                match kiteGoals with
+                | head :: _ -> Some head
+                | [] -> None
+
+            match adjacentEnemies state with
+                | [] 
+                    -> match prevKiteGoal with
+                       | Some (KiteGoal (0, _)) 
+                           -> { state with Goals = KiteGoal (1, []) :: otherGoals }
+                       | Some (KiteGoal (1, _))
+                           -> { state with Goals = otherGoals }
+                       | _ -> state
+                | enemies -> { state with Goals = KiteGoal (0, enemies) :: otherGoals }
+
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts = 
             let clearedState = clearTempBeliefs state
@@ -154,12 +173,11 @@ namespace NabfAgentLogic
                 List.fold handlePercept clearedState percepts
                 |> updateEdgeCosts state
                 |> updateLastPos state
+                |> updateKiteGoal
 
             match updatedState.Self.Role.Value with
             | Explorer -> updateStateExplorer updatedState
             | _ -> updatedState
-
-            
     
         let shouldSharePercept (state:State) percept =
             match percept with

@@ -16,6 +16,10 @@ module AgentLogicLib =
 
     let desirabilityForDecreasingValue value = (1000000/(value+1))
 
+    let adjacentAgents state = List.partition (fun agent -> agent.Team <> state.Self.Team) state.NearbyAgents
+    let adjacentEnemies state = fst <| adjacentAgents state
+    let adjacentFriends state = snd <| adjacentAgents state
+
     let desireFromPath agent graph node increaser = 
         let inc = if increaser < 0 then 0 else increaser
         let p = pathTo agent node graph

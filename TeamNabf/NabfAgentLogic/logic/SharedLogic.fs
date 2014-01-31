@@ -62,12 +62,15 @@ module SharedLogic =
             
     let workOnKiteGoal (state : State) =
         let kiteChooser = function
-                          | KiteGoal agents -> Some agents
+                          | KiteGoal (stepsSince, agents) -> Some (stepsSince, agents)
                           | _ -> None
 
         let kiteAgentLists = List.choose kiteChooser state.Goals
 
         match kiteAgentLists with
-        | agentsToKite :: _ -> kiteAgents agentsToKite state
-        | _ -> recharge
+        | (0, agentsToKite) :: _ -> kiteAgents agentsToKite state
+        | (1, _) :: _ -> recharge
+        | _ -> (false, None)
+
+
             

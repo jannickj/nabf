@@ -119,7 +119,7 @@ module AgentTypes =
 
     type Goal =
         | JobGoal  of JobGoal
-        | KiteGoal of Agent list
+        | KiteGoal of int * (Agent list)
 
     type Job = JobHeader * JobData
 
