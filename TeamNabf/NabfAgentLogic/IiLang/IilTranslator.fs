@@ -7,7 +7,7 @@ namespace NabfAgentLogic.IiLang
         exception InvalidIilException of string * (Element list)
             with 
                 override this.Message = 
-                            sprintf "(%A %A)" this.Data0 (this.Data1.ToString())
+                            sprintf "(%A %A)" this.Data0 (this.Data1)
 
         let deriveStatusFromHealth health =
             if health = 0 then 
@@ -29,8 +29,8 @@ namespace NabfAgentLogic.IiLang
 
         let parseIilAgentRole iilAgent =
             match iilAgent with
-            | [ Function ("agentId", [Identifier id])
-              ; Function ("role", [role])
+            | [ Function ("role", [role])
+              ; Function ("agentId", [Identifier id])
               ; Function ("sureness", [Numeral sureness])
               ] -> AgentRolePercept (id, (parseIilRole role).Value, int <| sureness)
             | _ -> raise <| InvalidIilException ("AgentRole", iilAgent)
@@ -400,7 +400,7 @@ namespace NabfAgentLogic.IiLang
             | VertexSeen (vn,_) -> [Function ("nodeKnowledge", [Identifier vn; Numeral 0.0])]
             | EdgeSeen (Some cost,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2; Numeral (float cost)])]
             | EdgeSeen (None,vn1,vn2) -> [Function ("edgeKnowledge", [Identifier vn1; Identifier vn2; Numeral 0.0])]
-            | EnemySeen { Role = Some role; Name = name } -> [Function ("roleKnowledge", [Identifier name; Identifier (role.ToString())])]
+            | EnemySeen { Role = Some role; Name = name } -> [Function ("roleKnowledge", [Identifier (sprintf "%A" role); Identifier name; Numeral (float 100)])]
             | _ -> []
 
         let buildIilMetaAction maction simid =
