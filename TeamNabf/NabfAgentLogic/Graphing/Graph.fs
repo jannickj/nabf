@@ -16,7 +16,9 @@
         type Graph = Map<string, Vertex>
 
         let getNeighbours identifier (graph:Graph) = 
-            let vertices = List.filter (fun id -> graph.ContainsKey id) (snd (List.unzip (Set.toList graph.[identifier].Edges)))
+            let nEdges = Set.toList graph.[identifier].Edges
+            let neighbourName  =(snd (List.unzip nEdges))
+            let vertices = List.filter (fun id -> graph.ContainsKey id) neighbourName
             List.map (fun id -> graph.[id]) vertices
 
         let isVertexAdjacentTo identifier vertex = 
@@ -26,33 +28,43 @@
             let vertex = graph.[vertexId]
             let updatedVertex = 
                 { vertex with Edges = 
-                    Set.filter (fun (_, id) -> id <> otherVertexId) vertex.Edges
-                    |> Set.add (value, otherVertexId) 
+                              Set.filter (fun (_, id) -> id <> otherVertexId) vertex.Edges
+                              |> Set.add (value, otherVertexId) 
                 } 
             Map.add vertex.Identifier updatedVertex graph
 
         let rec updateGraph (vertex : Vertex) (graph : Graph) = 
             match Set.toList vertex.Edges with
             | (weight, otherVertexId) :: rest -> 
-                addEdgeToVertex otherVertexId (weight, vertex.Identifier) graph
+                (if graph.ContainsKey(otherVertexId) then
+                    addEdgeToVertex otherVertexId (weight, vertex.Identifier) graph
+                else
+                    graph)
                 |> updateGraph { vertex with Edges = vertex.Edges.Remove (weight, otherVertexId) }
             | [] -> graph
 
         let addVertex graph vertex = 
             updateGraph vertex graph |> Map.add vertex.Identifier vertex
 
+        let addVertexById vertexId graph =
+            if Map.containsKey vertexId graph then
+                graph
+            else
+                Map.add vertexId {Identifier = vertexId; Value = None; Edges = Set.empty} graph
+
         let addEdge ((weight, vertexId1, vertexId2) : Edge) (graph : Graph) =
-            addEdgeToVertex vertexId1 (weight, vertexId2) graph 
+            let graph' = 
+                addVertexById vertexId1 graph 
+                |> addVertexById vertexId2
+            addEdgeToVertex vertexId1 (weight, vertexId2) graph'
             |> addEdgeToVertex vertexId2 (weight, vertexId1)
 
         let join (graph : Graph) (graph' : Graph) = 
             Map.empty<string, Vertex> : Graph
 
         let addVertexValue vertex value (graph : Graph) =
-            Map.add vertex { graph.[vertex] with Value = Some value } graph
-
-        let addEdgeCost ((value, vertex1, vertex2) : Edge) (graph : Graph) =
-            Map.empty<string,Vertex>
+            let newGraph = addVertexById vertex graph
+            Map.add vertex { newGraph.[vertex] with Value = Some value } newGraph
         
         let removeEdgeFromVertex edge vertex =
             { vertex with Edges = Set.remove edge vertex.Edges }
@@ -61,7 +73,6 @@
             let updateVertex (cost, id) (graph : Graph) = 
                 Map.add id (removeEdgeFromVertex (cost, vertex.Identifier) graph.[id]) graph
             
-            printfn "edges: %A" <| Set.toList vertex.Edges
              
             vertex.Edges
             |> Set.fold (fun graph edge -> updateVertex edge graph) graph

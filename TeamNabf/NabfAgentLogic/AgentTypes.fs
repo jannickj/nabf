@@ -105,23 +105,23 @@ module AgentTypes =
         | OccupyJob of VertexName list * VertexName list
         | RepairJob of VertexName * AgentName
         | DisruptJob of VertexName
-        | AttackJob of VertexName list
+        | AttackJob of VertexName list //Change to single vertex?
         | EmptyJob
     
     type AgentsNeededForJob = int
 
     type JobHeader = Option<JobID> * JobValue * JobType * AgentsNeededForJob
-    type Goal =
+    type JobGoal =
         | OccupyGoal of VertexName
         | RepairGoal of VertexName * AgentName
         | DisruptGoal of VertexName
         | AttackGoal of VertexName
 
+    type Goal =
+        | JobGoal of JobGoal
 
     type Job = JobHeader * JobData
 
-    
-    
 
     let levelToPoints start level =
         start * (pown 2 level)
@@ -207,6 +207,7 @@ module AgentTypes =
             SimulationStep   : int;
             NearbyAgents     : Agent list
             OwnedVertices    : Map<VertexName, TeamName>
+            LastPosition     : VertexName
             NewVertices      : SeenVertex list
             NewEdges         : Edge list
             LastStepScore    : int

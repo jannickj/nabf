@@ -4,6 +4,8 @@ module SaboteurLogic =
 
     open AgentTypes
     open AgentLogicLib
+    open PathFinding
+    open Constants
 
     let saboteurRank (allies:Agent list) (self:Agent) =
         let order = List.sort (self :: allies)
@@ -29,3 +31,31 @@ module SaboteurLogic =
         match target with
         | Some t -> tryDo (Attack(t.Name)) s
         | None -> (false, None)
+
+    let rec findAttackGoal (g:Goal list) =
+        match g with
+        | head :: tail -> 
+            match head with
+            | JobGoal(AttackGoal(v)) -> Some v
+            | _ -> findAttackGoal tail
+        | [] -> None
+
+    let workOnAttackGoal (s:State) =
+        match (findAttackGoal s.Goals) with
+        | Some v ->
+            let goal = pathTo s.Self v s.World
+            match goal with
+            | Some vl -> tryGo s.World.[vl.Head] s
+            | None -> (false,None)
+        | None -> (false,None)
+
+   /////////////////////////////////////
+   ///  DECIDE JOBS
+   /////////////////////////////////////
+
+    let decideJobSaboteur (s:State) (job:Job) =  
+        match job with
+        | ((_,_,JobType.AttackJob,_),AttackJob (vl) ) -> desireFromPath s.Self s.World vl.Head SABOTEUR_ATTACKJOB_MOD
+        | ((_,_,JobType.OccupyJob,_),OccupyJob (vl,zone) ) -> desireFromPath s.Self s.World vl.Head SABOTEUR_OCCUPYJOB_MOD
+        | ((_,_,JobType.DisruptJob,_),DisruptJob (vn)) -> desireFromPath s.Self s.World vn SABOTEUR_DISRUPTJOB_MOD
+        | _ -> (0,false)

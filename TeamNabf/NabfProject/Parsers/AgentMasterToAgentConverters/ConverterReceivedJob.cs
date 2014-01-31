@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using JSLibrary.IiLang.DataContainers;
 using JSLibrary.IiLang.Parameters;
+using NabfProject.AI;
 
 namespace NabfProject.Parsers.AgentMasterToAgentConverters
 {
@@ -19,13 +20,21 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
             IilPerceptCollection ipc;
             //IilPercept percept = ((IilPerceptCollection)Parsers.ConvertToForeign(gobj.Notice)).Percepts[0];
 
-            int receiverIndex = gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver);
+            SortedList<long, NabfAgent> sl = new SortedList<long, NabfAgent>();
+
+            foreach (NabfAgent a in gobj.Notice.GetTopDesireAgents())
+                sl.Add(a.Id, a);
+
+            int receiverIndex = sl.IndexOfValue(gobj.Receiver); ; //gobj.Notice.GetTopDesireAgents().IndexOf(gobj.Receiver);
+            string gotoNode = "emptyjob";
+            if (gobj.Notice.WhichNodes.Count != 0)
+                gotoNode = gobj.Notice.WhichNodes[receiverIndex].Name;
 
             ipc = new IilPerceptCollection
             (
                 new IilPercept("receivedJob"),
                 new IilPercept("noticeId", new IilNumeral(gobj.Notice.Id)),
-                new IilPercept("whichNodeNameToGoTo", new IilIdentifier(gobj.Notice.WhichNodes[receiverIndex].Name))
+                new IilPercept("whichNodeNameToGoTo", new IilIdentifier(gotoNode))
                 //percept
             );
 

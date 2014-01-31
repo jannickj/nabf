@@ -21,7 +21,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Debug\NabfAgentLogic.XML</DocumentationFile>
-    <StartArguments>--define: DebugModeOn</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -37,23 +36,26 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <ItemGroup>
-    <Compile Include="Logging.fs" />
+    <Compile Include="Constants.fs" />
     <Compile Include="Graphing\Graph.fsi" />
     <Compile Include="Graphing\Graph.fs" />
     <Compile Include="Graphing\Dijkstra.fsi" />
     <Compile Include="Graphing\Dijkstra.fs" />
     <Compile Include="AgentTypes.fs" />
+    <Compile Include="Logging.fs" />
     <Compile Include="PathFinding.fsi" />
     <Compile Include="PathFinding.fs" />
     <Compile Include="IiLang\IiLang.fs" />
     <Compile Include="IiLang\IilTranslator.fs" />
     <Compile Include="Logic\AgentLogicLib.fs" />
+    <Compile Include="Logic\SharedLogic.fs" />
     <Compile Include="Logic\ExplorerLogic.fs" />
     <Compile Include="Logic\SaboteurLogic.fs" />
     <Compile Include="Logic\InspectorLogic.fs" />
     <Compile Include="Logic\SentinelLogic.fs" />
     <Compile Include="Logic\RepairerLogic.fs" />
     <Compile Include="Logic\CommonLogic.fs" />
+    <Compile Include="DebuggingFeatures.fs" />
     <Compile Include="Explorer.fs" />
     <Compile Include="Inspector.fs" />
     <Compile Include="Repairer.fs" />
@@ -65,11 +67,6 @@
     <Compile Include="AgentLogicClient.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineExtensions\XmasEngineExtensions.csproj">
-      <Name>XmasEngineExtensions</Name>
-      <Project>{f0965ebc-feaf-4445-a43b-998d0a8d249d}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
@@ -79,6 +76,10 @@
     <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
       <Project>{02121C4A-B1FB-46B8-BDE8-C5C6CA28C036}</Project>
       <Name>JSLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineExtensions\XmasEngineExtensions.csproj">
+      <Project>{F0965EBC-FEAF-4445-A43B-998D0A8D249D}</Project>
+      <Name>XmasEngineExtensions</Name>
     </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

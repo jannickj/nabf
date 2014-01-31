@@ -23,8 +23,7 @@ namespace NabfClientApplication
 		{
             int masterinfo_pos = 0;
             int marsinfo_pos = masterinfo_pos+1;
-
-            const bool DebugModeOn = false;
+            
             
 			try
 			{
@@ -36,8 +35,13 @@ namespace NabfClientApplication
             string mars_server = args[marsinfo_pos];
             string username = args[marsinfo_pos+1];
             string password = args[marsinfo_pos+2];
-            if (DebugModeOn)
-                Console.WriteLine("Got: Server: " + mars_server + ", Username: " + username + ", Password: " + password);
+			string debug = null;
+			if (args.Length == marsinfo_pos + 4)
+				debug = args[marsinfo_pos + 3];
+
+			
+
+            Console.WriteLine("Got: Server: " + mars_server + ", Username: " + username + ", Password: " + password);
 
             IPEndPoint[] masterServerPoints = CreateIPEndPoint(master_server);
             IPEndPoint[] marsServerPoints = CreateIPEndPoint(mars_server);
@@ -58,6 +62,10 @@ namespace NabfClientApplication
             Console.WriteLine("Successfully connected to master server");
 
             AgentLogicFactory logicFactory = new AgentLogicFactory(username);
+
+			if (debug != null)
+				logicFactory.SetForcedMove(debug);
+
             ServerCommunication marsSerCom = new ServerCommunication(
                 new StreamReader(marsClient.GetStream()),
                 new StreamWriter(marsClient.GetStream()));
@@ -70,8 +78,7 @@ namespace NabfClientApplication
             AgentToMarsParser agentToMarsParser = new AgentToMarsParser();
 
             ClientApplication client = new ClientApplication(masterSerCom,marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
-            if (DebugModeOn)
-                client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalMilliseconds+" ms)");
+            client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalMilliseconds+" ms)");
 
             Console.WriteLine("Authenticating: username=" + username + ", password=" + password);
 

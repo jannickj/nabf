@@ -6,10 +6,23 @@ module ExplorerLogic =
     open AgentLogicLib
     open Graphing.Graph
     open PathFinding
+    open Logging
+    open Constants
 
-    //////////////////////
-    // Helper functions //
-    //////////////////////
+    type ZoneVertex = 
+        {   
+            Vertex          : Vertex
+            ControlValue    : int
+            Lock            : bool
+            HasAgent        : bool
+            Desire          : int
+        }
+
+    ////////////////////////////////////////
+    // Functions for creating occupy jobs //
+    ////////////////////////////////////////
+
+    //Check if a vertex v is part of an existing occupy job
     let rec zoneAlreadyFound (jobs:Job list) (v:string) =
         match jobs with
         | [] -> false
@@ -21,17 +34,15 @@ module ExplorerLogic =
                 zoneAlreadyFound tail v
         | _ -> failwithf "Incorrect input passed to zoneAlreadyFound"
 
-    let getRelevantNeighbours (s:State) =
-        let neighbours = List.map (fun v -> v.Identifier) (getNeighbours s.Self.Node s.World)
-        List.filter (fun st -> (List.tryFind (fun (st2:VertexName) -> st2 = st) s.NewZoneFrontier).IsSome) neighbours
+    //Get all neighbours that are not already in the zone
+    let getRelevantNeighbours (s:State) (vn:VertexName) =
+        let neighbours = List.map (fun v -> v.Identifier) (getNeighbours vn s.World)
+        let neighboursNotInFrontier = List.filter (fun st -> (List.tryFind (fun (st2:VertexName) -> st2 = st) s.NewZoneFrontier).IsNone) neighbours
+        List.filter (fun v -> not (Map.containsKey v (fst s.NewZone.Value))) neighboursNotInFrontier
 
-    let rec listIntersection (l1:string list) (l2:string list) =
-        match l1 with
-        | [] -> l2
-        | head :: tail -> if (List.tryFind (fun s -> s = head) l2).IsNone then listIntersection tail (head :: l2) else listIntersection tail l2
-
-    let rec getOverlappingVertices (s:State) (v:VertexName list) = 
-        match v with
+    //Get all vertices in vl that are also in NewZone
+    let rec getOverlappingVertices (s:State) (vl:VertexName list) = 
+        match vl with
         | [] -> []
         | head :: tail -> if (Map.containsKey head (fst s.NewZone.Value)) 
                           then 
@@ -39,18 +50,10 @@ module ExplorerLogic =
                           else 
                               getOverlappingVertices s tail
         
-
+    //Get all jobs that contain one or more vertices in NewZone
     let getOverlappingJobs (s:State) (occupyJobs:Job list) =
         List.filter (fun ((_,OccupyJob(_,vertices)):Job) -> (getOverlappingVertices s vertices) <> []) occupyJobs
 
-    type ZoneVertex = 
-        {   
-            Vertex          : Vertex
-            ControlValue    : int
-            Lock            : bool
-            HasAgent        : bool
-            Desire          : int
-        }
 
     let buildZoneVertex (vertex:Vertex) =
         {
@@ -129,58 +132,133 @@ module ExplorerLogic =
         let zl = List.filter (fun zn -> zn.HasAgent ) zl
         List.map (fun zn -> zn.Vertex.Identifier) zl
 
-    ////////////////////
-    // Main functions //
-    ////////////////////
+    let calcZoneValue (agents:int) (zone:Graph) =
+        Map.fold (fun state key value -> if value.Value = None then state else state + value.Value.Value) 0 zone
+
+    let rec mergeZones (zone:VertexName list) (overlapping:Job list) =
+        match overlapping with
+        | (_,JobData.OccupyJob(_,oldZone)) :: tail -> mergeZones (List.append oldZone zone) tail
+        | _ -> zone
+
+    let rec mergeListIntoGraph (s:State) (graph:Graph) (vertices:VertexName list) =
+        match vertices with
+        | head :: tail -> mergeListIntoGraph s (addVertex graph s.World.[head]) tail
+        | [] -> graph
+
+    let rec listEquals l1 l2 =
+        match l1 with
+        | [] -> true
+        | head :: tail -> if (List.tryFind (fun e -> e = head) l2).IsSome then listEquals tail l2 else false
+
+    //Check if you need to make a new occupy job based on NewZone
+    let generateOccupyJobExplorer (s:State) (knownJobs:Job list) =
+        
+        match s.NewZone with
+        | Some (g,true) -> 
+            let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
+            let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
+            if (List.tryFind (fun (_,JobData.OccupyJob(_,verts)) ->  (listEquals verts zone)) overlapping ).IsSome then ([],[]) //If the job is already in the job list
+            elif overlapping = [] //Nothing is overlapping
+            then
+                let zonePoints = findAgentPlacement (fst s.NewZone.Value)
+                ([((None,(calcZoneValue zonePoints.Length (fst s.NewZone.Value)),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,zone))],[])
+            else //There is a conflict with at least one other occupy job. We need to merge.                
+                let mergedZone = mergeZones zone overlapping
+                let newGraph = mergeListIntoGraph s Map.empty<string,Vertex> mergedZone
+                let zonePoints = findAgentPlacement newGraph
+                let removeIDs = List.map (fun (((id,_,_,_),_):Job) -> if id = None then 0 else id.Value) overlapping
+                ([((None,((calcZoneValue zonePoints.Length (fst s.NewZone.Value))/List.length zonePoints),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,mergedZone))],removeIDs)
+        | _ -> ([],[])
+
+
+    //////////////////////
+    // Behavioral logic //
+    //////////////////////
+
+    //Run away from enemy saboteurs. This has lower priority than inspecting.
     let explorerReact (s:State) (agents:Agent list * Agent list) =
         let enemySabs = List.filter (fun a -> (a.Role = Some Saboteur) || (a.Role = None)) (fst agents)
         runAway s enemySabs
 
-    let generateOccupyJobExplorer (s:State) (knownJobs:Job list) : Option<Job> =
-        match s.NewZone with
-        | Some (g,true) -> 
-            let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
-            
-            if overlapping = []
-            then
-                let completeZone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
-                let zonepoints = findAgentPlacement (fst s.NewZone.Value)
-                Some ((None,10(*Remember to add zone value*),JobType.OccupyJob,(List.length zonepoints)),JobData.OccupyJob(zonepoints,completeZone))
-            else
-                None // Join w. overlapping jobs and return the joined job
-        | _ -> None
-
+    // If the explorer is on an unprobed vertex, probe it.
     let probeVertex (s:State) =
-        if s.World.[s.Self.Node].Value.IsNone then tryDo (Probe None) s else (false,None)
+        let rank = rankByType s
+        //logInfo ("Vertex has value: "+s.World.[s.Self.Node].Value.IsNone.ToString())
+        if s.World.[s.Self.Node].Value.IsNone && rank <> 0 then tryDo (Probe None) s else (false,None) //Only one explorer should probe
 
-    let exploreZone (s:State) = 
+    //If the explorer is in the middle of finding a new zone to post, keep exploring it. Has lower priority than probe.
+    let exploreNewZone (s:State) =
+        match s.NewZoneFrontier with
+        | head :: _ -> 
+            
+            let path = pathToNearest s.Self (fun v -> List.exists (fun zV -> zV = v.Identifier ) s.NewZoneFrontier) s.World
+                        //pathTo s.Self s.NewZoneFrontier.Head s.World
+            
+            if path.IsSome && not path.Value.IsEmpty  then
+                logInfo ("Going to: "+(List.rev path.Value).Head)
+                tryGo (s.World.[path.Value.Head]) s
+            else
+                (false,None)
+        | [] -> (false,None)
+
+
+    //////////////////////////////////////
+    // Functions for updating the state //
+    //////////////////////////////////////
+
+    let partitionFrontier (s:State) = List.partition (fun vn -> s.World.ContainsKey vn && s.World.[vn].Value.IsSome) s.NewZoneFrontier
+        
+    let partitionExploredVertices (s:State) (f:VertexName list) = List.partition (fun vn -> s.World.ContainsKey vn && s.World.[vn].Value.IsSome && s.World.[vn].Value.Value > 5) f
+
+    let rec listUnion l1 l2 = 
+        match l1 with
+        | [] -> l2
+        | head :: tail -> if (List.tryFind (fun e -> e = head) l2).IsNone then listUnion tail (head::l2) else listUnion tail l2
+
+    let rec addToGraph (s:State) l g = 
+        match l with
+        | [] -> g
+        | head :: tail -> addToGraph s tail (addVertex g s.World.[head])
+
+    let rec verticesToAdd (s:State) (l:VertexName list) =
+        match l with
+        | [] -> []
+        | head :: tail -> listUnion (getRelevantNeighbours s head) (verticesToAdd s tail)
+
+    // If you are in the middle of exploring a zone, update NewZone and NewZoneFrontier
+    let updateExploreZone (s:State) = 
         match s.NewZone with
-        | Some (z,false) -> if (not s.NewZoneFrontier.IsEmpty) && (s.World.[s.Self.Node].Value.Value > 5) && (Map.tryFind s.Self.Node (fst s.NewZone.Value)).IsNone
-                            then
-                                let rn = listIntersection s.NewZoneFrontier (getRelevantNeighbours s)
-                                let s = {s with NewZone = Some (addVertex (fst s.NewZone.Value) s.World.[s.Self.Node],true)
-                                                NewZoneFrontier = rn.Tail}
-                                let path = pathTo s.Self rn.Head s.World
-                                tryGo s.World.[path.Value.Head] s
-                            elif
-                                (not s.NewZoneFrontier.IsEmpty)
-                            then
-                                let path = pathTo s.Self s.NewZoneFrontier.Head s.World
-                                tryGo s.World.[path.Value.Head] s
-                            else 
-                                (false,None)
-        | _ -> (false,None)
+        | Some (_,false) ->
+            let pFrontier = partitionFrontier s
+            let pExplored = partitionExploredVertices s (fst pFrontier)
+            let newVertices = verticesToAdd s (fst pExplored)
+            let newFrontier = listUnion (snd pFrontier) newVertices
+            match newFrontier with
+            | [] -> {s with NewZone = Some ((addToGraph s (fst pExplored) (fst s.NewZone.Value)),true); NewZoneFrontier = []}
+            | _  -> {s with NewZone = Some ((addToGraph s (fst pExplored) (fst s.NewZone.Value)),false); NewZoneFrontier = newFrontier}
+        | _ -> {s with NewZone = None}
 
-    let startDiscoveringZone (s:State) =
-        if s.NewZone.IsNone && s.World.[s.Self.Node].Value.Value = 10 
+    // If you are on a node with value 10, check if it is part of an occupy job, and if not, start exploring the area.
+    let findNewZone (s:State) =
+        let hasNoNewZone = s.NewZone.IsNone
+        let node = s.World.[s.Self.Node].Value
+        if hasNoNewZone && node.IsSome && node.Value >= ZONE_ORIGIN_VALUE 
             && not (zoneAlreadyFound (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
         then
-            let rn = getRelevantNeighbours s
-            let s = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) 
-                                      NewZoneFrontier = rn.Tail}
-            tryGo s.World.[rn.Head] s
+            let newS = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) }
+            {newS with NewZoneFrontier = getRelevantNeighbours newS s.Self.Node }
         else
-            (false,None)
+            s
 
-
+    let updateStateExplorer (s:State) =
+        let s2 = findNewZone s
+        updateExploreZone s2
    
+   /////////////////////////////////////
+   ///  DECIDE JOBS
+   /////////////////////////////////////
+
+    let decideJobExplore (s:State) (job:Job) =  
+        match job with
+        | ((_,_,JobType.OccupyJob,_),OccupyJob (vl,zone) ) -> desireFromPath s.Self s.World vl.Head EXPLORER_OCCUPYJOB_MOD
+        | _ -> (0,false)

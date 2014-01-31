@@ -5,6 +5,9 @@ namespace NabfAgentLogic.IiLang
         open NabfAgentLogic.AgentTypes
 
         exception InvalidIilException of string * (Element list)
+            with 
+                override this.Message = 
+                            sprintf "(%A %A)" this.Data0 (this.Data1.ToString())
 
         let deriveStatusFromHealth health =
             if health = 0 then 
@@ -163,10 +166,10 @@ namespace NabfAgentLogic.IiLang
         let parseIilSurveyedEdge iilData =
             match iilData with
             | Function ("surveyedEdge",
-                [ Function ("node1", [Identifier node1])
-                ; Function ("node2", [Identifier node2])
-                ; Function ("weight", [Numeral weight])
-                ]) -> (Some (int weight), node1, node2) : Edge
+                        [ Function ("node1", [Identifier node1])
+                        ; Function ("node2", [Identifier node2])
+                        ; Function ("weight", [Numeral weight])
+                        ]) -> (Some (int weight), node1, node2) : Edge
             | _ -> raise <| InvalidIilException ("surveyedEdge", [iilData])
 
         let parseIilAchievement achievement =
@@ -205,9 +208,9 @@ namespace NabfAgentLogic.IiLang
         let parseIilVisibleEdge visibleEdge =
             match visibleEdge with
             | Function ("visibleEdge", 
-                [ Function ("node1", [Identifier node1])
-                ; Function ("node2", [Identifier node2])
-                ]) -> (None, node1, node2) : Edge
+                        [ Function ("node1", [Identifier node1])
+                        ; Function ("node2", [Identifier node2])
+                        ]) -> (None, node1, node2) : Edge
             | _ -> raise <| InvalidIilException ("visibleEdge", [visibleEdge])
 
         let parseIilStatus status =
@@ -219,22 +222,22 @@ namespace NabfAgentLogic.IiLang
         let parseIilVisibleEntity visibleEntity =
             match visibleEntity with
             | Function ("visibleEntity", 
-                [ Function ("name", [Identifier name])
-                ; Function ("team", [Identifier team])
-                ; Function ("node", [Identifier node])
-                ; Function ("status", [status])
-                ]) -> { Energy = None
-                      ; Health = None
-                      ; MaxEnergy = None
-                      ; MaxHealth = None
-                      ; Name = name
-                      ; Node = node
-                      ; Role = None
-                      ; Strength = None
-                      ; Team = team
-                      ; VisionRange = None
-                      ; Status = parseIilStatus status
-                      }
+                        [ Function ("name", [Identifier name])
+                        ; Function ("team", [Identifier team])
+                        ; Function ("node", [Identifier node])
+                        ; Function ("status", [status])
+                        ]) -> { Energy = None
+                              ; Health = None
+                              ; MaxEnergy = None
+                              ; MaxHealth = None
+                              ; Name = name
+                              ; Node = node
+                              ; Role = None
+                              ; Strength = None
+                              ; Team = team
+                              ; VisionRange = None
+                              ; Status = parseIilStatus status
+                              }
             | _ -> raise <| InvalidIilException ("visibleEntity", [visibleEntity])
         
         let parseIilTeamName teamName =
@@ -368,7 +371,7 @@ namespace NabfAgentLogic.IiLang
             | Repair a -> Action ("repair", [Numeral id; Identifier a])
             | Survey -> Action ("survey", [Numeral id])
 
-        let vertexToIdentifer vlist = List.map (fun v -> Identifier v) vlist
+        let vertexToIdentifer vlist = List.map (fun v -> Function ("nodeKnowledge", [Identifier v; Numeral 0.0])) vlist
 
         let buildIilJobData simid job = 
             let ((id,value,jt,aNeeded),jdata) = job

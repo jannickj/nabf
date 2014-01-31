@@ -42,9 +42,10 @@ namespace NabfProject.Parsers.KnowledgeConverters
         {
             if (gobj.Weight == 0)
             {
-                return new IilPerceptCollection(new IilPercept("visibleEdge"
-                    , new IilFunction("node1", new IilIdentifier(gobj.Node1))
-                    , new IilFunction("node2", new IilIdentifier(gobj.Node2))
+                return new IilPerceptCollection(new IilPercept("visibleEdges",
+					new IilFunction("visibleEdge"
+						, new IilFunction("node1", new IilIdentifier(gobj.Node1))
+						, new IilFunction("node2", new IilIdentifier(gobj.Node2)))
                     ));
             }
             else

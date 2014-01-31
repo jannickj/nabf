@@ -17,8 +17,20 @@ namespace NabfProject.KnowledgeManagerModel
             Node2 = node2;
             Weight = weight;
         }
+		public override bool Equals(object obj)
+		{
+			if (obj is Knowledge)
+				return this.Equals((Knowledge)obj);
+			else
+				return false;
+		}
 
-        bool IEquatable<Knowledge>.Equals(Knowledge other)
+		public override int GetHashCode()
+		{
+			return this.Node1.GetHashCode() + this.Node2.GetHashCode();
+		}
+
+		public bool Equals(Knowledge other)
         {
             if (other == null)
                 throw new ArgumentException("Input of Equals of " + this.GetType().Name + " is null");
@@ -30,7 +42,7 @@ namespace NabfProject.KnowledgeManagerModel
 
             EdgeKnowledge ek = (EdgeKnowledge)other;
 
-            return ek.Node1 == this.Node1 && ek.Node2 == this.Node2;
+			return (ek.Node1 == this.Node1 && ek.Node2 == this.Node2) || (ek.Node1 == this.Node2 && ek.Node2 == this.Node1);
         }
 
         int IComparable<Knowledge>.CompareTo(Knowledge other)

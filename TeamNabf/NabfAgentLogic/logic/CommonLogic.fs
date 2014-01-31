@@ -10,9 +10,10 @@ module CommonLogic =
     open ExplorerLogic
     open InspectorLogic
     open AgentLogicLib
+    open Logging
 
     let reactToEnemyAgent (s:State) =
-        let agents = List.partition (fun a -> a.Node = s.Self.Node && a.Team <> s.Self.Team) s.NearbyAgents
+        let agents = List.partition (fun a -> (a.Node = s.Self.Node) && (a.Team <> s.Self.Team)) s.NearbyAgents
         if not (fst agents).IsEmpty then
             match s.Self.Role.Value with
             | Saboteur -> saboteurReact s agents
@@ -24,19 +25,18 @@ module CommonLogic =
             (false,None)
 
     let exploreLocalGraph (s:State) =
-        let unexplored = (pathToNearestUnExplored s.Self s.World)
-        printfn "Unexplored nodes: %A\n"  unexplored
-        ignore <| match unexplored with
-                    | Some (head :: _) -> printfn "Edges from first unexplored node: %A\n" s.World.[head]
-                    | _ -> ()
+        let rank = rankByType s
+        //Fix with rank
+        let unexplored = (pathsToNearestNUnexplored rank s.Self s.World)
+        
 
-        if unexplored = None 
+        if unexplored = []
         then 
-            printfn "Unexplored NONE!"
             (false,None) 
-        else            
-            printfn "TRY GO! to %s \n\t %A" unexplored.Value.Head s.World.[unexplored.Value.Head]
-            tryGo s.World.[unexplored.Value.Head] s
+        else
+            let index = rank % unexplored.Length 
+            logInfo (sprintf "path to unexplored: %A" unexplored.[index])     
+            tryGo s.World.[unexplored.[index].Head] s
             
     let idle (s:State) = recharge
 

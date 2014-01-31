@@ -21,6 +21,6 @@ namespace Graphing
         val addVertex : Graph -> Vertex -> Graph
         val addEdge : Edge -> Graph -> Graph
         val addVertexValue : string -> int -> Graph -> Graph
-        val addEdgeCost : Edge -> Graph -> Graph
         val removeVertex : Vertex -> Graph -> Graph
         val join : Graph -> Graph -> Graph
+        val addVertexById : string -> Graph -> Graph
