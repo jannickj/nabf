@@ -67,7 +67,7 @@
             | :? ThreadAbortException as e -> raise e
             | e -> 
                 let s = sprintf "%A" e.StackTrace
-                logError (name + " crashed with: "+e.Message+"\n"+s)
+                logError (name + " crashed with: " + e.Message + "\n" + s)
                 returnedOnError()
 
 
@@ -229,6 +229,8 @@
                     let sharedPs = ShareKnowledge sharedP
                     let action = buildIilSendMessage (this.simulationID,sharedPs)
                     SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
+                else
+                    ()
             this.asyncCalculation runningCalcID "generating shared percept" stopDeciders.Token generateSharedPercepts
             
             let newstate = lock stateLock (fun () -> 

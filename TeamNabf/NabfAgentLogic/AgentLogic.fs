@@ -176,7 +176,12 @@ namespace NabfAgentLogic
             | VertexSeen (vp,t) -> 
                 not (state.World.ContainsKey(vp))                
             | EnemySeen { Name = name; Role = Some _ } ->
-                not (List.exists (fun { Role = Some _; Name = an } -> an = name) (state.EnemyData))
+                let isSame agent =
+                    match agent with
+                    | { Role = Some _; Name = agentName } -> agentName = name
+                    | _ -> false
+
+                not <| List.exists isSame state.EnemyData
             | _ -> false
 
         let selectSharedPercepts state (percepts:Percept list) =
