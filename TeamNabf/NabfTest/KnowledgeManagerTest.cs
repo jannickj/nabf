@@ -143,7 +143,7 @@ namespace NabfTest
         }
 
 		[Test]
-		public void AddKnowledge_BetterAdded_RemoveTheOldKnowledge()
+		public void AddKnowledge_BetterNodeAdded_RemoveTheOldKnowledge()
 		{
 			km.Subscribe(agent1);
 			km.Subscribe(agent2);
@@ -159,6 +159,25 @@ namespace NabfTest
 			var knowledgeChosen = (NodeKnowledge) km.KnowledgeBase[0];
 
 			Assert.AreEqual(nk1better.Value, knowledgeChosen.Value);
+		}
+
+		[Test]
+		public void AddKnowledge_BetterEdgeAdded_RemoveTheOldKnowledge()
+		{
+			km.Subscribe(agent1);
+			km.Subscribe(agent2);
+
+
+
+			EdgeKnowledge ek1 = new EdgeKnowledge("v1", "v2", 0);
+			EdgeKnowledge ek1better = new EdgeKnowledge("v2", "v1", 7);
+
+			km.SendKnowledgeToManager(new List<Knowledge>() { ek1 }, agent1);
+			km.SendKnowledgeToManager(new List<Knowledge>() { ek1better }, agent2);
+
+			var knowledgeChosen = (EdgeKnowledge)km.KnowledgeBase[0];
+
+			Assert.AreEqual(ek1better.Weight, knowledgeChosen.Weight);
 		}
 
         private void CatchEvent(NewKnowledgeEvent evt)

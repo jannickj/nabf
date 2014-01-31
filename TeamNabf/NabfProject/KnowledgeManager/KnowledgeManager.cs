@@ -16,11 +16,11 @@ namespace NabfProject.KnowledgeManagerModel
         private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
         //private Dictionary<Knowledge, bool> _knowledgeBase = new Dictionary<Knowledge, bool>();
-		private HashSet<Knowledge> _knowledgeBase = new HashSet<Knowledge>();
+		private Dictionary<Knowledge,Knowledge> _knowledgeBase = new Dictionary<Knowledge,Knowledge>();
 
 		public Knowledge[] KnowledgeBase
 		{
-			get { return _knowledgeBase.ToArray(); }
+			get { return _knowledgeBase.Keys.ToArray(); }
 		} 
 
         //private DictionaryList<Knowledge, NabfAgent> _knowledgeToAgent = new DictionaryList<Knowledge, NabfAgent>();
@@ -43,18 +43,31 @@ namespace NabfProject.KnowledgeManagerModel
             //Knowledge kl;
             foreach (Knowledge k in sentKnowledge)
             {
-                if (!_knowledgeBase.Contains(k))
-                {
-                    _knowledgeBase.Add(k);
-                    foreach (NabfAgent a in _sharingList)
-                    {
-                        if (a == sender)
-                            continue;
-                        a.Raise(new NewKnowledgeEvent(k));
-                    }
-                    //_knowledgeToAgent.Add(k, sender);
-                    //_agentToKnowledge.Add(sender, k);
-                }
+				bool updatedKnowledge = false;
+				if (!_knowledgeBase.ContainsKey(k))
+				{
+					_knowledgeBase.Add(k,k);
+					updatedKnowledge = true;
+					//_knowledgeToAgent.Add(k, sender);
+					//_agentToKnowledge.Add(sender, k);
+				}
+				else
+				{
+					var oldKnowledge = _knowledgeBase[k];
+					if (oldKnowledge.CompareTo(k) > 0)
+					{
+						_knowledgeBase.Remove(k);
+						_knowledgeBase.Add(k, k);
+					}
+				}
+
+				if(updatedKnowledge)
+					foreach (NabfAgent a in _sharingList)
+					{
+						if (a == sender)
+							continue;
+						a.Raise(new NewKnowledgeEvent(k));
+					}
                 //else
                 //{
                     //kl = _knowledgeBase.Keys.First(pk => k.Equals(pk));
@@ -67,7 +80,7 @@ namespace NabfProject.KnowledgeManagerModel
         
         public void SendOutAllKnowledgeToAgent(NabfAgent agent)
         {
-            foreach (Knowledge k in _knowledgeBase)
+            foreach (Knowledge k in _knowledgeBase.Keys)
             {
                 agent.Raise(new NewKnowledgeEvent(k));
             }
