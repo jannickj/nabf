@@ -376,6 +376,15 @@
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                     | RoundChanged id ->
                         ()
+                    | RemovedJob ((Some jobid,_,_,_),_) -> 
+                        lock knownJobsLock (fun () -> 
+                            this.KnownJobs <- List.filter (fun ((kid,_,_,_),_) -> 
+                                                                    match kid with
+                                                                    | Some id -> id <> jobid
+                                                                    | _ -> true
+                                                                ) this.KnownJobs
+                            ())
+                    | unknown -> logError ("Master server message unintelligible: "+unknown.ToString())
                 | Some (MarsServerMessage msg) ->
                     match msg with
                     | SimulationEnd _ -> 
