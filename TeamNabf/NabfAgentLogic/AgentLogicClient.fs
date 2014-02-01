@@ -30,7 +30,8 @@
         let mutable runningCalcID = 0
         let mutable runningCalc = 0
         let mutable decisionId = 0
-        let mutable decidedAction = (Int32.MaxValue,Action.Recharge)
+        let mutable decidedAction = (Int32.MaxValue,Action.Skip)
+ 
         let mutable runningCalcNames = []
         
         let mutable recievedJobFromServer = false
@@ -67,7 +68,7 @@
             | :? ThreadAbortException as e -> raise e
             | e -> 
                 let s = sprintf "%A" e.StackTrace
-                logError (name + " crashed with: "+e.Message+"\n"+s)
+                logError (name + " crashed with: " + e.Message + "\n" + s)
                 returnedOnError()
 
 
@@ -107,7 +108,7 @@
                     async
                         {
                             
-                            use! handler = Async.OnCancel(fun () -> ( logWarning (name+" was cancelled") ))
+                            //use! handler = Async.OnCancel(fun () -> ( logWarning (name+" was cancelled") ))
                             let action() =
                                 changeCals(1)
                                 logAll("Starting: "+name)
@@ -160,14 +161,14 @@
                                         let (cR,cA) = decidedAction
                                         logInfo (rankCur.ToString()+": "+f.ToString()+" -> "+b.ToString())
                                         if b && a.IsSome && cR > rankCur then
-                                            logInfo ("Chosen: "+f.ToString())
+                                            logImportant ("Chosen: "+(sprintf "%A" f))
                                             decidedAction <- (rankCur,a.Value)
                                             stopSource.Cancel() 
                                     else
                                         stopSource.Cancel()
                                     )
                             else
-                                logWarning (rankCur.ToString()+": "+f.ToString()+" was cancelled")
+                                //logWarning (rankCur.ToString()+": "+f.ToString()+" was cancelled")
                                 stopSource.Cancel() 
                         }
                     )
@@ -201,7 +202,7 @@
 
         member public this.EvaluteState() =
             lock decisionLock ( fun () ->
-                                    decidedAction <- (Int32.MaxValue,Action.Recharge)
+                                    decidedAction <- (Int32.MaxValue,Action.Skip)
                                 )
             let s = lock stateLock (fun () -> this.BeliefData)
             ignore <| this.EvaluateDecision 0 stopDeciders.Token (new CancellationTokenSource()) (s,decisionTree)
@@ -229,11 +230,13 @@
                     let sharedPs = ShareKnowledge sharedP
                     let action = buildIilSendMessage (this.simulationID,sharedPs)
                     SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
+                else
+                    ()
             this.asyncCalculation runningCalcID "generating shared percept" stopDeciders.Token generateSharedPercepts
             
             let newstate = lock stateLock (fun () -> 
                             let action() =
-                                this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts)
+                                this.BeliefData <- updateState this.BeliefData (percepts@sharedPercepts) (lock knownJobsLock (fun () -> this.KnownJobs))
                                 this.BeliefData
                             let onFail() =
                                 lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- this.awaitingPercepts@sharedPercepts)
@@ -248,7 +251,7 @@
                                     decisionId <- (decisionId + 1)
                                 )
             
-            this.EvaluteState()
+            //this.EvaluteState()
             
 
         let stopLogic () =
@@ -326,7 +329,6 @@
                                 let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((-1),0))
                                 SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))
                              )
-                changeCals (1)
                 let stateData = lock stateLock (fun () -> this.BeliefData)
                 let (desire,wantJob) = decideJob stateData job
                 if wantJob then
@@ -374,6 +376,15 @@
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                     | RoundChanged id ->
                         ()
+                    | RemovedJob ((Some jobid,_,_,_),_) -> 
+                        lock knownJobsLock (fun () -> 
+                            this.KnownJobs <- List.filter (fun ((kid,_,_,_),_) -> 
+                                                                    match kid with
+                                                                    | Some id -> id <> jobid
+                                                                    | _ -> true
+                                                                ) this.KnownJobs
+                            ())
+                    | unknown -> logError ("Master server message unintelligible: "+unknown.ToString())
                 | Some (MarsServerMessage msg) ->
                     match msg with
                     | SimulationEnd _ -> 
@@ -396,6 +407,7 @@
                             let sendmsg = buildIilSendMessage (this.simulationID,ApplyJob((-1),(-1)))
                             SendAgentServerEvent.Trigger (this, new UnaryValueEvent<IilAction>(sendmsg))
                         else
+                            lock runningCalcLock (fun () -> jobDecideCalcs <- List.length knownJobs)
                             List.iter this.EvaluateJob knownJobs
 
                         this.generateNewJobs()
@@ -411,15 +423,17 @@
                                         if token.IsCancellationRequested then
                                             awaitingDecision:=false
                                         else                                          
-                                            do! Async.Sleep(20)
+                                            do! Async.Sleep(100)
                                             let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         
                                             let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
                                             logAll ("Current running calculations: "+runningCalcs.ToString())
                                             logAll ("Running: "+runningCalcNames.ToString())
                                             if (runningCalcs = 0 && recievedJobFromServer) || (expired+int64(800)) > int64(totaltime) then
-                                                SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
-                                                awaitingDecision:=false
+                                                let (_,decided) = lock decisionLock (fun () -> this.DecidedAction)
+                                                if (decided <> Skip) then
+                                                    SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
+                                                    awaitingDecision:=false
                                                 
                                             
                                 }

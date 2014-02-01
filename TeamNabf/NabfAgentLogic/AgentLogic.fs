@@ -147,6 +147,9 @@ namespace NabfAgentLogic
         let updateLastPos (lastState:State) (state:State) =
             { state with LastPosition = lastState.Self.Node }
 
+        let updateJobs knownJobs (state:State) =
+            { state with Jobs = knownJobs }
+
         let updateKiteGoal state =
             let kiteGoals, otherGoals = List.partition (function | KiteGoal _ -> true | _ -> false) state.Goals
 
@@ -166,13 +169,16 @@ namespace NabfAgentLogic
                 | enemies -> { state with Goals = KiteGoal (0, enemies) :: otherGoals }
 
         (* let updateState : State -> Percept list -> State *)
-        let updateState state percepts = 
+        let updateState state percepts knownJobs = 
             let clearedState = clearTempBeliefs state
 
             let updatedState = 
                 List.fold handlePercept clearedState percepts
                 |> updateEdgeCosts state
                 |> updateLastPos state
+                |> updateJobs knownJobs
+            
+           
                 |> updateKiteGoal
 
             match updatedState.Self.Role.Value with
@@ -194,7 +200,12 @@ namespace NabfAgentLogic
             | VertexSeen (vp,t) -> 
                 not (state.World.ContainsKey(vp))                
             | EnemySeen { Name = name; Role = Some _ } ->
-                not (List.exists (fun { Role = Some _; Name = an } -> an = name) (state.EnemyData))
+                let isSame agent =
+                    match agent with
+                    | { Role = Some _; Name = agentName } -> agentName = name
+                    | _ -> false
+
+                not <| List.exists isSame state.EnemyData
             | _ -> false
 
         let selectSharedPercepts state (percepts:Percept list) =

@@ -43,6 +43,11 @@ module DecisionTree =
                     Options [ Choice workOnKiteGoal ])
 
                 Choice workOnOccupyGoal
+                
+                
+                getRoleDecision
+                Choice workOnOccupyGoal
+                
 
                 //Choice(reactToEnemyAgent)
 

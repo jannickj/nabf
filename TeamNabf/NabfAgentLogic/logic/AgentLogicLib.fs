@@ -40,6 +40,8 @@ module AgentLogicLib =
         | Buy(u)    -> if s.Self.Energy.Value > BuyCost then (true,Some(Buy(u))) else recharge
         | _         -> printfn "PHILIP'S FAIL STORE.COM"; (false,None)
 
+    
+
     //Only meant for moving to adjacent nodes
     let tryGo (v:Vertex) (s:State) =
         let edges = Set.toList s.World.[s.Self.Node].Edges
@@ -59,6 +61,13 @@ module AgentLogicLib =
             else 
         
                 (true,Some(Goto(v.Identifier)))
+
+    let pathingTryGo (vn:VertexName) (s:State) =
+        let path = pathTo s.Self vn s.World
+        if path.IsSome && not path.Value.IsEmpty then
+            tryGo (s.World.[path.Value.Head]) s
+        else
+            (false,None)
 
     let rec getSafeVertex (s:State) (l:Vertex list) (enemySabs:Agent list)=
         match l with

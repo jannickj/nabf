@@ -33,7 +33,7 @@ namespace NabfProject.Parsers.KnowledgeConverters
             var identifier2 = (IilIdentifier)ia.Parameters[1];
             var numeral = (IilNumeral)ia.Parameters[2];
 
-            RoleKnowledge rk = new RoleKnowledge(identifier2.Value, identifier1.Value, (int)numeral.Value);
+            RoleKnowledge rk = new RoleKnowledge(identifier1.Value, identifier2.Value, (int)numeral.Value);
 
             return rk;
         }

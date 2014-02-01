@@ -5,6 +5,7 @@ module InspectorLogic =
     open AgentTypes
     open AgentLogicLib
     open Constants
+    open PathFinding
 
     //Run away from enemy saboteurs, preferring to go to an unexplored vertex
     let inspectorReact (s:State) (agents:Agent list * Agent list) =
@@ -22,7 +23,7 @@ module InspectorLogic =
             let adjacentEnemies = List.filter (fun a -> (a.Role = None) && (a.Team <> s.Self.Team)) (snd agents)
             if not adjacentEnemies.IsEmpty
             then
-                tryGo (s.World.[adjacentEnemies.Head.Node]) s
+                pathingTryGo adjacentEnemies.Head.Node s
             else
                 (false,None)
 
