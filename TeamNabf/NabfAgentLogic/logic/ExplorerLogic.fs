@@ -184,7 +184,7 @@ module ExplorerLogic =
     let probeVertex (s:State) =
         let rank = rankByType s
         //logInfo ("Vertex has value: "+s.World.[s.Self.Node].Value.IsNone.ToString())
-        if s.World.[s.Self.Node].Value.IsNone && rank <> 0 then tryDo (Probe None) s else (false,None) //Only one explorer should probe
+        if s.World.[s.Self.Node].Value.IsNone && rank = 1 then tryDo (Probe None) s else (false,None) //Only one explorer should probe
 
     //If the explorer is in the middle of finding a new zone to post, keep exploring it. Has lower priority than probe.
     let exploreNewZone (s:State) =
