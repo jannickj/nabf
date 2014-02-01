@@ -115,7 +115,7 @@ namespace NabfAgentLogic.IiLang
             | Identifier "failed_resources"    -> FailedResources
             | Identifier "failed_attacked"     -> FailedAttacked
             | Identifier "failed_parried"      -> FailedParried
-            | Identifier "failed_unreachable"  -> FailedUnreachable
+            | Identifier "failed_ureachable"  -> FailedUnreachable
             | Identifier "failed_out_of_range" -> FailedOutOfRange
             | Identifier "failed_in_range"     -> FailedInRange
             | Identifier "failed_wrong_param"  -> FailedWrongParam 

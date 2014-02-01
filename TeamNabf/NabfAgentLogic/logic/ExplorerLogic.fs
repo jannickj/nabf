@@ -195,7 +195,7 @@ module ExplorerLogic =
                         //pathTo s.Self s.NewZoneFrontier.Head s.World
             
             if path.IsSome && not path.Value.IsEmpty  then
-                logInfo ("Going to: "+(List.rev path.Value).Head)
+                logInfo ("Next zone node: "+(List.rev path.Value).Head)
                 tryGo (s.World.[path.Value.Head]) s
             else
                 (false,None)
@@ -242,13 +242,31 @@ module ExplorerLogic =
     let findNewZone (s:State) =
         let hasNoNewZone = s.NewZone.IsNone
         let node = s.World.[s.Self.Node].Value
-        if hasNoNewZone && node.IsSome && node.Value >= ZONE_ORIGIN_VALUE 
-            && not (zoneAlreadyFound (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs) s.Self.Node) 
-        then
-            let newS = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) }
-            {newS with NewZoneFrontier = getRelevantNeighbours newS s.Self.Node }
-        else
-            s
+        let occupyJobs = (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) s.Jobs)
+       
+        let zoneExists node = zoneAlreadyFound occupyJobs node
+
+        match s.NewZone with
+        | Some (g,_) -> 
+            logInfo ("Working on: \""+(sprintf "%A" g))
+            if Map.exists (fun name _ -> zoneExists(name)) g then { s with NewZone = None; NewZoneFrontier = [] } else s
+        | None -> if node.IsSome && node.Value >= ZONE_ORIGIN_VALUE  && not (zoneExists s.Self.Node) 
+                    then 
+                        logInfo ("Found Job on: \""+(sprintf "%A" s.Self.Node))
+                        let newS = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) }
+                        {newS with NewZoneFrontier = getRelevantNeighbours newS s.Self.Node } 
+                    else s
+
+//        if s.NewZone.IsSome  then
+//            s
+//        elif s.NewZone.IsNone then 
+//            if node.IsSome && node.Value >= ZONE_ORIGIN_VALUE && not (zoneExists s.Self.Node) then
+//                let newS = {s with NewZone = Some ((Map.add s.Self.Node s.World.[s.Self.Node] Map.empty),false) }
+//                {newS with NewZoneFrontier = getRelevantNeighbours newS s.Self.Node }
+//            else
+//                s
+//        else
+//            { s with NewZone = None }
 
     let updateStateExplorer (s:State) =
         let s2 = findNewZone s

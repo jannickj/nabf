@@ -9,5 +9,4 @@ module Sentinel =
     let getSentinelTree : Decision<(State -> (bool*Option<Action>))> =
         Options 
             [
-                Choice(workOnOccupyGoal)
             ]

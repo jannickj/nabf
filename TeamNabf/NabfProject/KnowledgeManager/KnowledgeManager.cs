@@ -58,6 +58,7 @@ namespace NabfProject.KnowledgeManagerModel
 					{
 						_knowledgeBase.Remove(k);
 						_knowledgeBase.Add(k, k);
+                        updatedKnowledge = true;
 					}
 				}
 

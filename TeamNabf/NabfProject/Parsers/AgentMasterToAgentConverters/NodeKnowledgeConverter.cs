@@ -31,7 +31,9 @@ namespace NabfProject.Parsers.KnowledgeConverters
             var identifier = (IilIdentifier)ia.Parameters[0];
             var numeral = (IilNumeral)ia.Parameters[1];
 
-            NodeKnowledge nk = new NodeKnowledge(identifier.Value, (int)numeral.Value);
+            int value = (int)numeral.Value;
+
+            NodeKnowledge nk = new NodeKnowledge(identifier.Value, value);
 
             return nk;
         }

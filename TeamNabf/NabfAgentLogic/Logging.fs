@@ -4,7 +4,7 @@ module Logging =
     open System
     open System.IO
 
-    let debugLevel = DebugLevel.Info
+    let debugLevel = DebugLevel.Important
 
     let sw = new StreamWriter (System.Console.OpenStandardOutput());
     sw.AutoFlush <- true;
@@ -18,6 +18,7 @@ module Logging =
     let logCritical = log DebugLevel.Critical
     let logError = log DebugLevel.Error
     let logWarning = log DebugLevel.Warning
+    let logImportant = log DebugLevel.Important
     let logInfo = log DebugLevel.Info
     let logAll = log DebugLevel.All
 

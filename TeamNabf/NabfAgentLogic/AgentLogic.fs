@@ -146,14 +146,20 @@ namespace NabfAgentLogic
         let updateLastPos (lastState:State) (state:State) =
             { state with LastPosition = lastState.Self.Node }
 
+        let updateJobs knownJobs (state:State) =
+            { state with Jobs = knownJobs }
+
         (* let updateState : State -> Percept list -> State *)
-        let updateState state percepts = 
+        let updateState state percepts knownJobs = 
             let clearedState = clearTempBeliefs state
 
             let updatedState = 
                 List.fold handlePercept clearedState percepts
                 |> updateEdgeCosts state
                 |> updateLastPos state
+                |> updateJobs knownJobs
+            
+           
 
             match updatedState.Self.Role.Value with
             | Explorer -> updateStateExplorer updatedState
