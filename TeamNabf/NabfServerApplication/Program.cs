@@ -26,6 +26,7 @@ namespace NabfServerApplication
         private static int agentoffset = 3;
         private static int start = 0;
         private static Dictionary<NabfAgent, int> consolepos = new Dictionary<NabfAgent, int>();
+        private static bool verbose = false;
 
 
         static void Main(string[] args)
@@ -34,6 +35,9 @@ namespace NabfServerApplication
             string[] ipp = args[0].Split(new Char[]{':'});
             string ip = ipp[0];
             int port = Convert.ToInt32(ipp[1]);
+
+            if (args.Length == 2 && args[1] == "verbose")
+                verbose = true;
 
             TcpListener listener = new TcpListener(IPAddress.Parse(ip),port);
 
@@ -63,14 +67,22 @@ namespace NabfServerApplication
 
         private static void ReceivedMessage(EntityXmasAction<NabfAgent> action)
         {
-            Console.SetCursorPosition(15, consolepos[action.Source] * 2 + agentoffset);
-            Console.Write("Received: " + action + "\t\t");
+            if (verbose)
+            {
+                Console.SetCursorPosition(15, consolepos[action.Source] * 2 + agentoffset);
+                Console.Write("Received: " + action + "\t\t");
+            }
+            
         }
 
         private static void SendMessage(NabfAgent agent, XmasEvent evt)
         {
-            Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset+1);
-            Console.Write("Sent: " + evt + "\t\t");
+            if (verbose)
+            {
+                Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset + 1);
+                Console.Write("Sent: " + evt + "\t\t");
+            }
+            
         }
 
         private static void AddedXmasObject(ActionCompletedEvent<AddXmasObjectAction> evten)
@@ -78,8 +90,12 @@ namespace NabfServerApplication
             if (evten.Action.Object is NabfAgent)
             {
                 var agent = (NabfAgent)evten.Action.Object;
-                Console.SetCursorPosition(0, start * 2 + agentoffset);
-                Console.Write("Agent: "+agent.Name);
+                if (verbose)
+                {
+                    Console.SetCursorPosition(0, start * 2 + agentoffset);
+                    Console.Write("Agent: " + agent.Name);
+                }
+                
                 consolepos.Add(agent, start);
                 //agent.Register(new Trigger<ActionStartingEvent<AddKnowledgeAction>>(evt => ReceivedMessage(evt.Action)));
                 agent.Register(new Trigger<ActionStartingEvent<ApplyNoticeAction>>(evt => { if (evt.Action.NoticeId != -1) ReceivedMessage(evt.Action); }));

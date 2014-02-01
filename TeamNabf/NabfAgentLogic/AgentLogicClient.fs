@@ -67,7 +67,7 @@
             | :? ThreadAbortException as e -> raise e
             | e -> 
                 let s = sprintf "%A" e.StackTrace
-                logError (name + " crashed with: "+e.Message+"\n"+s)
+                logError (name + " crashed with: " + e.Message + "\n" + s)
                 returnedOnError()
 
 
@@ -229,6 +229,8 @@
                     let sharedPs = ShareKnowledge sharedP
                     let action = buildIilSendMessage (this.simulationID,sharedPs)
                     SendAgentServerEvent.Trigger(this, new UnaryValueEvent<IilAction>(action))
+                else
+                    ()
             this.asyncCalculation runningCalcID "generating shared percept" stopDeciders.Token generateSharedPercepts
             
             let newstate = lock stateLock (fun () -> 
@@ -374,6 +376,15 @@
                         ignore <| lock awaitingPerceptsLock (fun () -> this.awaitingPercepts <- percepts@this.awaitingPercepts)
                     | RoundChanged id ->
                         ()
+                    | RemovedJob ((Some jobid,_,_,_),_) -> 
+                        lock knownJobsLock (fun () -> 
+                            this.KnownJobs <- List.filter (fun ((kid,_,_,_),_) -> 
+                                                                    match kid with
+                                                                    | Some id -> id <> jobid
+                                                                    | _ -> true
+                                                                ) this.KnownJobs
+                            ())
+                    | unknown -> logError ("Master server message unintelligible: "+unknown.ToString())
                 | Some (MarsServerMessage msg) ->
                     match msg with
                     | SimulationEnd _ -> 

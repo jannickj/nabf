@@ -33,9 +33,10 @@ module DecisionTree =
         Options 
             [
 
-                Choice workOnOccupyGoal
+                
                 
                 getRoleDecision
+                Choice workOnOccupyGoal
                 
                 //Choice(reactToEnemyAgent)
 
