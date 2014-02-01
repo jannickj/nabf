@@ -159,7 +159,11 @@ namespace NabfAgentLogic
                 |> updateLastPos state
                 |> updateJobs knownJobs
             
-           
+//            if updatedState.LastActionResult = FailedUnreachable then
+//                logImportant ("Unreachable: "+(sprintf "%A" updatedState.LastAction))
+//            
+//            if Map.exists (fun _ vertex -> Set.exists (snd >> (=) vertex.Identifier) vertex.Edges) updatedState.World then
+//                logError <| sprintf "EDGE TO SELF!!!"
 
             match updatedState.Self.Role.Value with
             | Explorer -> updateStateExplorer updatedState

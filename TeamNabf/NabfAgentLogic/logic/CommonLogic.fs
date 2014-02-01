@@ -35,7 +35,7 @@ module CommonLogic =
             (false,None) 
         else
             let index = rank % unexplored.Length 
-            logInfo (sprintf "path to unexplored: %A" unexplored.[index])     
+            logImportant (sprintf "path to unexplored: %A" unexplored.[index])     
             tryGo s.World.[unexplored.[index].Head] s
             
     let idle (s:State) = recharge

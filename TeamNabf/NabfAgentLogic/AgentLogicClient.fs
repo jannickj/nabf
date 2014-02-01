@@ -37,6 +37,7 @@
         let mutable recievedJobFromServer = false
         let mutable jobDecideCalcs  = 0
 
+        
         new(name,moveTo) = AgentLogicClient(name,fun () -> moveToDTree moveTo)
         new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
         
