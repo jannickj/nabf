@@ -1,9 +1,32 @@
 namespace NabfAgentLogic
     module PathFinding = 
+        open FsPlanning.Searching
         open Graphing.Graph
         open Graphing.Dijkstra
         open AgentTypes
         open System.Collections.Generic
+
+        type pathState = 
+            { Vertex : VertexName
+            ; EnergyLeft : int
+            }
+
+        let definiteCost cost = match cost with 
+                                | Some c -> c
+                                | None -> Constants.UNKNOWN_EDGE_COST
+                            
+        let planProblem (start : VertexName) (goal : VertexName) agent (graph : Graph) = 
+            { InitialState = { Vertex = start; EnergyLeft = agent.Energy.Value }
+            ; GoalTest = fun state -> state.Vertex = goal
+            ; Actions = fun state -> graph.[state.Vertex].Edges |> Set.toList
+            ; Result = fun state (cost, otherVertex) -> 
+                let energyLeft = match state.EnergyLeft - definiteCost cost with
+                                 | e when e > 0 -> e
+                                 | _ -> (agent.MaxEnergy.Value / 2) - definiteCost cost
+                { Vertex = otherVertex; EnergyLeft = energyLeft }
+
+            ; StepCost = fun state (cost, _) -> if definiteCost cost > state.EnergyLeft then 1 else 2
+            }
 
         [<CustomComparison; CustomEquality>]
         type PathCost = 
