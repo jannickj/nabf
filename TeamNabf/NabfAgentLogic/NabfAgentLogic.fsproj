@@ -81,6 +81,10 @@
       <Project>{F0965EBC-FEAF-4445-A43B-998D0A8D249D}</Project>
       <Name>XmasEngineExtensions</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\FsPlanning\FsPlanning\FsPlanning\FsPlanning.fsproj">
+      <Project>{06CC68A7-84B7-4352-8700-FD9F79DAA71B}</Project>
+      <Name>FsPlanning</Name>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

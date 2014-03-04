@@ -1,3 +1,6 @@
 [submodule "XmasEngine"]
 	path = XmasEngine
 	url = https://github.com/jannickj/XmasEngine.git
+[submodule "FsPlanning"]
+	path = FsPlanning
+	url = https://srnjcbsn@github.com/srnjcbsn/FsPlanning.git
