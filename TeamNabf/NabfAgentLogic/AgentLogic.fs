@@ -245,7 +245,7 @@ namespace NabfAgentLogic
         
        
 
-        let generateDecisionTree : Decision<(State -> (bool*Option<Action>))> = DecisionTree.getTree
+        let defaultDecisionTree : Decision<(State -> (bool*Option<Action>))> = DecisionTree.getTree
 
         let generateOccupyJob (s:State) (knownJobs:Job list) =
             match s.Self.Role with

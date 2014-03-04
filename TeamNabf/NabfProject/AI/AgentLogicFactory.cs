@@ -10,7 +10,7 @@ namespace NabfProject.AI
     public class AgentLogicFactory
     {
         private string name;
-		private string forcedMove = null;
+		private bool debugmode = false;
 
         public AgentLogicFactory(string agentName)
         {
@@ -23,11 +23,12 @@ namespace NabfProject.AI
 				return new AgentLogicClient(name);
 			else
 				return new AgentLogicClient(name, forcedMove);
+			
         }
 
-		public void SetForcedMove(string moveTo)
+		public void SetDebugMode()
 		{
-			forcedMove = moveTo;
+			debugmode = true;
 		}
 	}
 }

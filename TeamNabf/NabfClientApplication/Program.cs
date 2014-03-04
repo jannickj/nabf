@@ -40,14 +40,19 @@ namespace NabfClientApplication
 				debug = args[marsinfo_pos + 3];
 
 			
+			bool hasMaster = master_server.ToLower() != "no_master";
 
             Console.WriteLine("Got: Server: " + mars_server + ", Username: " + username + ", Password: " + password);
+			
+			IPEndPoint[] masterServerPoints = new IPEndPoint[0];
 
-            IPEndPoint[] masterServerPoints = CreateIPEndPoint(master_server);
-            IPEndPoint[] marsServerPoints = CreateIPEndPoint(mars_server);
+			if(hasMaster)
+				masterServerPoints = CreateIPEndPoint(master_server);
+            
+			IPEndPoint[] marsServerPoints = CreateIPEndPoint(mars_server);
 
             TcpClient marsClient = new TcpClient();
-            TcpClient masterClient = new TcpClient();
+			TcpClient masterClient = null;
 
             Console.WriteLine("Connecting to Mars Server: " + mars_server);
 
@@ -55,14 +60,23 @@ namespace NabfClientApplication
             
             Console.WriteLine("Successfully connected to mars server");
 
-            Console.WriteLine("Connecting to master server: " + master_server);
 
-            ConnectToServer(masterClient, masterServerPoints);
+			if (hasMaster)
+			{
+				masterClient = new TcpClient();
+				Console.WriteLine("Connecting to master server: " + master_server);
 
-            Console.WriteLine("Successfully connected to master server");
+				ConnectToServer(masterClient, masterServerPoints);
+
+				Console.WriteLine("Successfully connected to master server");
+			}
 
             AgentLogicFactory logicFactory = new AgentLogicFactory(username);
 
+			if (debug == "debug_mode")
+			{
+
+			}
 			if (debug != null)
 				logicFactory.SetForcedMove(debug);
 
@@ -70,15 +84,23 @@ namespace NabfClientApplication
                 new StreamReader(marsClient.GetStream()),
                 new StreamWriter(marsClient.GetStream()));
 
-            XmlPacketTransmitter<IilPerceptCollection, IilAction> masterSerCom = new XmlPacketTransmitter<IilPerceptCollection, IilAction>(
-                new StreamReader(masterClient.GetStream()),
-                new StreamWriter(masterClient.GetStream()));
+			XmlPacketTransmitter<IilPerceptCollection, IilAction> masterSerCom = null;
+			if (hasMaster)
+			{
+				masterSerCom = new XmlPacketTransmitter<IilPerceptCollection, IilAction>(
+					new StreamReader(masterClient.GetStream()),
+					new StreamWriter(masterClient.GetStream()));
+			}
 
             MarsToAgentParser marsToAgentParser = new MarsToAgentParser();
             AgentToMarsParser agentToMarsParser = new AgentToMarsParser();
+			ClientApplication client;
+			if (hasMaster)
+				client = new ClientApplicationWithMaster(masterSerCom, marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
+			else
+				client = new ClientApplication(marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
 
-            ClientApplication client = new ClientApplication(masterSerCom,marsSerCom, marsToAgentParser, agentToMarsParser, logicFactory);
-            client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalMilliseconds+" ms)");
+			client.ActionSent += (sender, evt) => Console.WriteLine("Action sent: " + "("+evt.Value.Item1+", "+evt.Value.Item2.TotalMilliseconds+" ms)");
 
             Console.WriteLine("Authenticating: username=" + username + ", password=" + password);
 
@@ -89,7 +111,8 @@ namespace NabfClientApplication
             if (authmsg.Response == ServerResponseTypes.Success)
             {
                 Console.WriteLine("Successfully Authenticated");
-                masterSerCom.SeralizePacket(new IilAction("agent_name", new IilIdentifier(username)));
+				if(hasMaster)
+					masterSerCom.SeralizePacket(new IilAction("agent_name", new IilIdentifier(username)));
                 client.Start();
             }
             else

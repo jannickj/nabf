@@ -5,10 +5,12 @@ namespace NabfAgentLogic.AgentInterfaces
     open JSLibrary.Data.GenericEvents;
     open System;
     open NabfAgentLogic.AgentLogic
+    open NabfAgentLogic.AgentTypes
 
     
 
     type IAgentLogic = 
+        abstract member SetGoal : Goal -> unit
         abstract member HandlePercepts : IilPerceptCollection -> unit
         abstract member Close : unit -> unit
         [<CLIEvent>]

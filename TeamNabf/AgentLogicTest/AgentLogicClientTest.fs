@@ -31,7 +31,7 @@
                             Choice(optionB)
                         ]
             
-            let client = new AgentLogicClient("",fun () -> tree)
+            let client = new AgentLogicClient("",tree)
             let iclient = client :> IAgentLogic 
             client.EvaluteState()
             ignore <| waiter.WaitOne(1000)
@@ -60,7 +60,7 @@
                             Choice(optionA)
                             Choice(optionB)
                         ]
-            let client = new AgentLogicClient("",fun () -> tree)
+            let client = new AgentLogicClient("",tree)
             client.EvaluteState()
             
             

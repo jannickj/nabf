@@ -15,7 +15,7 @@
     open DebuggingFeatures
     
 
-    type public AgentLogicClient(name,decisionTreeGenerator) = class 
+    type public AgentLogicClient(name,decisionTree) = class 
         
         
         [<DefaultValue>] val mutable private BeliefData : State
@@ -25,7 +25,7 @@
         [<DefaultValue>] val mutable private simulationID : SimulationID
 
         let agentname = name
-        let decisionTree = decisionTreeGenerator()
+        let decisionTree = decisionTree
         let mutable simEnded = false
         let mutable runningCalcID = 0
         let mutable runningCalc = 0
@@ -38,9 +38,10 @@
         let mutable jobDecideCalcs  = 0
 
         
-        new(name,moveTo) = AgentLogicClient(name,fun () -> moveToDTree moveTo)
-        new(name) = AgentLogicClient(name,fun () -> generateDecisionTree)
         
+       
+        new(name,debugmode:bool) = AgentLogicClient(name,debugModeTree)
+        new(name) = AgentLogicClient(name,defaultDecisionTree)
 
         //Parallel helpers
         let mutable stopDeciders = new CancellationTokenSource()
@@ -72,6 +73,8 @@
                 logError (name + " crashed with: " + e.Message + "\n" + s)
                 returnedOnError()
 
+        
+             
 
         member private this.protectedExecute (name, action) = this.protectedExecute (name, action, (fun () -> ()))
 
@@ -355,6 +358,9 @@
 
 
         interface IAgentLogic with
+            member this.SetGoal goal =
+                lock stateLock (fun () -> this.BeliefData <- { this.BeliefData with Goals =  [goal] })
+
             member this.Close() = 
                 stopLogic()
                 ()

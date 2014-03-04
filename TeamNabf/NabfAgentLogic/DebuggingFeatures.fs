@@ -7,6 +7,11 @@
         open PathFinding
         open AgentLogicLib
 
+        let AccomplishGotoGoal (s:State) =
+            let gotoGoals = List.tryFind (fun g -> match g with | GotoGoal _ -> true | _ -> false) s.Goals
+            
+            (false,None)
+
         let moveTo (vName:string) (s:State) = 
             //(tryGo s.World.[s.Self.Node] s)
             (true,Some (Goto s.Self.Node))
@@ -24,6 +29,12 @@
         let moveToDTree vName = 
             Options 
                     [   Choice(moveTo vName)
+                    ;   Choice(exploreLocalGraph)
+                    ]
+
+        let debugModeTree = 
+            Options 
+                    [   Choice(AccomplishGotoGoal)
                     ;   Choice(exploreLocalGraph)
                     ]
 

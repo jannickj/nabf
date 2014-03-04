@@ -119,6 +119,7 @@ module AgentTypes =
 
     type Goal =
         | JobGoal of JobGoal
+        | GotoGoal of VertexName
 
     type Job = JobHeader * JobData
 
