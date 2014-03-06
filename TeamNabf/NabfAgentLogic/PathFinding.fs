@@ -24,11 +24,11 @@ namespace NabfAgentLogic
             ; Actions = fun state -> graph.[state.Vertex].Edges |> Set.toList
             ; Result = fun state (cost, otherVertex) -> 
                 let energyLeft = match state.Energy - definiteCost cost with
-                                 | e when e > 0 -> e
-                                 | e -> e + (agent.MaxEnergy.Value / 2) - definiteCost cost
+                                 | e when e >= 0 -> e
+                                 | e -> state.Energy + (agent.MaxEnergy.Value / 2) - definiteCost cost
                 { Vertex = otherVertex; Energy = energyLeft }
 
-            ; StepCost = fun state (cost, _) -> if definiteCost cost > state.Energy then 1 else 2
+            ; StepCost = fun state (cost, _) -> if definiteCost cost <= state.Energy then 1 else 2
             }
         
         let rangeProblem agent goalEvaluator graph =
