@@ -8,76 +8,38 @@ namespace NabfAgentLogic
 
         type pathState = 
             { Vertex : VertexName
-            ; EnergyLeft : int
+            ; Energy : int
             }
 
         let definiteCost cost = match cost with 
                                 | Some c -> c
                                 | None -> Constants.UNKNOWN_EDGE_COST
                             
-        let planProblem (start : VertexName) (goal : VertexName) agent (graph : Graph) = 
-            { InitialState = { Vertex = start; EnergyLeft = agent.Energy.Value }
-            ; GoalTest = fun state -> state.Vertex = goal
+        let stepProblem agent (goalEvaluator : VertexName -> bool) (graph : Graph) = 
+            { InitialState = { Vertex = agent.Node; Energy = agent.Energy.Value }
+            ; GoalTest = fun state -> goalEvaluator (state.Vertex)
             ; Actions = fun state -> graph.[state.Vertex].Edges |> Set.toList
             ; Result = fun state (cost, otherVertex) -> 
-                let energyLeft = match state.EnergyLeft - definiteCost cost with
+                let energyLeft = match state.Energy - definiteCost cost with
                                  | e when e > 0 -> e
                                  | _ -> (agent.MaxEnergy.Value / 2) - definiteCost cost
-                { Vertex = otherVertex; EnergyLeft = energyLeft }
+                { Vertex = otherVertex; Energy = energyLeft }
 
-            ; StepCost = fun state (cost, _) -> if definiteCost cost > state.EnergyLeft then 1 else 2
+            ; StepCost = fun state (cost, _) -> if definiteCost cost > state.Energy then 1 else 2
             }
-
-        [<CustomComparison; CustomEquality>]
-        type PathCost = 
-            { Steps : int
-            ; Energy : int
-            }
-
-            interface System.IComparable<PathCost> with
-                member this.CompareTo (other : PathCost) = 
-                    let (Steps', Energy') = (other.Steps, other.Energy)
-                    if (this.Steps > Steps') then      1
-                    elif (this.Steps < Steps') then   -1
-                    elif (this.Energy > Energy') then -1
-                    elif (this.Energy < Energy') then  1
-                    else                               0 
-            
-            interface System.IEquatable<PathCost> with
-                member this.Equals other =
-                    (this.Steps = other.Steps) && (this.Energy = other.Energy)
-
-            interface System.IComparable with
-                member this.CompareTo obj = 
-                    match obj with
-                    | :? PathCost as other -> (this :> System.IComparable<PathCost>).CompareTo other
-                    | _                    -> failwith "%s is not a of type PathCost"
-
-        let costEvaluator maxEnergy edgeCost currentCost = 
-            let edgeCostGuess = 
-                match edgeCost with
-                | Some cost -> cost
-                | None -> 5
-            if currentCost.Energy >= edgeCostGuess then
-                { Steps  = currentCost.Steps + 1
-                ; Energy = currentCost.Energy - edgeCostGuess
-                }
-            else
-                { Steps  = currentCost.Steps + 2
-                ; Energy = (currentCost.Energy - edgeCostGuess) + (maxEnergy / 2)
-                }
         
-        let stepProblem maxEnergy energy goalEvaluator = 
-            { GoalEvaluator = goalEvaluator
-            ; CostEvaluator = costEvaluator maxEnergy
-            ; InitialCost   = { Steps = 0; Energy = energy }
-            }
+        let rangeProblem agent goalEvaluator graph =
+            let stepProb = stepProblem agent goalEvaluator graph
+            { stepProb with StepCost = fun _ _ -> 1 }
 
-        let rangeProblem goalId =
-            { GoalEvaluator = fun vertex -> vertex.Identifier = goalId
-            ; CostEvaluator = fun _ currentCost -> currentCost + 1
-            ; InitialCost   = 0
-            }
+        let pathToNearest agent goalEvaluator graph =
+            aStar <| stepProblem agent goalEvaluator graph
+        
+        let pathTo agent goal graph = 
+            pathToNearest agent (fun vertex -> vertex = goal) graph
+
+        let distanceTo agent goal graph =
+            aStar <| rangeProblem agent ((=) agent.Node) graph
 
         let pathToNearestWithCost agent goalEvaluator (graph : Graph) =
             match (agent.MaxEnergy, agent.Energy) with
