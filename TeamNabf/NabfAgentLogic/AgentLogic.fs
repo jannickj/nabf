@@ -149,15 +149,22 @@ namespace NabfAgentLogic
         let updateJobs knownJobs (state:State) =
             { state with Jobs = knownJobs }
 
+        let removeGotoGoal (state:State) =
+            let newg = List.filter (fun g ->   
+                                            match g with 
+                                            | GotoGoal v -> v <> state.Self.Node
+                                            | _ -> true ) state.Goals
+            { state with Goals = newg }
+
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts knownJobs = 
             let clearedState = clearTempBeliefs state
-
             let updatedState = 
                 List.fold handlePercept clearedState percepts
                 |> updateEdgeCosts state
                 |> updateLastPos state
                 |> updateJobs knownJobs
+                |> removeGotoGoal
             
 //            if updatedState.LastActionResult = FailedUnreachable then
 //                logImportant ("Unreachable: "+(sprintf "%A" updatedState.LastAction))

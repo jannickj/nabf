@@ -138,11 +138,10 @@
                                                 (s:State,d:Decision<(State -> (bool*Option<Action>))>) =
             match d with
             | Choice f -> 
-                
                 this.asyncCalculationAF runningCalcID ("Calc Choice "+f.ToString()) stopToken (
                     async
                         { 
-                            
+                           
                             let dId = lock decisionLock (fun () -> decisionId)
                            
                             let cancelFunc() =
@@ -255,7 +254,7 @@
                                     decisionId <- (decisionId + 1)
                                 )
             
-            //this.EvaluteState()
+            this.EvaluteState()
             
 
         let stopLogic () =

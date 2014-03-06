@@ -10,7 +10,7 @@
         let AccomplishGotoGoal (s:State) =
             let gotoGoal = List.tryFind (fun g -> match g with | GotoGoal _ -> true | _ -> false) s.Goals
             match gotoGoal with
-            | Some (GotoGoal vertex) -> (true,Some (Goto vertex))
+            | Some (GotoGoal vertex) -> pathingTryGo vertex s
             | _ -> (false,None)
 
         let moveTo (vName:string) (s:State) = 
