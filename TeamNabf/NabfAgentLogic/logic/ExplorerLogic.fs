@@ -191,7 +191,7 @@ module ExplorerLogic =
         match s.NewZoneFrontier with
         | head :: _ -> 
             
-            let path = pathToNearest s.Self (fun v -> List.exists (fun zV -> zV = v.Identifier ) s.NewZoneFrontier) s.World
+            let path = pathToNearest s.Self (fun v -> List.exists (fun zV -> zV = v) s.NewZoneFrontier) s.World
                         //pathTo s.Self s.NewZoneFrontier.Head s.World
             
             if path.IsSome && not path.Value.IsEmpty  then
