@@ -72,13 +72,13 @@ namespace NabfClientApplication
 			}
 
             AgentLogicFactory logicFactory = new AgentLogicFactory(username);
+			bool inDebugMode = debug == "debug_mode";
 
-			if (debug == "debug_mode")
+			if (inDebugMode)
 			{
-
+				logicFactory.SetDebugMode();
 			}
-			if (debug != null)
-				logicFactory.SetForcedMove(debug);
+			
 
             ServerCommunication marsSerCom = new ServerCommunication(
                 new StreamReader(marsClient.GetStream()),
@@ -120,6 +120,16 @@ namespace NabfClientApplication
                 Console.WriteLine("Failed to Authenticate");
             }
 
+			if (inDebugMode)
+			{
+				NabfAgentLogic.Logging.Enabled = false;
+				while (true)
+				{
+					Console.WriteLine("Goto Vertice: ");
+					string vertice = Console.ReadLine();
+					client.SetGoal(NabfAgentLogic.AgentTypes.Goal.NewGotoGoal(vertice));
+				}
+			}
             //mars_client.Connect(
 		}
 

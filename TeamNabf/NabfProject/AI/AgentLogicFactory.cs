@@ -19,10 +19,10 @@ namespace NabfProject.AI
 
         public virtual IAgentLogic ConstructAgentLogic()
         {
-			if (forcedMove == null)
+			if (!debugmode)
 				return new AgentLogicClient(name);
 			else
-				return new AgentLogicClient(name, forcedMove);
+				return new AgentLogicClient(name, true);
 			
         }
 

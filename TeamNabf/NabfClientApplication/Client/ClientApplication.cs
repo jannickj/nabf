@@ -57,7 +57,6 @@ namespace NabfClientApplication.Client
 		public ClientApplication(ServerCommunication marsServCom, MarsToAgentParser marsParser, AgentToMarsParser agentToMarsParser, AgentLogicFactory factory)
 		{
 			
-			this.currentLogic.SetGoal();
 			this.marsServCom = marsServCom;
             this.marsToAgentParser = marsParser;
             this.agentToMarsParser = agentToMarsParser;

@@ -8,9 +8,10 @@
         open AgentLogicLib
 
         let AccomplishGotoGoal (s:State) =
-            let gotoGoals = List.tryFind (fun g -> match g with | GotoGoal _ -> true | _ -> false) s.Goals
-            
-            (false,None)
+            let gotoGoal = List.tryFind (fun g -> match g with | GotoGoal _ -> true | _ -> false) s.Goals
+            match gotoGoal with
+            | Some (GotoGoal vertex) -> (true,Some (Goto vertex))
+            | _ -> (false,None)
 
         let moveTo (vName:string) (s:State) = 
             //(tryGo s.World.[s.Self.Node] s)

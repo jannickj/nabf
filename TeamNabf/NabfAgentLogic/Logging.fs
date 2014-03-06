@@ -12,8 +12,8 @@ module Logging =
 
     let logger = new Logger (sw, debugLevel);
     let logLock = new Object ();
-
-    let log debugLevel str = lock logLock (fun () -> logger.LogStringWithTimeStamp (str, debugLevel))
+    let mutable Enabled = true;
+    let log debugLevel str = if Enabled then lock logLock (fun () -> logger.LogStringWithTimeStamp (str, debugLevel))
 
     let logCritical = log DebugLevel.Critical
     let logError = log DebugLevel.Error
