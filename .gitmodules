@@ -4,3 +4,6 @@
 [submodule "FsPlanning"]
 	path = FsPlanning
 	url = https://srnjcbsn@github.com/srnjcbsn/FsPlanning.git
+[submodule "JSLibrary"]
+	path = JSLibrary
+	url = https://github.com/jannickj/JSLibrary.git

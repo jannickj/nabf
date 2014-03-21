@@ -50,10 +50,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\XmasEngine\JSLibrary\JSLibrary\JSLibrary\JSLibrary.csproj">
-      <Project>{02121C4A-B1FB-46B8-BDE8-C5C6CA28C036}</Project>
-      <Name>JSLibrary</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\XmasEngine\XmasProject\XmasEngineController\XmasEngineController.csproj">
       <Project>{0FAE1368-42FC-48F7-A82B-58CF276188C1}</Project>
       <Name>XmasEngineController</Name>

@@ -82,6 +82,8 @@ namespace NabfAgentLogic
                 | LastActionResult res -> { state with LastActionResult = res }
                 | _ -> state
         
+        
+
         let buildInitState (name, simData:SimStartData) =
             {   World = Map.empty
             ;   Self =  {   Energy = Some 0
