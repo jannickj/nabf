@@ -63,6 +63,7 @@
     <Compile Include="Sentinel.fs" />
     <Compile Include="DecisionTree.fs" />
     <Compile Include="AgentLogic.fs" />
+    <Compile Include="Planning.fs" />
     <Compile Include="AgentInterfaces.fs" />
     <Compile Include="AgentLogicClient.fs" />
   </ItemGroup>

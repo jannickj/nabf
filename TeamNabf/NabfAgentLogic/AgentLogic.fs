@@ -15,8 +15,9 @@ namespace NabfAgentLogic
         open InspectorLogic
         open RepairerLogic
         open SentinelLogic
+        open Constants
 
-        let OurTeam = "Nabf"
+        
         
         (* handlePercept State -> Percept -> State *)
         let handlePercept state percept =
@@ -91,7 +92,7 @@ namespace NabfAgentLogic
                         ;   Node = ""
                         ;   Role = Some (simData.SimRole)
                         ;   Strength = Some 0
-                        ;   Team = OurTeam
+                        ;   Team = AGENT_TEAM
                         ;   Status = Normal
                         ;   VisionRange = Some 0
                         }

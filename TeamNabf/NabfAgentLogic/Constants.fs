@@ -25,3 +25,4 @@
         ///////////////////////////////
         let UNKNOWN_EDGE_COST = 5
         let ZONE_ORIGIN_VALUE = 10
+        let AGENT_TEAM = "Nabf"
