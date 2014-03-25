@@ -186,7 +186,7 @@ namespace NabfProject.SimManager
         }
         public void UnApplyToNotice(int simID, Int64 noticeId, NabfAgent a)
         {
-            if (_currentID != simID || _applicationClosed)
+            if (_currentID != simID)
                 return;
 
             NoticeBoard nb;
@@ -196,7 +196,7 @@ namespace NabfProject.SimManager
             if (b == false)
                 return;
 
-            nb.UnApplyToNotice(notice, a);
+            nb.UnApplyToNotice(notice, a, true);
         }
 
         private void FindJobsForAgents(int simID)
@@ -217,8 +217,11 @@ namespace NabfProject.SimManager
             _currentRoundNumber++;
             NoticeBoard nb;
             TryGetNoticeBoard(simID, out nb);
-            foreach(NabfAgent a in nb.GetSubscribedAgents())
-                nb.UnApplyFromAll(a);
+
+            //agents no longer unapplies from all jobs when starting a new round
+            //foreach(NabfAgent a in nb.GetSubscribedAgents())
+            //    nb.UnApplyFromAll(a);
+
             try { this.EventManager.Raise(new RoundChangedEvent(_currentRoundNumber)); }
             catch { }
             _applicationClosed = false;

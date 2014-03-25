@@ -50,6 +50,7 @@
     <Compile Include="Actions\DeleteNoticeAction.cs" />
     <Compile Include="Actions\CreateNoticeAction.cs" />
     <Compile Include="Actions\SubscribeSimulationAction.cs" />
+    <Compile Include="Events\FiredFromJobEvent.cs" />
     <Compile Include="Events\ReceivedJobEvent.cs" />
     <Compile Include="EmptyWorld.cs" />
     <Compile Include="EmptyWorldBuilder.cs" />

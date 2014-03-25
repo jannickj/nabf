@@ -14,12 +14,14 @@ namespace NabfProject.NoticeBoardModel
         public int AgentsNeeded { get; protected set; }
         public Int64 Id { get; private set; }
         public int Value { get; protected set; }
+        public NoticeBoard.Status Status = NoticeBoard.Status.available;
 
         private int _highestAverageDesirabilityForNotice = -1;
         public int HighestAverageDesirabilityForNotice { get { return _highestAverageDesirabilityForNotice; } set { _highestAverageDesirabilityForNotice = value; } }
         private List<NabfAgent> _agentsApplied = new List<NabfAgent>();
         private List<NabfAgent> _topDesireAgents = new List<NabfAgent>();
         private Dictionary<NabfAgent, int> _agentsToDesirability = new Dictionary<NabfAgent, int>(); 
+
 
         public Notice(Int64 id)
         {
