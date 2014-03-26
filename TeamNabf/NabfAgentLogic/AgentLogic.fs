@@ -15,6 +15,7 @@ namespace NabfAgentLogic
         open InspectorLogic
         open RepairerLogic
         open SentinelLogic
+        open AgentLogicLib
 
         let OurTeam = "Nabf"
         
@@ -158,6 +159,24 @@ namespace NabfAgentLogic
         let updateJobs knownJobs (state:State) =
             { state with Jobs = knownJobs }
 
+        let updateKiteGoal state =
+            let kiteGoals, otherGoals = List.partition (function | KiteGoal _ -> true | _ -> false) state.Goals
+
+            let prevKiteGoal = 
+                match kiteGoals with
+                | head :: _ -> Some head
+                | [] -> None
+
+            match adjacentEnemies state with
+                | [] 
+                    -> match prevKiteGoal with
+                       | Some (KiteGoal (0, _)) 
+                           -> { state with Goals = KiteGoal (1, []) :: otherGoals }
+                       | Some (KiteGoal (1, _))
+                           -> { state with Goals = otherGoals }
+                       | _ -> state
+                | enemies -> { state with Goals = KiteGoal (0, enemies) :: otherGoals }
+
         let removeGotoGoal (state:State) =
             let newg = List.filter (fun g ->   
                                             match g with 
@@ -180,12 +199,11 @@ namespace NabfAgentLogic
 //            
 //            if Map.exists (fun _ vertex -> Set.exists (snd >> (=) vertex.Identifier) vertex.Edges) updatedState.World then
 //                logError <| sprintf "EDGE TO SELF!!!"
+                |> updateKiteGoal
 
             match updatedState.Self.Role.Value with
             | Explorer -> updateStateExplorer updatedState
             | _ -> updatedState
-
-            
     
         let shouldSharePercept (state:State) percept =
             match percept with

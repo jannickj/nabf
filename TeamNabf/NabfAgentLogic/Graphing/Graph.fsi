@@ -15,6 +15,7 @@ namespace Graphing
 
         type Graph = Map<string, Vertex>
 
+        val getNeighbourIds : VertexName -> Graph -> VertexName list
         val getNeighbours : string -> Graph -> Vertex list
         val isVertexAdjacentTo : string -> Vertex -> bool
         val addEdgeToVertex : string -> DirectedEdge -> Graph -> Graph

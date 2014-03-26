@@ -15,11 +15,14 @@
 
         type Graph = Map<string, Vertex>
 
-        let getNeighbours identifier (graph:Graph) = 
-            let nEdges = Set.toList graph.[identifier].Edges
+        let getNeighbourIds vertexId (graph : Graph) =
+            let nEdges = Set.toList graph.[vertexId].Edges
             let neighbourName  =(snd (List.unzip nEdges))
-            let vertices = List.filter (fun id -> graph.ContainsKey id) neighbourName
-            List.map (fun id -> graph.[id]) vertices
+            List.filter (fun id -> graph.ContainsKey id) neighbourName
+
+        let getNeighbours vertexId (graph:Graph) = 
+            List.map (fun id -> graph.[id]) <| getNeighbourIds vertexId graph 
+
 
         let isVertexAdjacentTo identifier vertex = 
             Set.exists (fun (_, toVertex) -> toVertex = identifier) vertex.Edges 

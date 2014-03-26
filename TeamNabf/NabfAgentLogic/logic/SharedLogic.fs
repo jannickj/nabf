@@ -7,6 +7,44 @@ module SharedLogic =
     open Logging
     open PathFinding
 
+    open Graphing.Graph
+
+    let kiteAgents agents state = 
+
+        let (nearbyEnemeies, nearbyFriends) = 
+            List.partition (fun agent -> agent.Team <> state.Self.Team) state.NearbyAgents
+
+        let (enemyVertices, friendlyVertices) = 
+            ( List.map (fun agent -> agent.Node) nearbyEnemeies |> Set.ofList
+            , List.map (fun agent -> agent.Node) nearbyFriends |> Set.ofList
+            )
+        
+        let neighbours = getNeighbours state.Self.Node state.World
+
+        let (enemyNeighbours, otherNeighbours) = 
+            List.partition (fun vertex -> Set.contains vertex.Identifier enemyVertices) neighbours
+        let (friendlyNeighbours, emptyNeighbours) = 
+            List.partition (fun vertex -> Set.contains vertex.Identifier friendlyVertices) otherNeighbours
+
+        let neighbourPartitions = [emptyNeighbours; enemyNeighbours; friendlyNeighbours]
+        
+        // sort empty neighbours by their degree (in decreasing order)
+        let sortNeighbours = List.rev << List.sortBy (fun vertex -> Set.count vertex.Edges)
+        
+        let shouldGoTo vertex =
+            match tryGo vertex state with
+            | (true, Some (Goto _)) -> true
+            | _ -> false
+
+        let bestNeighbour neighbourSet =
+            match List.tryFind shouldGoTo <| sortNeighbours neighbourSet with
+            | Some neighbour -> Some <| tryGo neighbour state
+            | None -> None
+
+        match List.tryPick bestNeighbour neighbourPartitions with
+            | Some result -> result
+            | None -> recharge
+    
     let workOnOccupyGoal (state : State) = 
         let occupyChooser = function
                             | JobGoal (OccupyGoal vertex) -> Some vertex
@@ -22,7 +60,17 @@ module SharedLogic =
                                                          | _ -> (false, None)
         | _ -> (false, None)
             
-                
+    let workOnKiteGoal (state : State) =
+        let kiteChooser = function
+                          | KiteGoal (stepsSince, agents) -> Some (stepsSince, agents)
+                          | _ -> None
+
+        let kiteAgentLists = List.choose kiteChooser state.Goals
+
+        match kiteAgentLists with
+        | (0, agentsToKite) :: _ -> kiteAgents agentsToKite state
+        | (1, _) :: _ -> recharge
+        | _ -> (false, None)
+
+
             
-
-
