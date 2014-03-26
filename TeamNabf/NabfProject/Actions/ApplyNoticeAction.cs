@@ -38,7 +38,7 @@ namespace NabfProject.Actions
 		public override string ToString()
 		{
 			SimulationManager simMan = ((NabfModel)this.Engine).SimulationManager;
-			return "Apply to "+NoticeId+" at round: "+simMan.CurrentRoundNumber+" desire: "+this.Desired;
+			return "Apply to " + NoticeId + " at round: " + simMan.CurrentRoundNumber + " desire: " + this.Desired;
 		}
     }
 }
