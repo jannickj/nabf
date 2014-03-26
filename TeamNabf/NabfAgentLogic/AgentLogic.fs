@@ -22,10 +22,18 @@ namespace NabfAgentLogic
         let handlePercept state percept =
             match percept with
                 | EnemySeen enemy when enemy.Name <> state.Self.Name
-                    -> { state with 
-                           EnemyData = enemy :: state.EnemyData
-                           NearbyAgents = enemy :: state.NearbyAgents 
-                       }
+                    -> 
+                        let updateAgentList agent alist = 
+                            let others = List.filter (fun a -> a.Name <> agent.Name) alist
+                            agent::others
+
+                        let newS = { state with 
+                                       NearbyAgents = enemy :: state.NearbyAgents 
+                                    }
+                        if enemy.Team = state.Self.Team then
+                            { newS with FriendlyData = updateAgentList enemy state.FriendlyData }
+                        else
+                            { newS with EnemyData = updateAgentList enemy state.EnemyData }
                 | VertexSeen (id, team) ->
                     let ownedVertices = 
                         match team with
@@ -95,6 +103,7 @@ namespace NabfAgentLogic
                         ;   Status = Normal
                         ;   VisionRange = Some 0
                         }
+            ;   FriendlyData = []
             ;   EnemyData = List.Empty
             ;   SimulationStep = 0
             ;   NearbyAgents = List.Empty
@@ -212,11 +221,8 @@ namespace NabfAgentLogic
             { state with Goals = filteredGoals }
 
         let updateStateWhenGivenJob (initstate:State) (((_,_,jobType,_),jobdata):Job) (moveTo:VertexName) : State =
-            let filteredGoals = List.filter (fun g -> 
-                                                match g with
-                                                | JobGoal _ -> false
-                                                | _ -> true) initstate.Goals
-            let state = { initstate with Goals = filteredGoals }
+          
+            let state = initstate 
 
             match jobType with
             | JobType.OccupyJob -> if (List.tryFind (fun g -> g = JobGoal(OccupyGoal(moveTo))) state.Goals).IsNone then {state with Goals = (JobGoal(OccupyGoal(moveTo)))::state.Goals} else state

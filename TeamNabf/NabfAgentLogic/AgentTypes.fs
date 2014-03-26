@@ -206,6 +206,7 @@ module AgentTypes =
         { 
             World            : Graph; 
             Self             : Agent; 
+            FriendlyData     : Agent list;         
             EnemyData        : Agent list; 
             SimulationStep   : int;
             NearbyAgents     : Agent list

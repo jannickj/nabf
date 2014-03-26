@@ -91,4 +91,4 @@ module AgentLogicLib =
     let rankByType (s:State) =
         let sameRankAllies = List.filter (fun a -> (a.Node = s.Self.Node) && (a.Team = s.Self.Team) && (a.Role = s.Self.Role)) s.NearbyAgents
         let order = List.sort (s.Self :: sameRankAllies)
-        (List.findIndex (fun a -> a = s.Self) order) + 1
+        (List.findIndex (fun a -> a = s.Self) order)

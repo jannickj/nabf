@@ -132,8 +132,13 @@ module ExplorerLogic =
         let zl = List.filter (fun zn -> zn.HasAgent ) zl
         List.map (fun zn -> zn.Vertex.Identifier) zl
 
-    let calcZoneValue (agents:int) (zone:Graph) =
-        Map.fold (fun state key value -> if value.Value = None then state else state + value.Value.Value) 0 zone
+    let calcZoneValue  (state:State) (agents:int) (zone:Graph) =
+        let hasEnemy = Map.exists (fun vn _ -> List.exists (fun ea -> ea.Node = vn) state.EnemyData) zone
+        let fullvalue = Map.fold (fun state key value -> if value.Value = None then state else state + value.Value.Value) 0 zone
+        if hasEnemy then
+            fullvalue / 2
+        else
+            fullvalue
 
     let rec mergeZones (zone:VertexName list) (overlapping:Job list) =
         match overlapping with
@@ -161,13 +166,13 @@ module ExplorerLogic =
             elif overlapping = [] //Nothing is overlapping
             then
                 let zonePoints = findAgentPlacement (fst s.NewZone.Value)
-                ([((None,(calcZoneValue zonePoints.Length (fst s.NewZone.Value)),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,zone))],[])
+                ([((None,(calcZoneValue s zonePoints.Length (fst s.NewZone.Value)),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,zone))],[])
             else //There is a conflict with at least one other occupy job. We need to merge.                
                 let mergedZone = mergeZones zone overlapping
                 let newGraph = mergeListIntoGraph s Map.empty<string,Vertex> mergedZone
                 let zonePoints = findAgentPlacement newGraph
                 let removeIDs = List.map (fun (((id,_,_,_),_):Job) -> if id = None then 0 else id.Value) overlapping
-                ([((None,((calcZoneValue zonePoints.Length (fst s.NewZone.Value))/List.length zonePoints),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,mergedZone))],removeIDs)
+                ([((None,((calcZoneValue s zonePoints.Length (fst s.NewZone.Value))/List.length zonePoints),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,mergedZone))],removeIDs)
         | _ -> ([],[])
 
 
@@ -184,7 +189,7 @@ module ExplorerLogic =
     let probeVertex (s:State) =
         let rank = rankByType s
         //logInfo ("Vertex has value: "+s.World.[s.Self.Node].Value.IsNone.ToString())
-        if s.World.[s.Self.Node].Value.IsNone && rank <> 0 then tryDo (Probe None) s else (false,None) //Only one explorer should probe
+        if s.World.[s.Self.Node].Value.IsNone && rank = 0 then tryDo (Probe None) s else (false,None) //Only one explorer should probe
 
     //If the explorer is in the middle of finding a new zone to post, keep exploring it. Has lower priority than probe.
     let exploreNewZone (s:State) =
@@ -208,7 +213,7 @@ module ExplorerLogic =
 
     let partitionFrontier (s:State) = List.partition (fun vn -> s.World.ContainsKey vn && s.World.[vn].Value.IsSome) s.NewZoneFrontier
         
-    let partitionExploredVertices (s:State) (f:VertexName list) = List.partition (fun vn -> s.World.ContainsKey vn && s.World.[vn].Value.IsSome && s.World.[vn].Value.Value > 5) f
+    let partitionExploredVertices (s:State) (f:VertexName list) = List.partition (fun vn -> s.World.ContainsKey vn && s.World.[vn].Value.IsSome && s.World.[vn].Value.Value >= ZONE_BORDER_VALUE) f
 
     let rec listUnion l1 l2 = 
         match l1 with
@@ -277,6 +282,13 @@ module ExplorerLogic =
    /////////////////////////////////////
 
     let decideJobExplore (s:State) (job:Job) =  
-        match job with
-        | ((_,_,JobType.OccupyJob,_),OccupyJob (vl,zone) ) -> desireFromPath s.Self s.World vl.Head EXPLORER_OCCUPYJOB_MOD
-        | _ -> (0,false)
+        let mapExplored = not ( Map.exists ( fun vn v -> v.Value.IsNone) s.World )
+        let noJob = not ( List.exists (fun goal ->   match goal with 
+                                                | JobGoal (OccupyGoal _) -> true 
+                                                | _ -> false ) s.Goals)
+        if mapExplored && noJob then
+            match job with
+            | ((_,value,JobType.OccupyJob,_),OccupyJob (vl,zone) ) -> (value,true)
+            | _ -> (0,false)
+        else
+            (0,false)
