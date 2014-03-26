@@ -23,7 +23,7 @@ namespace NabfProject.Parsers
             this.AddConverter(new ConverterChangeNotice() { MasterDataParser = amdp });
             this.AddConverter(new ConverterCreateNotice() { MasterDataParser = amdp });
             this.AddConverter(new ConverterDeleteNotice());
-            //this.AddConverter(new ConverterUnapplyNotice());
+            this.AddConverter(new ConverterUnapplyNotice());
             this.AddConverter(new ConverterSubscribeSimulation());
             this.AddConverter(new ConverterNewRound());
         }

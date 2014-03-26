@@ -67,6 +67,7 @@
     <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterNoticeUpdated.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterReceivedJob.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterRoundChanged.cs" />
+    <Compile Include="Parsers\AgentMasterToAgentConverters\ConverterFiredFromJob.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\EdgeKnowledgeConverter.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\NodeKnowledgeConverter.cs" />
     <Compile Include="Parsers\AgentMasterToAgentConverters\NoticeConverter.cs" />

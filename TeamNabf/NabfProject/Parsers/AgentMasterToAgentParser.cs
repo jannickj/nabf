@@ -35,6 +35,10 @@ namespace NabfProject.Parsers
             {
                 Parsers = new AgentMasterDataParsers()
             });
+            this.AddConverter(new ConverterFiredFromJob()
+            {
+                Parsers = new AgentMasterDataParsers()
+            });
 
             this.AddConverter(new ConverterRoundChanged());
 
