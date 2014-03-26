@@ -15,17 +15,17 @@ namespace NabfProject.Parsers.AgentMasterToAgentConverters
     {
         public AgentMasterDataParsers Parsers { get; set; }
 
-        public override IilPerceptCollection BeginConversionToForeign(ReceivedJobEvent gobj)
-        {
-            IilPerceptCollection ipc;
+		public override IilPerceptCollection BeginConversionToForeign (FiredFromJobEvent gobj)
+		{
+			IilPerceptCollection ipc;
 
-            ipc = new IilPerceptCollection
-            (
-                new IilPercept("firedFromJob"),
-                new IilPercept("noticeId", new IilNumeral(gobj.Notice.Id))
-            );
+			ipc = new IilPerceptCollection
+				(
+					new IilPercept("firedFromJob"),
+					new IilPercept("noticeId", new IilNumeral(gobj.Notice.Id))
+				);
 
-            return ipc;
-        }
+			return ipc;
+		}
     }
 }
