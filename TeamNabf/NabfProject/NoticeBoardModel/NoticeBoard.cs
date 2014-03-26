@@ -20,6 +20,7 @@ namespace NabfProject.NoticeBoardModel
         private HashSet<NabfAgent> _sharingList = new HashSet<NabfAgent>();
 
         public enum JobType { Empty = 0, Occupy = 1, Repair = 2, Disrupt = 3, Attack = 4 }
+        public enum Status { available, unavailable}
         
         public NoticeBoard()
         {
@@ -182,7 +183,7 @@ namespace NabfProject.NoticeBoardModel
                 return false;
 
             foreach (NabfProject.AI.NabfAgent a in no.GetAgentsApplied())
-                UnApplyToNotice(no, a);
+                UnApplyToNotice(no, a, true);
             _idToNotice.Remove(no.Id);
             _availableJobs.Remove(NoticeToJobType(no), no);
 
@@ -265,7 +266,7 @@ namespace NabfProject.NoticeBoardModel
                 }
             }
         }
-        public void UnApplyToNotice(Notice notice, NabfAgent a)
+        public void UnApplyToNotice(Notice notice, NabfAgent a, bool fireAll)
         {
             foreach (Notice n in _availableJobs.Get(NoticeToJobType(notice)))
             {
@@ -273,16 +274,28 @@ namespace NabfProject.NoticeBoardModel
                 {
                     n.UnApply(a, this);
                     _agentToNotice.Remove(a, n);
+                    
+                    //loop through each agent and fire them.
+                    if (fireAll)
+                    {
+                        foreach (NabfAgent agent in notice.GetTopDesireAgents())
+                        {
+                            UnApplyToNotice(n, agent, false);
+                            RaiseFiredEventForNotice(n, agent);
+                        }
+                    }
+
+                    n.Status = Status.available;
                     break;
                 }
             }
         }
 
-        public void UnApplyFromAll(NabfAgent a)
-        {
-            foreach (Notice n in _agentToNotice[a])
-                UnApplyToNotice(n, a);
-        }
+        //public void UnApplyFromAll(NabfAgent a)
+        //{
+        //    foreach (Notice n in _agentToNotice[a])
+        //        UnApplyToNotice(n, a);
+        //}
 
         public  bool TryFindTopDesiresForNotice(Notice n, out int averageDesire, out List<NabfAgent> agents)
         {
@@ -344,10 +357,11 @@ namespace NabfProject.NoticeBoardModel
             {
                 notice = PopFromJobsList();
                 QueueNotEmpty = (notice != null);
-                if (notice != null && notice.AgentsNeeded <= notice.GetTopDesireAgents().Count)
+                if (notice != null && notice.AgentsNeeded <= notice.GetTopDesireAgents().Count && notice.Status == Status.available)
                 {
                     agentsWhoReceivedJob.AddRange(notice.GetTopDesireAgents());
-                    RaiseEventForNotice(notice);
+                    RaiseEventForNotice(notice, false);
+                    notice.Status = Status.unavailable;
                 }
             }
             Notice n;
@@ -355,7 +369,7 @@ namespace NabfProject.NoticeBoardModel
             {
                 n = new EmptyJob();
                 n.AddToTopDesireAgents(agent);
-                RaiseEventForNotice(n);
+                RaiseEventForNotice(n, false);
             }
         }
 
@@ -410,7 +424,7 @@ namespace NabfProject.NoticeBoardModel
             return jobs;
         }
 
-        private bool RaiseEventForNotice(Notice n) 
+        private bool RaiseEventForNotice(Notice n, bool fireOtherAtEnd) 
         {
             //NoticeIsReadyToBeExecutedEventArgs args = new NoticeIsReadyToBeExecutedEventArgs();
             //args.Agents = n.GetTopDesireAgents();
@@ -425,9 +439,16 @@ namespace NabfProject.NoticeBoardModel
                 {
                     if (no.ContentIsEqualTo(n))
                         continue;
-                    UnApplyToNotice(no, a);
+                    UnApplyToNotice(no, a, fireOtherAtEnd);
                 }
             }
+            return true;
+        }
+
+        private bool RaiseFiredEventForNotice(Notice n, NabfAgent a)
+        {
+            a.Raise(new FiredFromJobEvent(n, a));
+
             return true;
         }
 
@@ -450,7 +471,10 @@ namespace NabfProject.NoticeBoardModel
             foreach (KeyValuePair<JobType, Notice[]> kvp in _availableJobs)
             {
                 foreach (Notice n in kvp.Value)
-                    agent.Raise(new NewNoticeEvent(n));                    
+                {
+                    if (n.Status == Status.available)
+                        agent.Raise(new NewNoticeEvent(n));
+                }
             }
         }
     }
