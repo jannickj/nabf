@@ -37,3 +37,11 @@
                 let placement = findAgentPlacement initialGraph
                 Assert.AreEqual(4,List.length placement)
                 ()
+           
+            [<Test>]
+            member this.FindAgentPositions_1NodeGraph_Return1Positons() =
+                let initialGraph =  [ ("v23", { Identifier = "v23"; Value = Some 10; Edges = [(Some 8, "v16")] |> Set.ofList }) 
+                                    ] |> Map.ofList
+                let placement = findAgentPlacement initialGraph
+                Assert.AreEqual(1,List.length placement)
+                ()

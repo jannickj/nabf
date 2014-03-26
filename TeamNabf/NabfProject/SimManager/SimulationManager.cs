@@ -18,10 +18,17 @@ namespace NabfProject.SimManager
         private Dictionary<int, SimulationData> _simDataStorage = new Dictionary<int, SimulationData>();
         private SimulationFactory _factory;
         private int _currentID = -1;
-        private int _currentRoundNumber = -1;
+		private int _currentRoundNumber = -1;
+
+		
         private bool _applicationClosed = false;
         private bool _jobsFoundForThisRound = false;
         private int _numberOfAgentsFinishedApplying = 0;
+
+		public int CurrentRoundNumber
+		{
+			get { return _currentRoundNumber; }
+		}
 
         public SimulationManager(SimulationFactory sf, int timeBeforeApplyCloses = _standardTimeBeforeApplyCloses)
         {
