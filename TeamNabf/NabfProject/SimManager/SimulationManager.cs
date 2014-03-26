@@ -12,6 +12,8 @@ namespace NabfProject.SimManager
 {
     public class SimulationManager : XmasUniversal
     {
+		public int CurrentRoundNumber { get { return _currentRoundNumber; } }
+
         public int TimeBeforeApplyCloses { get; private set; }
         private const int _standardTimeBeforeApplyCloses = 1000;
 

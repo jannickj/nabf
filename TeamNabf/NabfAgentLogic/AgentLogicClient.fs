@@ -164,7 +164,7 @@
                                         let (cR,cA) = decidedAction
                                         logInfo (rankCur.ToString()+": "+f.ToString()+" -> "+b.ToString())
                                         if b && a.IsSome && cR > rankCur then
-                                            logImportant ("Chosen: "+(sprintf "%A" f))
+                                            logImportant ("Chosen: "+(sprintf "%A" (f s) ))
                                             decidedAction <- (rankCur,a.Value)
                                             stopSource.Cancel() 
                                     else
