@@ -162,6 +162,7 @@ module AgentTypes =
         | RemoveJob of JobID
         | UpdateJob of Job
         | ApplyJob of JobID*Desirability
+        | UnapplyJob of JobID
         | SimulationSubscribe
         | ShareKnowledge of Percept list
         | NewRound of int
@@ -189,6 +190,7 @@ module AgentTypes =
         | AcceptedJob of JobID*VertexName
         | SharedPercepts of Percept list
         | RoundChanged of int
+        | FiredFrom of JobID
 
     type MarsServerMessage =  
         | ActionRequest of ActionRequestData * Percept list

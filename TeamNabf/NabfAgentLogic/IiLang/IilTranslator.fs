@@ -353,6 +353,9 @@ namespace NabfAgentLogic.IiLang
                 | "receivedJob" ->
                     let [Percept ("noticeId", [Numeral rjobid]); Percept ("whichNodeNameToGoTo", [Identifier nodename])] = tail
                     AgentServerMessage <| (AcceptedJob <| ((int rjobid),nodename))
+                | "firedFromJob" ->
+                    let [Percept ("noticeId", [Numeral jobId])] = tail
+                    AgentServerMessage <| (FiredFrom (int jobId))
                 | _ ->  raise <| InvalidIilException ("iilServerMessage", data)
             | _ -> failwith "nonono"
         
@@ -422,4 +425,6 @@ namespace NabfAgentLogic.IiLang
             | ShareKnowledge perceptlist ->
                 let iilfuncs = List.collect (fun percept -> buildPerceptAsIilFunction percept) perceptlist
                 Action ("addKnowledgeAction",[Numeral (float simid); Function ("knowledges",iilfuncs)])
+            | UnapplyJob jobid ->
+                Action ("unapplyJob", [Numeral (float simid); Numeral (float jobid)])
                 

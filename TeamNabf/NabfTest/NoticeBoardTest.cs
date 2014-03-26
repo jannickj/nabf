@@ -254,7 +254,7 @@ namespace NabfTest
             Assert.AreEqual(2, n.GetAgentsApplied().Count);
 
 
-            nb.UnApplyToNotice(possibleJobs[0], a2);
+            nb.UnApplyToNotice(possibleJobs[0], a2, false);
             Assert.AreEqual(1, n.GetAgentsApplied().Count);
         }
 
