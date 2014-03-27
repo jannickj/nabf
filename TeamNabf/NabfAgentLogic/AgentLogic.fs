@@ -216,7 +216,7 @@ namespace NabfAgentLogic
                         false
                 else 
                     false
-            | EdgeSeen es -> true
+            | EdgeSeen es -> false
             | VertexSeen (vp,t) -> 
                 not (state.World.ContainsKey(vp))                
             | EnemySeen { Name = name; Role = Some _ } ->
@@ -229,7 +229,9 @@ namespace NabfAgentLogic
             | _ -> false
 
         let selectSharedPercepts state (percepts:Percept list) =
-            List.filter (shouldSharePercept state) percepts
+            let propagatedPercepts = List.filter (shouldSharePercept state) percepts
+            let newPercepts = state.NewEdges
+            propagatedPercepts @ List.map EdgeSeen state.NewEdges
         
         let updateStateWhenLostJob (state:State) =
             let filteredGoals = List.filter (fun g -> 

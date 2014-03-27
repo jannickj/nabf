@@ -27,11 +27,6 @@ namespace NabfProject.SimManager
         private bool _jobsFoundForThisRound = false;
         private int _numberOfAgentsFinishedApplying = 0;
 
-		public int CurrentRoundNumber
-		{
-			get { return _currentRoundNumber; }
-		}
-
         public SimulationManager(SimulationFactory sf, int timeBeforeApplyCloses = _standardTimeBeforeApplyCloses)
         {
             TimeBeforeApplyCloses = timeBeforeApplyCloses;

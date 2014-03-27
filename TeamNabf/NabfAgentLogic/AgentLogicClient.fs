@@ -162,7 +162,7 @@
                                     if dId = decisionId then
                                         let (b,a) = output.Value
                                         let (cR,cA) = decidedAction
-                                        logInfo (rankCur.ToString()+": "+f.ToString()+" -> "+b.ToString())
+                                        logImportant (rankCur.ToString()+": " + f.ToString() + " -> " + b.ToString())
                                         if b && a.IsSome && cR > rankCur then
                                             logImportant ("Chosen: "+(sprintf "%A" (f s) ))
                                             decidedAction <- (rankCur,a.Value)
@@ -294,22 +294,29 @@
             let jobTypes = Enum.GetValues(typeof<JobType>)
             let rec jobGenFunc jobtype state knownJobs =
                 let (created,removed) = generateJob jobtype state knownJobs
+
+                logImportant (sprintf "created: %A" created)
+                logImportant (sprintf "removed: %A" removed)
                 
                 List.iter removeJob removed
                 List.iter createJob created
-                if not (List.isEmpty created && List.isEmpty removed) then
-                    let removedKnown = List.filter (fun ((id,_,_,_),_) -> not (List.exists (fun jid -> if (id:Option<JobID>).IsSome then id.Value = jid else false) removed) ) knownJobs
-                    let createdKnown = List.filter (fun ((id,_,_,_),_) -> not (List.exists (fun cjob ->
-                                                (  match cjob with
-                                                     | (Some cjid,_,_,_),_ -> if (id:Option<JobID>).IsSome then id.Value = cjid else false
-                                                     | (None,_,_,_),_ -> false
-                                                )
-                                                ) created) ) removedKnown
-                
-                    jobGenFunc jobtype state (created@createdKnown)
-                else
-                    //logInfo ("Generating job completed: "+jobtype.ToString())
-                    ()
+                ()
+//                if not (List.isEmpty created && List.isEmpty removed) then
+//                    let removedKnown = List.filter (fun ((id,_,_,_),_) -> not (List.exists (fun jid -> if (id:Option<JobID>).IsSome then id.Value = jid else false) removed) ) knownJobs
+//                    let createdKnown = List.filter (fun ((id,_,_,_),_) -> not (List.exists (fun cjob ->
+//                                                (  match cjob with
+//                                                     | (Some cjid,_,_,_),_ -> if (id:Option<JobID>).IsSome then id.Value = cjid else false
+//                                                     | (None,_,_,_),_ -> false
+//                                                )
+//                                                ) created) ) removedKnown
+//
+//                    logImportant (sprintf "createdKnown: %A" createdKnown)
+//                    logImportant (sprintf "removedKnown: %A" removedKnown)
+//                
+//                    jobGenFunc jobtype state (created@createdKnown)
+//                else
+//                    //logInfo ("Generating job completed: "+jobtype.ToString())
+//                    ()
             let jobTypeList = (List.ofSeq (jobTypes.Cast<JobType>())).Tail
             let joblist = lock knownJobsLock (fun () -> this.KnownJobs)
             let knownjobs jobtype =List.filter (fun ((_, _, jt,_), _) -> jt = jobtype) joblist

@@ -42,16 +42,20 @@ module ExplorerLogic =
 
     //Get all vertices in vl that are also in NewZone
     let rec getOverlappingVertices (s:State) (vl:VertexName list) = 
-        match vl with
-        | [] -> []
-        | head :: tail -> if (Map.containsKey head (fst s.NewZone.Value)) 
-                          then 
-                              List.Cons (head,(getOverlappingVertices s tail)) 
-                          else 
-                              getOverlappingVertices s tail
+//        logImportant (sprintf "%A" vl)
+        match (vl, s.NewZone) with
+        | (_, None) ->  
+                []
+        | ([], _) -> []
+        | (head :: tail, Some (g, _)) -> 
+            if (Map.containsKey head g) then 
+                head :: (getOverlappingVertices s tail)
+            else 
+                getOverlappingVertices s tail
         
     //Get all jobs that contain one or more vertices in NewZone
     let getOverlappingJobs (s:State) (occupyJobs:Job list) =
+        logImportant "getOverLappingJobs"
         List.filter (fun ((_,OccupyJob(_,vertices)):Job) -> (getOverlappingVertices s vertices) <> []) occupyJobs
 
 
@@ -161,6 +165,7 @@ module ExplorerLogic =
         match s.NewZone with
         | Some (g,true) -> 
             let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
+            logImportant "generateOccupyJobExplorer" 
             let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
             if (List.tryFind (fun (_,JobData.OccupyJob(_,verts)) ->  (listEquals verts zone)) overlapping ).IsSome then ([],[]) //If the job is already in the job list
             elif overlapping = [] //Nothing is overlapping

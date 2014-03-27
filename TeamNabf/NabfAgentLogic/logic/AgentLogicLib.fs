@@ -4,6 +4,7 @@ module AgentLogicLib =
     open Graphing.Graph
     open AgentTypes
     open PathFinding
+    open Logging
 
     let ProbeCost = 1
     let SurveyCost = 1
@@ -93,6 +94,6 @@ module AgentLogicLib =
             tryGo sortedNeighbours.Head s
 
     let rankByType (s:State) =
-        let sameRankAllies = List.filter (fun a -> (a.Node = s.Self.Node) && (a.Team = s.Self.Team) && (a.Role = s.Self.Role)) s.NearbyAgents
-        let order = List.sort (s.Self :: sameRankAllies)
-        (List.findIndex (fun a -> a = s.Self) order)
+        let sameRankAllies = List.filter (fun a -> (a.Node = s.Self.Node) && (a.Team = s.Self.Team)) s.NearbyAgents
+        let order = List.sort <| List.map (fun a -> a.Name) (s.Self :: sameRankAllies)
+        (List.findIndex ((=) s.Self.Name) order)

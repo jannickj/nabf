@@ -50,11 +50,12 @@ namespace NabfProject.Parsers.KnowledgeConverters
             }
             else
             {
-                return new IilPerceptCollection(new IilPercept("surveyedEdges"
-                    , new IilFunction("node1", new IilIdentifier(gobj.Node1))
-                    , new IilFunction("node2", new IilIdentifier(gobj.Node2))
-                    , new IilFunction("weight", new IilNumeral(gobj.Weight))
-                    ));
+				return new IilPerceptCollection(new IilPercept("surveyedEdges"
+					, new IilFunction ("surveyedEdge"
+	                    , new IilFunction("node1", new IilIdentifier(gobj.Node1))
+	                    , new IilFunction("node2", new IilIdentifier(gobj.Node2))
+						, new IilFunction("weight", new IilNumeral(gobj.Weight)))
+	                ));
             }
         }
     }
