@@ -39,8 +39,8 @@ module DecisionTree =
             [
                 getRoleDecision
 
-                Condition (isWorkingOnOccupyGoal,
-                    Options [ Choice workOnKiteGoal ])
+//                Condition (isWorkingOnOccupyGoal,
+//                    Options [ Choice workOnKiteGoal ])
 
                 Choice workOnOccupyGoal
 
