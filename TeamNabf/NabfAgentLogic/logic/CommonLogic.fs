@@ -29,7 +29,7 @@ module CommonLogic =
 
         if rank > 0 then
             logImportant (sprintf "%A Standing still due to rank %A" s.Self.Name rank)
-            recharge
+            (false, None)
         else
             
             let unexplored = pathToNearestUnExplored s.Self s.World
