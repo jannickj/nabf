@@ -187,6 +187,7 @@ namespace NabfAgentLogic
         (* let updateState : State -> Percept list -> State *)
         let updateState state percepts knownJobs = 
             let clearedState = clearTempBeliefs state
+            logImportant (sprintf "%A" (List.filter (fun g -> match g with | JobGoal jg -> true | _ -> false) state.Goals))
             let updatedState = 
                 List.fold handlePercept clearedState percepts
                 |> updateEdgeCosts state
