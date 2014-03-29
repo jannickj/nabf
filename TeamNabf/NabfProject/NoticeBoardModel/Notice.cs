@@ -35,12 +35,14 @@ namespace NabfProject.NoticeBoardModel
 
         public void AddToTopDesireAgents(NabfAgent toAdd)
         {
-            _topDesireAgents.Add(toAdd);
+			if (! _topDesireAgents.Exists (a => a.Id == toAdd.Id))
+            	_topDesireAgents.Add(toAdd);
         }
 
         public void AddRangeToTopDesireAgents(ICollection<NabfAgent> toAdd)
         {
-            _topDesireAgents.AddRange(toAdd);
+			foreach (NabfAgent a in toAdd)
+				AddToTopDesireAgents (a);
         }
 
         public List<NabfAgent> GetAgentsApplied()

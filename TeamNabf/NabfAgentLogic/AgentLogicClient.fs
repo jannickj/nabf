@@ -162,9 +162,9 @@
                                     if dId = decisionId then
                                         let (b,a) = output.Value
                                         let (cR,cA) = decidedAction
-                                        logImportant (rankCur.ToString()+": " + f.ToString() + " -> " + b.ToString())
+                                        logImportant (sprintf "(%A): %A: %A -> %A" s.Self.Name rankCur f b)
                                         if b && a.IsSome && cR > rankCur then
-                                            logImportant ("Chosen: "+(sprintf "%A" (f s) ))
+                                            logImportant (sprintf "(%A): Chosen: %A" s.Self.Name (f s))
                                             decidedAction <- (rankCur,a.Value)
                                             stopSource.Cancel() 
                                     else

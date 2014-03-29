@@ -53,11 +53,17 @@ module SharedLogic =
         let occupyVertices = List.choose occupyChooser state.Goals
         
         match occupyVertices with
-        | vertex :: _ when vertex = state.Self.Node -> recharge
-        | vertex :: _ when vertex <> state.Self.Node ->  let p = pathTo state.Self vertex state.World
-                                                         match p with
-                                                         | Some (first::_) -> tryGo state.World.[first] state
-                                                         | _ -> (false, None)
+//        | vertex :: _ when vertex = state.Self.Node -> recharge
+//        | vertex :: _ when vertex <> state.Self.Node ->  let p = pathTo state.Self vertex state.World
+//                                                         match p with
+//                                                         | Some (first::_) -> tryGo state.World.[first] state
+//                                                         | _ -> (false, None)
+        | vertex :: _ -> let p = pathTo state.Self vertex state.World
+                         logImportant (sprintf  "%A: occupyVertices path: %A" state.Self.Name p)
+                         match p with
+                         | Some (first :: _) -> tryGo state.World.[first] state
+                         | Some [] -> recharge
+                         | None -> (false, None)
         | _ -> (false, None)
             
     let workOnKiteGoal (state : State) =
