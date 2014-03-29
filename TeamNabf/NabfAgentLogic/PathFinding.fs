@@ -6,10 +6,24 @@ namespace NabfAgentLogic
         open AgentTypes
         open System.Collections.Generic
 
-        type pathState = 
+        [<CustomComparison; CustomEquality>]
+        type PathState = 
             { Vertex : VertexName
             ; Energy : int
             }
+            with
+            override self.Equals(yobj) =
+                match yobj with
+                | :? PathState as obj  -> self.Vertex = obj.Vertex
+                | _ -> false
+            
+            interface System.IComparable with
+                member self.CompareTo yobj = 
+                   match yobj with
+                    | :? PathState as obj  -> self.Vertex.CompareTo(obj.Vertex)
+                    | _ -> 0
+                
+                
 
         let edgeToVert (_, otherVertex) = otherVertex
         let vertPath path = List.map edgeToVert path

@@ -270,12 +270,12 @@
                             
                             let ajob = foundJob.Value
                             lock stateLock (fun () ->   this.BeliefData <- updateStateWhenGivenJob this.BeliefData ajob moveTo)
-                            this.asyncCalculation runningCalcID "Calc accept job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
+                            //this.asyncCalculation runningCalcID "Calc accept job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
                         }
                 Async.StartImmediate update
             else
                 lock stateLock (fun () ->this.BeliefData <- updateStateWhenLostJob this.BeliefData)
-                this.asyncCalculation runningCalcID "Calc lost job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
+                //this.asyncCalculation runningCalcID "Calc lost job" stopDeciders.Token (fun () -> ignore <| this.EvaluteState())
 
         member private this.generateNewJobs() = 
             let removeJob jobid =
@@ -295,8 +295,6 @@
             let rec jobGenFunc jobtype state knownJobs =
                 let (created,removed) = generateJob jobtype state knownJobs
 
-                logImportant (sprintf "created: %A" created)
-                logImportant (sprintf "removed: %A" removed)
                 
                 List.iter removeJob removed
                 List.iter createJob created
@@ -381,7 +379,7 @@
                     | AddedOrChangedJob job ->
                         this.updateJob job
                     | AcceptedJob (id,vn) ->
-                        logInfo ("Recieved Job: "+id.ToString())
+                        logImportant ("Recieved Job: "+id.ToString())
                         
                         this.CalculateAcceptedJob (Some id) vn
                         recievedJobFromServer <- true
@@ -440,9 +438,9 @@
                                             let expired = (System.DateTime.Now.Ticks - start)/(int64(10000))
                                         
                                             let runningCalcs = lock runningCalcLock (fun () -> runningCalc)
-                                            logAll ("Current running calculations: "+runningCalcs.ToString())
-                                            logAll ("Running: "+runningCalcNames.ToString())
-                                            if (runningCalcs = 0 && recievedJobFromServer) || (expired+int64(800)) > int64(totaltime) then
+                                            logImportant ("Current running calculations: "+runningCalcs.ToString())
+                                            logImportant ("Running: "+runningCalcNames.ToString())
+                                            if (runningCalcs = 0) || (expired+int64(800)) > int64(totaltime) then
                                                 let (_,decided) = lock decisionLock (fun () -> this.DecidedAction)
                                                 if (decided <> Skip) then
                                                     SendMarsServerEvent.Trigger(this,new UnaryValueEvent<IilAction>(buildIilAction (float id) (lock decisionLock (fun () -> snd decidedAction))))
