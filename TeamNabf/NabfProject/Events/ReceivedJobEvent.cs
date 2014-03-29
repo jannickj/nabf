@@ -17,12 +17,12 @@ namespace NabfProject.Events
         {
             Notice = n;
             Receiver = agent;
-			if (n.GetType () != typeof(EmptyJob)) {
-				Console.WriteLine ("\n{0}: {1}", Receiver, this);
-				foreach ( NabfAgent a in Notice.GetTopDesireAgents() )
-					Console.WriteLine (a);
+			//if (n.GetType () != typeof(EmptyJob)) {
+			//	Console.WriteLine ("\n{0}: {1}", Receiver, this);
+			//	foreach ( NabfAgent a in Notice.GetTopDesireAgents() )
+			//		Console.WriteLine (a);
 
-			}
+			//}
         }
 
 		public override string ToString()

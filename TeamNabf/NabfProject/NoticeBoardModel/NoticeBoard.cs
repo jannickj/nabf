@@ -359,7 +359,7 @@ namespace NabfProject.NoticeBoardModel
                 QueueNotEmpty = (notice != null);
                 if (notice != null && notice.AgentsNeeded <= notice.GetTopDesireAgents().Count && notice.Status == Status.available)
                 {
-                    agentsWhoReceivedJob.AddRange(notice.GetTopDesireAgents());
+					agentsWhoReceivedJob.AddRange(notice.GetTopDesireAgents());
                     RaiseEventForNotice(notice, false);
                     notice.Status = Status.unavailable;
                 }

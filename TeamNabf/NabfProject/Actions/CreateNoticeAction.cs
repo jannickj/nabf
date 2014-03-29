@@ -35,8 +35,12 @@ namespace NabfProject.Actions
         {
             SimulationManager simMan = ((NabfModel)this.Engine).SimulationManager;
 
+			
+
             Notice n;
             simMan.CreateAndAddNotice(SimId, JobType, AgentsNeeded, WhichNodes, ZoneNodes, AgentToRepair, Value, out n);
+			//string nodes = n.WhichNodes.Select(nk => nk.ToString() + ", ").Aggregate((i, j) => i + j);
+			//Console.WriteLine("Added job: " + n + " with nodes: " + nodes);
         }
     }
 }

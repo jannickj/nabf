@@ -10,6 +10,11 @@ namespace NabfProject.KnowledgeManagerModel
         public string Name { get; private set; }
         public int Value { get; private set;}
 
+		public override string ToString()
+		{
+			return "Node(" + Name + ")";
+		}
+
         public NodeKnowledge(string name)
         {
             Name = name;

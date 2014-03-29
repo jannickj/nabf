@@ -20,8 +20,14 @@ namespace NabfProject.NoticeBoardModel
         public int HighestAverageDesirabilityForNotice { get { return _highestAverageDesirabilityForNotice; } set { _highestAverageDesirabilityForNotice = value; } }
         private List<NabfAgent> _agentsApplied = new List<NabfAgent>();
         private List<NabfAgent> _topDesireAgents = new List<NabfAgent>();
-        private Dictionary<NabfAgent, int> _agentsToDesirability = new Dictionary<NabfAgent, int>(); 
+        private Dictionary<NabfAgent, int> _agentsToDesirability = new Dictionary<NabfAgent, int>();
 
+		public override string ToString()
+		{
+			string nodes = this.WhichNodes.Select(nk => nk.ToString() + ", ").Aggregate((i, j) => i + j);
+
+			return "Notice: "+ this.GetType().Name +"( "+Id +" ), nodes: " + nodes;
+		}
 
         public Notice(Int64 id)
         {
@@ -35,8 +41,8 @@ namespace NabfProject.NoticeBoardModel
 
         public void AddToTopDesireAgents(NabfAgent toAdd)
         {
-			if (! _topDesireAgents.Exists (a => a.Id == toAdd.Id))
-            	_topDesireAgents.Add(toAdd);
+			//if (! _topDesireAgents.Exists (a => a.Id == toAdd.Id))
+			_topDesireAgents.Add(toAdd);
         }
 
         public void AddRangeToTopDesireAgents(ICollection<NabfAgent> toAdd)

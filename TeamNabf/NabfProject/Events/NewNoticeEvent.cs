@@ -14,6 +14,9 @@ namespace NabfProject.Events
         public NewNoticeEvent(Notice n)
         {
             Notice = n;
+			
+			
+
         }
     }
 }

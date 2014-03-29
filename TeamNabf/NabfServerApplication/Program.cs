@@ -90,11 +90,11 @@ namespace NabfServerApplication
             if (evten.Action.Object is NabfAgent)
             {
                 var agent = (NabfAgent)evten.Action.Object;
-                if (verbose)
-                {
-                    Console.SetCursorPosition(0, start * 2 + agentoffset);
-                    Console.Write("Agent: " + agent.Name);
-                }
+				//if (verbose)
+				//{
+				//	Console.SetCursorPosition(0, start * 2 + agentoffset);
+				//	Console.Write("Agent: " + agent.Name);
+				//}
                 
                 consolepos.Add(agent, start);
                 //agent.Register(new Trigger<ActionStartingEvent<AddKnowledgeAction>>(evt => ReceivedMessage(evt.Action)));
@@ -107,11 +107,11 @@ namespace NabfServerApplication
                 agent.Register(new Trigger<ActionStartingEvent<AgentCrashed>>(evt =>
                     {
                         var message = "Crashed! (" + evt.Action.Exception.Message.Substring(0, 20) + "...)";
-                        Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset);
-                        Console.Write("Received: " + message + "\t\t");
+                        //Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset);
+                        Console.WriteLine("Received: " + message);
 
-                        Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset + 1);
-                        Console.Write("Sent: " + message + "\t\t");
+                        //Console.SetCursorPosition(15, consolepos[agent] * 2 + agentoffset + 1);
+                        Console.WriteLine("Sent: " + message);
                     }));
 
                 //agent.Register(new Trigger<NewKnowledgeEvent>(evt => SendMessage(agent, evt)));
@@ -136,8 +136,8 @@ namespace NabfServerApplication
                     }
                     if (updated)
                     {
-                        Console.SetCursorPosition(0, 0);
-                        Console.Write("Simulation: " + simId + ", Round: " + roundId + "\t\t");
+                        //Console.SetCursorPosition(0, 0);
+                        Console.WriteLine("Simulation: " + simId + ", Round: " + roundId);
                     }
 
 

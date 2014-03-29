@@ -159,37 +159,50 @@ module ExplorerLogic =
         | [] -> true
         | head :: tail -> if (List.tryFind (fun e -> e = head) l2).IsSome then listEquals tail l2 else false
 
+    let vertexHasEnemy vn (s:State) =
+        List.exists (fun e -> e.Node = vn) s.EnemyData
+    
+    //Number of enemies that are neighbours to vn
+    let vertexEnemyNeighbours vn (s:State) =
+        let neighs = getNeighbourIds vn s.World
+        List.length <| List.filter (fun neigh -> vertexHasEnemy neigh s  ) neighs
+
     //Check if you need to make a new occupy job based on NewZone
     let generateOccupyJobExplorer (s:State) (knownJobs:Job list) =
         
         match s.NewZone with
         | Some (g,true) -> 
-            let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList (fst s.NewZone.Value))))
-            logImportant "generateOccupyJobExplorer" 
-            let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
-            if (List.tryFind (fun (_,JobData.OccupyJob(_,verts)) ->  (listEquals verts zone)) overlapping ).IsSome then ([],[]) //If the job is already in the job list
-            elif overlapping = [] //Nothing is overlapping
-            then
-                let zoneGraph = (fst s.NewZone.Value)
-                let isSingleIsland (g:Map<_,Vertex>) = g.Count = 1 && (Map.exists(fun _ v -> v.Edges.Count = 1) g)
-                let (zonePoints,finalZone,finalZoneGraph) = 
-                    if isSingleIsland zoneGraph  then
-                        let [(vn,v)] = Map.toList zoneGraph
-                        let [(_,edgeName)] = Set.toList v.Edges
-                        let nzoneGraph = addVertexById edgeName zoneGraph
-                        ([edgeName],edgeName::zone,nzoneGraph)
-                    else
-                        ((findAgentPlacement zoneGraph),zone,zoneGraph)
+            //Remove all nodes with an enemy or has atleast 2 neighbouring  enemies
+            match (Map.filter (fun vn _ -> (vertexEnemyNeighbours vn s) < 2 && not (vertexHasEnemy vn s)  ) g) with
+            | g' when not <| Map.isEmpty g' -> 
+                let zone = List.map (fun v -> v.Identifier) (snd (List.unzip (Map.toList g')))
+                logImportant "generateOccupyJobExplorer" 
+                let overlapping = getOverlappingJobs s (List.filter (fun ((_,_,jType,_),_) -> jType = JobType.OccupyJob) knownJobs)
+                if (List.tryFind (fun (_,JobData.OccupyJob(_,verts)) ->  (listEquals verts zone)) overlapping ).IsSome then ([],[]) //If the job is already in the job list
+                elif overlapping = [] //Nothing is overlapping
+                then
+                  
+                    let isSingleIsland (g:Map<_,Vertex>) = g.Count = 1 && (Map.exists(fun _ v -> v.Edges.Count = 1) g)
+                    let (zonePoints,finalZone,finalZoneGraph) = 
+                        if isSingleIsland g'  then
+                            let [(vn,v)] = Map.toList g'
+                            let [(_,edgeName)] = Set.toList v.Edges
+                            let nzoneGraph = addVertexById edgeName g'
+                            ([edgeName],edgeName::zone,nzoneGraph)
+                        else
+                            ((findAgentPlacement g'),zone,g')
                 
 
-                ([((None,(calcZoneValue s zonePoints.Length finalZoneGraph),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,finalZone))],[])
-            else //There is a conflict with at least one other occupy job. We need to merge.                
-                let mergedZone = mergeZones zone overlapping
-                let newGraph = mergeListIntoGraph s Map.empty<string,Vertex> mergedZone
-                let zonePoints = findAgentPlacement newGraph
-                let removeIDs = List.map (fun (((id,_,_,_),_):Job) -> if id = None then 0 else id.Value) overlapping
-                ([((None,((calcZoneValue s zonePoints.Length (fst s.NewZone.Value))/List.length zonePoints),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,mergedZone))],removeIDs)
-        | _ -> ([],[])
+                    ([((None,(calcZoneValue s zonePoints.Length finalZoneGraph),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,finalZone))],[])
+                else //There is a conflict with at least one other occupy job. We need to merge.                
+                    let mergedZone = mergeZones zone overlapping
+                    let newGraph = mergeListIntoGraph s Map.empty<string,Vertex> mergedZone
+                    let zonePoints = findAgentPlacement newGraph
+                    let removeIDs = List.map (fun (((id,_,_,_),_):Job) -> if id = None then 0 else id.Value) overlapping
+                    ([((None,((calcZoneValue s zonePoints.Length (fst s.NewZone.Value))/List.length zonePoints),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,mergedZone))],removeIDs)
+
+            | _ -> ([],[])
+                    | _ -> ([],[])
 
 
     //////////////////////
