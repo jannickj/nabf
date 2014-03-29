@@ -202,7 +202,7 @@ module ExplorerLogic =
                     ([((None,((calcZoneValue s zonePoints.Length (fst s.NewZone.Value))/List.length zonePoints),JobType.OccupyJob,(List.length zonePoints)),JobData.OccupyJob(zonePoints,mergedZone))],removeIDs)
 
             | _ -> ([],[])
-                    | _ -> ([],[])
+        | _ -> ([],[])
 
 
     //////////////////////
