@@ -90,6 +90,8 @@ module AgentTypes =
 
     
 
+    
+
     type JobID = int
     type JobValue = int
     type Desirability = int
@@ -204,6 +206,8 @@ module AgentTypes =
             World            : Graph; 
             Self             : Agent; 
             EnemyData        : Agent list; 
+            FriendlyData     : Agent list;
+            InspectedEnemies : Agent list;
             SimulationStep   : int;
             NearbyAgents     : Agent list
             OwnedVertices    : Map<VertexName, TeamName>
@@ -227,3 +231,6 @@ module AgentTypes =
     type OptionFunc = State -> (bool*Option<Action>)
 
     type DecisionRank = int
+
+
+    

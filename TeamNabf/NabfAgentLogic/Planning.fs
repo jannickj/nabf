@@ -45,22 +45,25 @@ module Planning =
         match a with
         | Goto vn -> { s with Self = { s.Self with Node = vn }}
         | Attack agentname -> 
-            let attacked::_,rest = List.partition (fun e -> e.Name = agentname) s.EnemyData
-            let updateAtt = { attacked with Status = Disabled }
+            let attacked, rest = List.partition (fun e -> e.Name = agentname) s.EnemyData 
+            let updateAtt = { List.head attacked with Status = Disabled }
             { s with EnemyData = updateAtt::rest }
         | Recharge -> 
             let curE = match s.Self.Energy with Some e -> e | _ -> 0
             let maxE = match s.Self.MaxEnergy with Some e -> e | _ -> 20
             { s with Self = { s.Self with Energy = Some (curE + maxE/2)}}
         | Repair a -> 
-            let ra::_,rest = List.partition (fun e -> e.Name = a) s.NearbyAgents 
-            let ua = { ra with Health = ra.MaxHealth; Status = Normal }
+            let ra, rest = List.partition (fun e -> e.Name = a) s.NearbyAgents 
+            let ua = { List.head ra with Health = ra.MaxHealth; Status = Normal }
             { s with NearbyAgents = ua::rest }
         | skip -> s
         | Buy _ -> s
-        | Inspect _ -> s
+        | Inspect agentname -> 
+            let inspectedAgent, rest = List.partition (fun nearbyAgent -> nearbyAgent.Name = agentname) s.NearbyAgents
+            let UpdateInspectedAgent = { List.head inspectedAgent with 
         | Parry _ -> s
         | Probe _ -> s
+        | _ -> failwith "fail"
 
     let stepcost s a = 1
 
